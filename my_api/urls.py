@@ -15,7 +15,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf.urls import url, include
+from django.contrib.auth import views as auth_views
+from django.contrib.auth import urls
+from django.http import HttpResponseRedirect
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
+    url(r'^graph/', include('graph.urls')),
+    url(r'^accounts/login/$', auth_views.LoginView.as_view(),name='login'),
+    url(r'^accounts/logout/$', auth_views.LogoutView.as_view(), name='logout'),
+    url(r'^accounts/password_reset/$', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    url(r'^accounts/password/reset/confirm/$', 
+             auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    url(r'^accounts/password/reset/complete/$', 
+             auth_views.PasswordResetCompleteView.as_view(), name='password_reset_done'),
 ]
