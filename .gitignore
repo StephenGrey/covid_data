@@ -1,6 +1,7 @@
 *.bak
 .*
 **/migrations/
+usersettings.config
 
 #OS junk files
 [Tt]humbs.db
@@ -69,7 +70,6 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 logfile*
-settings.py
 
 
 # Flask stuff:

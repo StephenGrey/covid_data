@@ -11,8 +11,8 @@ import logging,json
 log = logging.getLogger('api.graph.views')
 
 @staff_member_required()
-def index(request,path='/Volumes'):
-    return render(request,'test_js/test.html')
+def index(request):
+    return render(request,'graph/local_covid.html')
 
 def api(request,place=""):
 	print(place)
