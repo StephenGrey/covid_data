@@ -2,26 +2,26 @@
 <!--<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js'></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 
-
+<link rel="stylesheet" href="https://www.reuters.com/investigates/static/4-3-1/en/styles/main.css?v=090816300620">
+ 
 
 
 <h1>COVID Kingdom: the Reuters UK <b>COVID-19 Tracker</b></h1>
 <p><p>
-<h3>This interactive graphic shows how the local pattern of how the coronavirus spread through Britain. 
+<h4>This interactive graphic shows how the local pattern of how the coronavirus spread through Britain. 
 Select below a county, city or London borough and see the patterns of tests, deaths, and the Reuters estimate of when infections arrived.
-</h3><br>
+</h4><h6>Click on the points for the data.</h6><br>
 Read our full investigation here:  <a href="https://www.reuters.com/investigates/special-report/health-coronavirus-britain-tracing/">Into the fog: How Britain lost track of the coronavirus</a>
 
 
 <div class="container">
 
  <div class="row">
-  	<div style="width:100%; height:90%">
     	<div class="col-md-1"></div>
-    	<div class="col-md-11">
-      		<canvas id="myChart" width="400" height="500"></canvas>
-    	</div>
-
+    	<div class="col-md-10">
+<!--      		<canvas id="myChart" width="600" height="400"></canvas>
+--><canvas id="myChart" width="200" height="400"</canvas>
+</div>
 <select id="Filter">
 <option value="Adur">Adur</option>
 <option value="Allerdale">Allerdale</option>
@@ -29,7 +29,6 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 <option value="Arun">Arun</option>
 <option value="Ashfield">Ashfield</option>
 <option value="Ashford">Ashford</option>
-<option value="Aylesbury Vale">Aylesbury Vale</option>
 <option value="Ayrshire and Arran">Ayrshire and Arran</option>
 <option value="Babergh">Babergh</option>
 <option value="Barking and Dagenham">Barking and Dagenham</option>
@@ -401,13 +400,10 @@ Chart/programming: Stephen Grey
 
 
   	</div>
- </div>
 
 
 
-<div class="container">
-  
-</div>
+
 
 <script>
 
