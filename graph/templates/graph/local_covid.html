@@ -3,34 +3,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 
 
+
+
 <h1>COVID Kingdom: the Reuters UK <b>COVID-19 Tracker</b></h1>
 <p><p>
 <h3>This interactive graphic shows how the local pattern of how the coronavirus spread through Britain. 
 Select below a county, city or London borough and see the patterns of tests, deaths, and the Reuters estimate of when infections arrived.
-</h3><p>
+</h3><br>
 Read our full investigation here:  <a href="https://www.reuters.com/investigates/special-report/health-coronavirus-britain-tracing/">Into the fog: How Britain lost track of the coronavirus</a>
 
-<div class="container">
-
-  <div class="row">
-  	<div style="width:75%; height:50%">
-    <div class="col-md-1"></div>
-    <div class="col-md-10">
-<!--       Chart.js Canvas Tag -->
-      <canvas id="canvas"></canvas>
-      <canvas id="myChart" width="400" height="500"></canvas>
-    </div>
-    <div class="col-md-1"></div>
-  </div>
-   </div>
-</div>
 
 <div class="container">
-  <br />
-  <br />
-  <br />
-   <p><p>
-   <select id="Filter">
+
+ <div class="row">
+  	<div style="width:75%; height:90%">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-11">
+      		<canvas id="myChart" width="400" height="500"></canvas>
+    	
+    	</div>
+
+<select id="Filter">
 <option value="Adur">Adur</option>
 <option value="Allerdale">Allerdale</option>
 <option value="Amber Valley">Amber Valley</option>
@@ -383,16 +376,9 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 <option value="Wyre">Wyre</option>
 <option value="Wyre Forest">Wyre Forest</option>
 <option value="York">York</option>
-
-
 </select>
-</div>
-
-
-
-<div class="container">
-  <br />
-
+<p>
+<br />
 Infection was spreading widely in the UK long before people started dying from COVID-19. With inconsistent and low volumes of testing for COVID-19, the best method available for working out infections is working back from deaths that follow approx 3 weeks later. 
 <p><p>
 Notes:<p> 
@@ -410,6 +396,21 @@ Data: Ryan McNeil
 Chart/programming: Stephen Grey
 
 
+    	<div class="col-md-1"></div>
+
+
+
+  	</div>
+ </div>
+
+
+
+
+
+
+
+<div class="container">
+  
 </div>
 
 <script>
