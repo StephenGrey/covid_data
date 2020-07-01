@@ -1,3 +1,9 @@
+*.bak
+.*
+#OS junk files
+[Tt]humbs.db
+*.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -60,6 +66,9 @@ coverage.xml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+logfile*
+settings.py
+
 
 # Flask stuff:
 instance/
@@ -102,6 +111,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env3
 .env
 .venv
 env/
