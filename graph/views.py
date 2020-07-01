@@ -21,7 +21,7 @@ def api(request,place=""):
 	weeklycases=[i.weeklycases for i in district]
 	estcasesweekly=[i.estcasesweekly for i in district]
 	dataset={ 
-			1:{'label':"Estimate- new infections ",'data':estcasesweekly},
+			1:{'label':"Reuters estimate- new infections ",'data':estcasesweekly},
 			2:{'label':'Total Deaths','data':totalcumdeaths},
 			3:{'label':'Covid-Positive Tests','data':weeklycases},
 			4:{'label':"Weekly deaths",'data':weeklydeaths},
