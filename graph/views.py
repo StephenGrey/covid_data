@@ -10,7 +10,6 @@ import logging,json
 
 log = logging.getLogger('api.graph.views')
 
-@staff_member_required()
 def index(request):
     return render(request,'graph/local_covid.html')
 
