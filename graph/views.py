@@ -11,7 +11,7 @@ import logging,json
 log = logging.getLogger('api.graph.views')
 
 def index(request):
-    return render(request,'graph/local_covid.html')
+    return render(request,'graph/covid_chart.html')
 
 def api(request,place=""):
 	print(place)
