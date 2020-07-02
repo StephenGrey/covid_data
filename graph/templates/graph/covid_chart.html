@@ -35,8 +35,7 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 		</div>
 		<div class="col-md-1"></div>
 		<div class="col-md-1">
-<select id="Filter">
-
+<select id="FilterEngland">
 <option value="Adur" data-tag="1">Adur</option>
 <option value="Allerdale" data-tag="1">Allerdale</option>
 <option value="Amber Valley" data-tag="1">Amber Valley</option>
@@ -350,6 +349,8 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 <option value="Wyre" data-tag="1">Wyre</option>
 <option value="Wyre Forest" data-tag="1">Wyre Forest</option>
 <option value="York" data-tag="1">York</option>
+</select>
+<select id="FilterNI">
 <option value="Antrim and Newtownabbey" data-tag="4">Antrim and Newtownabbey</option>
 <option value="Ards and North Down" data-tag="4">Ards and North Down</option>
 <option value="Armagh City, Banbridge and Craigavon" data-tag="4">Armagh City, Banbridge and Craigavon</option>
@@ -361,6 +362,8 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 <option value="Mid Ulster" data-tag="4">Mid Ulster</option>
 <option value="Mid and East Antrim" data-tag="4">Mid and East Antrim</option>
 <option value="Newry, Mourne and Down" data-tag="4">Newry, Mourne and Down</option>
+</select>
+<select id="FilterScotland">
 <option value="Ayrshire and Arran" data-tag="3">Ayrshire and Arran</option>
 <option value="Borders" data-tag="3">Borders</option>
 <option value="Dumfries and Galloway" data-tag="3">Dumfries and Galloway</option>
@@ -375,6 +378,8 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 <option value="Shetland" data-tag="3">Shetland</option>
 <option value="Tayside" data-tag="3">Tayside</option>
 <option value="Western Isles" data-tag="3">Western Isles</option>
+</select>
+<select id="FilterWales">
 <option value="Blaenau Gwent" data-tag="2">Blaenau Gwent</option>
 <option value="Bridgend" data-tag="2">Bridgend</option>
 <option value="Caerphilly" data-tag="2">Caerphilly</option>
@@ -408,7 +413,7 @@ Notes:<p>
 
 * Estimated new infections [LEFT AXIS]: a Reuters rough estimate based on a 1% infection fatality rate (IFR) [Most studies currently show IFR at 0.5%-1%] and average time from infection to death of approximately 3 weeks . The IFR will vary based on age distribution, so the number of infections is likely an over-estimate in the later stages of the outbreak when, in most areas, infection spread into care homes.
 <p>
-* Test with a positive COVID-19 result [RIGHT AXIS]: these are tests carried out in Public Health England NHS labs. Pillar 2 tests carried out in private "Lighthouse" labs are not included, and have formed an increasing portion of the tests. We await data from these.
+* Tests with a positive COVID-19 result [RIGHT AXIS]: these are tests carried out in Public Health England NHS labs. Pillar 2 tests carried out in private "Lighthouse" labs are not included, and have formed an increasing portion of the tests. We await data from these.
 
 <p>
 * Deaths [RIGHT AXIS]: derived from death certificates where COVID-19 is listed as a cause of death. Location is by usual place of residence (not place of death). This figure is significantly below recorded excess deaths for the time of year, suggesting the COVID-19 figures are an under-estimate.
@@ -559,8 +564,8 @@ function draw_chart(chart_title,series1,series2,series3,series4,label1,label2,la
 		};
 
 
-
 var currentChart;
+var nat_code=1
 var place='Birmingham'
 var ctx = document.getElementById('myChart');
 ctx.height = 100;
@@ -569,43 +574,93 @@ myChart=new Chart(ctx, {});
 
 get_data("Birmingham");
 
-//
 function updateChart() {
-     var determineChart = $("#Filter").val();
+
+     if (nat_code==1)
+     	{
+     var determineChart = $("#FilterEngland").val();
+ 		}
+ 	else if (nat_code==2)
+ 		{
+     	var determineChart = $("#FilterWales").val();
+ 		}
+ 	else if (nat_code==3)
+ 		{
+ 		var determineChart = $("#FilterScotland").val();
+ 		}
+ 	else {
+		var determineChart = $("#FilterNI").val();
+		};
+
      get_data(determineChart);
  };
 
 
 function updateNation() {
 	var nation_select=$("#Filter2").val();
+	console.log(nation_select);
+	nat_code=nation_select;
+	if (nation_select=='1'){
+		console.log('England');
+		$('#FilterEngland').show();
+		$('#FilterNI').hide();
+		$('#FilterScotland').hide();		
+		$('#FilterWales').hide();
+	}
+	else if (nation_select=='2')
+	{
+		console.log('Wales');
+		$('#FilterEngland').hide();
+		$('#FilterNI').hide();
+		$('#FilterScotland').hide();		
+		$('#FilterWales').show();
+	}
+	else if (nation_select=='3'){
+		console.log('Scotland');
+		$('#FilterEngland').hide();
+		$('#FilterNI').hide();
+		$('#FilterScotland').show();		
+		$('#FilterWales').hide();
+		}
+	else {
+		console.log('NI');
+		$('#FilterEngland').hide();
+		$('#FilterNI').show();
+		$('#FilterScotland').hide();		
+		$('#FilterWales').hide();
+		};
 	new_nation=nations[nation_select];
 	all_data=new_data[new_nation];
-	filter_options(nation_select);
  };
 
+//function filter_options(nation_select){
+//		var selected = nation_select
+//		$("#Filter option").each(function(item){
+//			console.log(selected) ;  
+//			var element =  $(this) ; 
+//			console.log(element.data("tag")) ; 
+//			if (element.data("tag") != selected){
+//				element.hide() ; 
+//			}else{
+//				element.show();
+//			}
+//		}) ; 
+//	};
 
-function filter_options(nation_select){
-		var selected = nation_select
-		$("#Filter option").each(function(item){
-			console.log(selected) ;  
-			var element =  $(this) ; 
-			console.log(element.data("tag")) ; 
-			if (element.data("tag") != selected){
-				element.hide() ; 
-			}else{
-				element.show();
-			}
-		}) ; 
-	};
+//FIRST LOAD
+$('#FilterEngland').show();
+$('#FilterNI').hide();
+$('#FilterScotland').hide();		
+$('#FilterWales').hide();
 
-filter_options();
-//
-updateNation();
-$('#Filter').on('change', updateChart);
-
+//WATCHERS
+$('#FilterEngland').on('change', updateChart);
+$('#FilterNI').on('change', updateChart);
+$('#FilterWales').on('change', updateChart);
+$('#FilterScotland').on('change', updateChart);
 $('#Filter2').on('change', updateNation);
 
-
+updateNation();
 
 </script>
 
