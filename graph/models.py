@@ -10,6 +10,7 @@ from django.contrib.auth.models import Group, User
 class CovidWeek(models.Model):
     areacode=models.CharField('area_code',max_length=200,default='')
     areaname=models.CharField('areaname',max_length=200,default='')
+    nation=models.CharField('areaname',max_length=50,default='')
     date=models.DateTimeField('date',blank=True)
     weeklydeaths=models.IntegerField('weekly_deaths',default=0)
     totcumdeaths=models.IntegerField('cum_deaths',default=0)

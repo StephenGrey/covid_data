@@ -15,6 +15,7 @@ class NullDate(Exception):
 
 class Importer:
     def __init__(self,f,maxloop=1000000):
+        print('parsing')
         if not os.path.exists(f) or f is None:
             raise BadPath
         self.main(f,maxloop)
@@ -49,8 +50,6 @@ class Importer:
     
     def parserow(self,row):
 #area_code,areaname,date,weekly_deaths,cum_deaths,weekly_cases,cum_cases,est_cases_weekly
-        print('parsing')
-        print(row)
         post=CovidWeek()   
         post.areacode=row[0]
         post.areaname=row[1]
@@ -83,3 +82,19 @@ def timeaware(dumbtimeobject):
     return pytz.timezone("GMT").localize(dumbtimeobject)
 #Mac / Linux stores all file times etc in GMT, so localise to GMT
 
+
+class AddNation(Importer):
+	
+	def parserow(self,row):
+		try:
+			areacode=row[0]
+			district=row[1]
+			nation=row[2]
+			print(f'Parsing: Area: {district} Nation: {nation}')
+			entries=CovidWeek.objects.filter(areacode=areacode)
+			for e in entries:
+				e.nation=nation
+				e.save()
+		except Exception as e:
+			print(e)
+#        post.save()
