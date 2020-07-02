@@ -59,10 +59,19 @@ class Importer:
         post.totcumdeaths=row[4]
         post.weeklycases=row[5]
         post.totcumcases=row[6]
-        post.estcasesweekly=row[7]
-        print(post)
+        
+        estc=row[7]
+        if not estc:
+            post.estcasesweekly=None
+        else:
+        	post.estcasesweekly=estc
         print('saving')
-        post.save()
+        try:
+            post.save()
+        except Exception as e:
+            print(e)
+            print(row)
+            
     
     def fetchdate(self,datestring):
         print(datestring)

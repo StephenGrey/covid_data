@@ -37,10 +37,11 @@ def query_by_nation(nation):
 def output_all():
 	all_data={}
 	for nation in nations():
+		print(nation)
 		q=query_by_nation(nation)
 		nationset={}
 		for place in district_names():
-			district=q.filter(areaname=place,date__range=["2020-02-14", "2020-06-12"])	
+			district=q.filter(areaname=place,date__range=["2020-02-14", "2020-06-21"])	
 			#print(district)
 			totalcumdeaths=[i.totcumdeaths for i in district]
 			weeklydeaths=[i.weeklydeaths for i in district]

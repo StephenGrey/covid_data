@@ -16,7 +16,7 @@ class CovidWeek(models.Model):
     totcumdeaths=models.IntegerField('cum_deaths',default=0)
     weeklycases= models.IntegerField('weekly_cases',default=0)
     totcumcases= models.IntegerField('cum_cases',default=0)
-    estcasesweekly= models.IntegerField('est_cases_weekly',default=0)
+    estcasesweekly= models.IntegerField('est_cases_weekly',blank=True,null=True)
     
     def __str__(self):
         return f"{self.areacode}: {self.date} cases: {self.estcasesweekly}"
