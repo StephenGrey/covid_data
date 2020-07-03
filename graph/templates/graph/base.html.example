@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 
-
+{% block header_content %}{% endblock %}
 </head>
 <body>
 {% block body_content %}{% endblock %}
