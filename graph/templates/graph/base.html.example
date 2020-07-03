@@ -1,0 +1,11 @@
+<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+</head>
+<body>
+{% block body_content %}{% endblock %}
+</body>
+

@@ -16,17 +16,12 @@ from configs import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config['Django']['secretkey']
-#SECRET_KEY = '4*#@z!zi5o!h7*%3+hwjbz^q5@f&8l)mbxp%k!x#2zk2l7_q^z'
-
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
 try:
     if config['Django']['debug']=='False':
         DEBUG =  False
@@ -35,10 +30,7 @@ try:
 except:
     DEBUG= True
 
-ALLOWED_HOSTS = config['Django']['allowed_hosts'].split(',') #['shiptrack.ddns.net','localhost','34.211.121.135']
-
-
-# Application definition
+ALLOWED_HOSTS = config['Django']['allowed_hosts'].split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,7 +57,7 @@ ROOT_URLCONF = 'my_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
