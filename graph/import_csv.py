@@ -50,17 +50,29 @@ class Importer:
     
     def parserow(self,row):
 #area_code,areaname,date,weekly_deaths,cum_deaths,weekly_cases,cum_cases,est_cases_weekly
-        post=CovidWeek()   
-        post.areacode=row[0]
-        post.areaname=row[1]
-        datestring=row[2]
+        post=CovidWeek()
+        post.nation=row[0]   
+        post.areacode=row[1]
+        post.areaname=row[2]
+        datestring=row[3]
         post.date=self.fetchdate(datestring)
-        post.weeklydeaths=row[3]
-        post.totcumdeaths=row[4]
-        post.weeklycases=row[5]
-        post.totcumcases=row[6]
         
-        estc=row[7]
+        weeklyd=row[4]
+        if weeklyd:
+            post.weeklydeaths=weeklyd
+        else:
+            post.weeklydeaths=None
+        
+        totd=row[5]
+        if totd:
+            post.totcumdeaths=totd
+        else:
+            post.totcumdeaths=None
+        
+        post.weeklycases=row[6]
+        post.totcumcases=row[7]
+        
+        estc=row[8]
         if not estc:
             post.estcasesweekly=None
         else:

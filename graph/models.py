@@ -12,12 +12,12 @@ class CovidWeek(models.Model):
     areaname=models.CharField('areaname',max_length=200,default='')
     nation=models.CharField('areaname',max_length=50,default='')
     date=models.DateTimeField('date',blank=True)
-    weeklydeaths=models.IntegerField('weekly_deaths',default=0)
-    totcumdeaths=models.IntegerField('cum_deaths',default=0)
-    weeklycases= models.IntegerField('weekly_cases',default=0)
-    totcumcases= models.IntegerField('cum_cases',default=0)
+    weeklydeaths=models.IntegerField('weekly_deaths',default=0,blank=True,null=True)
+    totcumdeaths=models.IntegerField('cum_deaths',default=0,blank=True,null=True)
+    weeklycases= models.IntegerField('weekly_cases',default=0,null=True,blank=True)
+    totcumcases= models.IntegerField('cum_cases',default=0,null=True,blank=True)
     estcasesweekly= models.IntegerField('est_cases_weekly',blank=True,null=True)
-    
+    estinfectionscum=models.IntegerField('est_cases_cum',blank=True,null=True)
     def __str__(self):
         return f"{self.areacode}: {self.date} cases: {self.estcasesweekly}"
 

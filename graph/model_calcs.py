@@ -41,16 +41,16 @@ def output_all():
 		q=query_by_nation(nation)
 		nationset={}
 		for place in district_names():
-			district=q.filter(areaname=place,date__range=["2020-02-14", "2020-06-21"])	
+			district=q.filter(areaname=place,date__range=["2020-02-14", "2020-06-28"])	
 			#print(district)
 			totalcumdeaths=[i.totcumdeaths for i in district]
 			weeklydeaths=[i.weeklydeaths for i in district]
 			weeklycases=[i.weeklycases for i in district]
 			estcasesweekly=[i.estcasesweekly for i in district]
 			dataset={ 
-				1:{'label':"Estimate- new infections ",'data':estcasesweekly},
+				1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
 				2:{'label':'Total Deaths','data':totalcumdeaths},
-				3:{'label':'Covid-Positive Tests','data':weeklycases},
+				3:{'label':'Weekly Covid-Positive Tests','data':weeklycases},
 				4:{'label':"Weekly deaths",'data':weeklydeaths},
 				'placename':place
 				}
