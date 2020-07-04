@@ -19,8 +19,10 @@ from django.conf.urls import url, include
 from django.contrib.auth import views as auth_views
 from django.contrib.auth import urls
 from django.http import HttpResponseRedirect
+from graph import views as graph_views
 
 urlpatterns = [
+    url('^$', graph_views.index, name='home'),
     url(r'^admin/', admin.site.urls),
     url(r'^graph/', include('graph.urls')),
     url(r'^accounts/login/$', auth_views.LoginView.as_view(),name='login'),
