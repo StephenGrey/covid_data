@@ -13,6 +13,9 @@ log = logging.getLogger('api.graph.views')
 def index(request):
     return render(request,'graph/covid_chart.html')
 
+def index_m(request):
+    return render(request,'graph/covid_chart_m.html')
+
 def api(request,place=""):
 	print(place)
 	district=CovidWeek.objects.filter(areaname=place,date__range=["2020-02-14", "2020-06-12"])

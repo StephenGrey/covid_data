@@ -1,3 +1,4 @@
+
 {% extends "graph/base.html" %}
 
 {% block header_content %}
@@ -8,13 +9,12 @@
 <link rel="stylesheet" href="https://www.reuters.com/investigates/static/4-3-1/en/styles/main.css?v=090816300620">
 <link rel="shortcut icon" href="https://www.reuters.com/investigates/static/4-3-1/en/favicon.ico?v=353616290620">
 
+
  <style type="text/css">
  .row-full{
  width: 90vw;
-margin-left: -10vw;
-
+ left: 50%;
   </style>
-
 {% endblock %}
 
 {% block body_content %}
@@ -23,11 +23,11 @@ margin-left: -10vw;
 
 
 <div class="container">
-	<h1>COVID Kingdom: the UK <b>COVID-19 Tracker</b></h1>
-	<p><p>
-	<h4>This interactive graphic shows the local pattern of how the coronavirus spread through Britain. 
+<h1>COVID Kingdom: the UK <b>COVID-19 Tracker</b></h1>
+<p><p>
+<h4>Explore how the coronavirus spread through Britain. 
 Select below a county, city or London borough and see the patterns of tests, deaths, and the Reuters estimate of when infections arrived.
-	</h4><h6>Click on the points for the data.</h6><br>
+</h4><h6>Click on the points for the data.</h6><br>
 Read our full investigation here:  <a href="https://www.reuters.com/investigates/special-report/health-coronavirus-britain-tracing/">Into the fog: How Britain lost track of the coronavirus</a>
 </div>
 
@@ -35,14 +35,19 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 
  	<div class="row">
     	<div class="col-md-1"></div>
+    	<div class="row-full">
     	<div class="col-md-10">
-    		<div class="row-full">
+    		 	<div class="row-full">
 			<canvas id="myChart" width="200" height="400"</canvas>
 			</div>
 		</div>
 	    <div class="col-md-1"></div>
   	</div>
+ </div>
+
+<div class="container">	
   	<div class="row">
+  		<div class="col-md-1"></div>
   		<div class="col-md-1">
 			<select id="Filter2">
 			<option value="1">England</option>
@@ -52,6 +57,7 @@ Read our full investigation here:  <a href="https://www.reuters.com/investigates
 			</select>	
 		</div>
 		<div class="col-md-1"></div>
+	
 		<div class="col-md-1">
 <select id="FilterEngland">
 <option value="Adur" data-tag="1">Adur</option>
@@ -581,7 +587,7 @@ function draw_chart(chart_title,series1,series2,series3,series4,label1,label2,la
         		}
     		} //end of options
     	};
-	console.log(params);
+//	console.log(params);
 	myChart.destroy();
 	myChart = new Chart(ctx, params);
 		};
@@ -621,10 +627,9 @@ function updateChart() {
 
 function updateNation() {
 	var nation_select=$("#Filter2").val();
-	console.log(nation_select);
 	nat_code=nation_select;
 	if (nation_select=='1'){
-		console.log('England');
+//		console.log('England');
 		$('#FilterEngland').show();
 		$('#FilterNI').hide();
 		$('#FilterScotland').hide();		
@@ -632,7 +637,7 @@ function updateNation() {
 	}
 	else if (nation_select=='2')
 	{
-		console.log('Wales');
+//		console.log('Wales');
 		$('#FilterEngland').hide();
 		$('#FilterNI').hide();
 		$('#FilterScotland').hide();		
