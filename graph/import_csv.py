@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
-from .models import CovidWeek
+from .models import CovidWeek,AverageWeek,CovidScores
 from datetime import datetime
 import csv,pytz, os 
 #import ast, iso8601
 #import json, collections
+#pop estimates 2020: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/localauthoritiesinenglandtable2
 
 
 class BadPath(Exception):
@@ -119,3 +120,49 @@ class AddNation(Importer):
 		except Exception as e:
 			print(e)
 #        post.save()
+
+class AddAverages(Importer):
+	#Local Authority Code,Local Authority Name,Week Number,Place of occurrence,Five year average number of deaths
+	def parserow(self,row):
+		try:
+			wk, created = AverageWeek.objects.get_or_create(
+			week=row[2],
+			areacode=row[0]
+			)
+			location=row[3]
+			print(f'Parsing: Area: {row[1]}')
+			av=row[4]
+			if location=='Hospital':
+				wk.weeklyhospitaldeaths=av
+			elif location=='Elsewhere':
+				wk.weeklyelsewheredeaths=av
+			elif location=='Hospice':
+				wk.weeklyhospicedeaths=av
+			elif location=='Other communal establishment':
+				wk.weeklyothercommunaldeaths=av
+			elif location=='Care home':
+				wk.weeklycarehomedeaths=av
+			elif location=='Home':
+				wk.weeklyhomedeaths=av
+			wk.save()
+		except Exception as e:
+			print(e)
+
+
+class AddPop(Importer):
+	
+	def parserow(self,row):
+		try:
+			areacode=row[0]
+			district=row[1]
+			population=int(row[2])
+			print(f'Parsing: Area: {district} pop {population}')
+			
+			e,created=CovidScores.objects.get_or_create(areaname=district)
+			
+			e.population=population
+			e.save()
+
+		except Exception as e:
+			print(e)
+

@@ -7,14 +7,16 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from .models import CovidWeek
 import logging,json
+from . import ons_fetch
+
 
 log = logging.getLogger('api.graph.views')
 
-def index(request):
+def index(request,place='Birmingham'):
     return render(request,'graph/covid_chart.html')
 
-def index_m(request):
-    return render(request,'graph/covid_chart_m.html')
+def index_m(request,place='Birmingham'):
+    return render(request,'graph/covid_chart2.html',{'place':place})
 
 def api(request,place=""):
 	print(place)
@@ -31,3 +33,12 @@ def api(request,place=""):
 	}
 	jsonresponse={'error':False, 'place':place,'dataset':dataset}    
 	return JsonResponse(jsonresponse)
+
+
+
+def fetch_ons(request,place=""):
+	print('fetch ons')
+	dataset=ons_fetch.lookup_ons("some query")
+	print(dataset)
+	jsonresponse={'error':False, 'place':place,'dataset':dataset}    
+	return JsonResponse(dataset)
