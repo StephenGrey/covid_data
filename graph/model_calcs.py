@@ -1,9 +1,10 @@
 from .models import CovidWeek,AverageWeek,CovidScores
 import datetime,json
 one_week=datetime.timedelta(7)
+from . import ons_week
 
-RANGE=["2020-02-14", "2020-06-28"]
-RANGE_WEEK=[7, 26]
+RANGE=["2020-02-14", "2020-07-05"]
+RANGE_WEEK=[7, 27]
 
 def excess_deaths_district(place='Birmingham',save=False):
 	
@@ -43,6 +44,20 @@ def excess_deaths_district(place='Birmingham',save=False):
 def excess_deaths():
 	for place in district_names():
 		excess_deaths_district(place=place,save=True)
+
+
+def update_cum_deaths():
+	for d in districts():
+		cum=0
+		print(d)
+		for w in CovidWeek.objects.filter(areacode=d):
+			if w.weeklydeaths:
+				cum+=w.weeklydeaths
+				if cum != w.totcumdeaths:
+					print(f'stored: {w.totcumdeaths} calc {cum}')
+					w.totcumdeaths=cum
+					w.save()
+		
 		
 def calc_excess_rates():
 	for place in district_names():
@@ -53,6 +68,7 @@ def calc_excess_rates():
 			i.save()
 
 def calc_new_cases():
+	"""calculate the new cases from cumulative cases"""
 	for d in districts():
 		for w in CovidWeek.objects.filter(areacode=d):
 			lastweek=CovidWeek.objects.filter(areacode=d,date=w.date-one_week)
@@ -66,6 +82,16 @@ def calc_new_cases():
 			w.save()
 		
 	return 
+
+def fix_names():
+    _i=ons_week.stored_names
+    for missing in CovidWeek.objects.filter(areaname='Hartlepool'):
+        try:
+            print(f'Areacode {missing.areacode} is {_i[missing.areacode]}')
+            missing.areaname=_i[missing.areacode]
+            missing.save()
+        except Exception as e:
+            print(e)
 	
 def districts():
 	q=CovidWeek.objects.values('areacode').distinct()
@@ -80,9 +106,69 @@ def nations():
 	q=CovidWeek.objects.values('nation').distinct()
 	return [d['nation'] for d in q]
 	
+def nations_index():
+	nations={}
+	for district in CovidWeek.objects.values('areacode','nation').distinct():
+		nations[district['areacode']]=district['nation']
+	return nations
+	
 def query_by_nation(nation):
 	return CovidWeek.objects.filter(nation=nation)
 	
+def output_district(place,q=None):
+	if q:
+		district=q.filter(areaname=place,date__range=RANGE)
+	else:
+		district=CovidWeek.objects.filter(areaname=place,date__range=RANGE)
+	
+	if district:
+		totalcumdeaths=[i.totcumdeaths for i in district]
+		weeklydeaths=[i.weeklydeaths for i in district]
+		weeklycases=[i.weeklycases for i in district]
+		estcasesweekly=[i.estcasesweekly for i in district]
+		
+		weeklyalldeaths=[i.weeklyalldeaths for i in district]
+		weeklycarehomedeaths=[i.weeklycarehomedeaths for i in district]
+
+		areacode=district[0].areacode
+
+		averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
+		totavdeaths=[str(i.weeklyalldeaths) for i in averages]
+		avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
+		
+		print(place)
+		print(weeklycases)
+		sc=CovidScores.objects.get(areaname=place)
+		if sc:
+			excess=sc.excess_deaths
+			excess_ch=sc.excess_deaths_carehomes
+			excess_rate=sc.excess_death_rate
+			
+			if not excess or not excess_ch or not excess_rate:
+				excess,excess_ch,excess_rate="N/A","N/A","N/A"
+			
+		else:
+			excess,excess_ch,excess_rate="N/A","N/A","N/A"
+			
+		dataset={ 
+			1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
+			2:{'label':'Total Deaths','data':totalcumdeaths},
+			3:{'label':'Weekly Covid-Positive Tests','data':weeklycases},
+			4:{'label':"Weekly Covid19 deaths",'data':weeklydeaths},
+			
+			5:{'label':"All-Causes deaths",'data':weeklyalldeaths},
+#					4:{'label':"Hospital deaths",'data':weeklyhospitaldeaths},
+			6:{'label':"All carehome deaths",'data':weeklycarehomedeaths},
+			7:{'label':"5Y average total deaths",'data':totavdeaths},
+			8:{'label':"5Y average carehome deaths",'data':avcaredeaths},
+			'excess':f"Excess deaths: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
+			'placename':place,
+			}
+	else:
+		dataset={}
+	return dataset
+	
+
 	
 def output_all():
 	all_data={}
@@ -91,49 +177,7 @@ def output_all():
 		q=query_by_nation(nation)
 		nationset={}
 		for place in district_names():
-			district=q.filter(areaname=place,date__range=RANGE)	
-			if district:
-				totalcumdeaths=[i.totcumdeaths for i in district]
-				weeklydeaths=[i.weeklydeaths for i in district]
-				weeklycases=[i.weeklycases for i in district]
-				estcasesweekly=[i.estcasesweekly for i in district]
-				
-				weeklyalldeaths=[i.weeklyalldeaths for i in district]
-				weeklycarehomedeaths=[i.weeklycarehomedeaths for i in district]
-
-				areacode=district[0].areacode
-
-				averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
-				totavdeaths=[str(i.weeklyalldeaths) for i in averages]
-				avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
-				
-				sc=CovidScores.objects.get(areaname=place)
-				if sc:
-					excess=sc.excess_deaths
-					excess_ch=sc.excess_deaths_carehomes
-					excess_rate=sc.excess_death_rate
-					
-					if not excess or not excess_ch or not excess_rate:
-						excess,excess_ch,excess_rate="N/A","N/A","N/A"
-					
-				else:
-					excess,excess_ch,excess_rate="N/A","N/A","N/A"
-					
-				dataset={ 
-					1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
-					2:{'label':'Total Deaths','data':totalcumdeaths},
-					3:{'label':'Weekly Covid-Positive Tests','data':weeklycases},
-					4:{'label':"Weekly Covid19 deaths",'data':weeklydeaths},
-					
-					5:{'label':"All-Causes deaths",'data':weeklyalldeaths},
-#					4:{'label':"Hospital deaths",'data':weeklyhospitaldeaths},
-					6:{'label':"All carehome deaths",'data':weeklycarehomedeaths},
-					7:{'label':"5Y average total deaths",'data':totavdeaths},
-					8:{'label':"5Y average carehome deaths",'data':avcaredeaths},
-					'excess':f"Excess deaths: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
-					'placename':place,
-					}
-				nationset[place]=dataset
+			nationset[place]=output_district(place,q=None)	
 		all_data[nation]=nationset
 	return all_data
 
@@ -147,7 +191,7 @@ def district_deaths(place='Birmingham'):
 	weeklyhospitaldeaths=[i.weeklyhospitaldeaths for i in district]
 	weeklycarehomedeaths=[i.weeklycarehomedeaths for i in district]
 	
-	averages=AverageWeek.objects.filter(areacode=areacode,week__range=[7, 26])
+	averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
 	totavdeaths=[str(i.weeklyalldeaths) for i in averages]
 	avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
 	

@@ -6,6 +6,19 @@ from django.contrib.auth.models import Group, User
 
 # Create your models here.
 
+class DailyCases(models.Model):
+    areacode=models.CharField('area_code',max_length=200,default='')
+    areaname=models.CharField('areaname',max_length=200,default='')
+    specimenDate=models.DateTimeField('date',blank=True)
+    dailyLabConfirmedCases=models.IntegerField('dailyLabConfirmedCases',blank=True,null=True)
+    previouslyReportedDailyCases=models.IntegerField('previouslyReportedDailyCases',blank=True,null=True)
+    changeInDailyCases=models.IntegerField('changeInDailyCases',blank=True,null=True)
+    totalLabConfirmedCases=models.IntegerField('totalLabConfirmedCases',blank=True,null=True)
+    previouslyReportedTotalCases=models.IntegerField('previouslyReportedTotalCases',blank=True,null=True)
+    changeInTotalCases=models.IntegerField('changeInTotalCases',blank=True,null=True)
+    dailyTotalLabConfirmedCasesRate=models.DecimalField('dailyTotalLabConfirmedCasesRate',max_digits=7, decimal_places=1,blank=True,null=True)
+
+
 class CovidScores(models.Model):
     areaname=models.CharField('areaname',max_length=200,default='')
     excess_deaths=models.IntegerField('estimated_excess_deaths',blank=True,null=True)

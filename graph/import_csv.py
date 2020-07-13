@@ -105,6 +105,27 @@ def timeaware(dumbtimeobject):
 #Mac / Linux stores all file times etc in GMT, so localise to GMT
 
 
+class JustCases(Importer):
+    def parserow(self,row):
+        try:
+            areacode=row[1]
+            areaname=row[2]
+            datestring=row[3]
+            weeklycases=row[6]
+            date=self.fetchdate(datestring)
+            try:
+                post=CovidWeek.objects.get(areacode=areacode,areaname=areaname,date=date)
+                if post.weeklycases != weeklycases:
+                    print(f'updating {areaname} date: {datestring} from {post.weeklycases} to {weeklycases}')
+                    post.weeklycases=weeklycases
+                    post.save()
+            except:
+                pass
+        except Exception as e:
+            print('error')
+            print(e)
+            
+
 class AddNation(Importer):
 	
 	def parserow(self,row):
