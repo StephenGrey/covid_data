@@ -102,7 +102,7 @@ class Updater():
 
             print('Updating excess deaths')
             self.check_excess()
-            
+            model_calcs.calc_excess_rates()
             print('Updating Reuters infection curve')
             infections.calc()
 
@@ -125,6 +125,7 @@ class Updater():
         #England and Wales
         aa=import_csv.AddAverages(os.path.join(DATA_STORE,EW_AV_FILE))
         aa.total_averages()
+        
         #Scotland
         sa=scotland.Scot_Average()
         sa.process(os.path.join(DATA_STORE,SCOT_AV_FILE))

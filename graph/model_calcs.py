@@ -193,6 +193,7 @@ def output_district(place,q=None):
 			}
 	else:
 		dataset={}
+	print(dataset)
 	return dataset
 	
 
