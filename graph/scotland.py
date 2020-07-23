@@ -71,6 +71,7 @@ class Scot_Importer(PandaImporter):
     def process(self,f=DEATHS_URL):
         self.fetch_excel(url=f,skiprows=2,sheet_name="Data")
         self.fix()
+        self.parse()
         
     def fetch_excel(self,url=DEATHS_URL,skiprows=2,sheet_name="Data"):
         f=requests.get(url)
@@ -204,6 +205,9 @@ class Scot_Cases(Scot_Importer):
         if scotupdate:
             self.last_update=scotupdate.get('latest_cases')
             print(f'Previously stored Scot cases data:{self.last_update}')
+        else:
+            self.last_update=None
+            return True
         if self.last_update != str(self.edition):
             print('Update Scottish cases')
             return True

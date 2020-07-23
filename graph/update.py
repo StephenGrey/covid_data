@@ -13,6 +13,16 @@ SCOT_AV_FILE="Scotland_averages_15-19_data.csv"
 DATA_STORE=model_calcs.DATA_STORE
 
 """
+TO LOAD UP THIS DATABASE:
+
+u=Updater()
+
+u.load_constants()   >>> to load up population and 5-year averages.
+
+u.process()   >> download and install up to date covid deaths and cases
+
+
+
 data glitches:  #TO DO AUTO FIXING OF GLITCHES
 MISSING AVERAGES AND CASES DATA FOR N IRELAND
 
@@ -113,8 +123,8 @@ class Updater():
         
         #add average deaths
         #England and Wales
-        import_csv.AddAverages(os.path.join(DATA_STORE,EW_AV_FILE))
-        
+        aa=import_csv.AddAverages(os.path.join(DATA_STORE,EW_AV_FILE))
+        aa.total_averages()
         #Scotland
         sa=scotland.Scot_Average()
         sa.process(os.path.join(DATA_STORE,SCOT_AV_FILE))

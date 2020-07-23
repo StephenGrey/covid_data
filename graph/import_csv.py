@@ -256,6 +256,16 @@ class AddAverages(Importer):
 			wk.save()
 		except Exception as e:
 			print(e)
+			
+	def total_averages(self):
+		for wk in AverageWeek.objects.all():
+			try:
+				_sum=sum(filter(None,[wk.weeklyhospitaldeaths,wk.weeklyelsewheredeaths,wk.weeklyhospicedeaths,wk.weeklyothercommunaldeaths,wk.weeklycarehomedeaths,wk.weeklyhomedeaths]))
+				wk.weeklyalldeaths=_sum
+				wk.save()
+			except Exception as e:
+				print(e)
+				print(wk.__dict__)
 
 
 class AddPop(Importer):
@@ -276,3 +286,13 @@ class AddPop(Importer):
 		except Exception as e:
 			print(e)
 
+def total_averages():
+	if True:	
+		for wk in AverageWeek.objects.all():
+			try:
+				_sum=sum(filter(None,[wk.weeklyhospitaldeaths,wk.weeklyelsewheredeaths,wk.weeklyhospicedeaths,wk.weeklyothercommunaldeaths,wk.weeklycarehomedeaths,wk.weeklyhomedeaths]))
+				wk.weeklyalldeaths=_sum
+				wk.save()
+			except Exception as e:
+				print(e)
+				print(wk.__dict__)

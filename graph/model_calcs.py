@@ -259,8 +259,3 @@ def output_tags():
 			placename=item['areaname']
 			print(f"""<option value="{placename}" data-tag="{tag} ">{placename}</option>""")
 			
-def add_averages():
-	for wk in AverageWeek.objects.all():
-			_sum=wk.weeklyhospitaldeaths+wk.weeklyelsewheredeaths+wk.weeklyhospicedeaths+wk.weeklyothercommunaldeaths+wk.weeklycarehomedeaths+wk.weeklyhomedeaths
-			wk.weeklyalldeaths=_sum
-			wk.save()
