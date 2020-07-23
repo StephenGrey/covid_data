@@ -1,20 +1,32 @@
 from .models import CovidWeek,AverageWeek,CovidScores
-import datetime,json
+import datetime,json,os
 one_week=datetime.timedelta(7)
 from . import ons_week
 
-RANGE=["2020-02-14", "2020-07-05"]
-RANGE_WEEK=[7, 27]
+RANGE=["2020-02-09", "2020-07-19"]
+RANGE_WEEK=[6, 29]
+DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
+
+#NOTE: current we are measuring weeks up to Sunday; but using England and Wales data to Friday. Scotland runs to Sunday.
+#so the above date range is ONS date + 2 days.
 
 def excess_deaths_district(place='Birmingham',save=False):
-	
-	district=CovidWeek.objects.filter(areaname=place,date__range=RANGE)
+	"""calculate rate of excess death for one district; for weeks when 2020 data existss"""
+	district=CovidWeek.objects.filter(areaname=place,date__range=RANGE).order_by('date')
 	areacode=district[0].areacode
 
-	all_deaths_2020=sum([i.weeklyalldeaths for i in district])
-	all_carehome_deaths_2020=sum([i.weeklycarehomedeaths for i in district])
+	all_deaths_2020=0
+	all_carehome_deaths_2020=0
+	count=0 #count the number of weeks with data
+	for i in district:
+		if not i.weeklyalldeaths or not i.weeklycarehomedeaths: #check for when data runs out
+			break
+		all_deaths_2020+=i.weeklyalldeaths
+		all_carehome_deaths_2020+=i.weeklycarehomedeaths
+		count+=1
 	
-	averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)	
+	#gather the dates for same weeks
+	averages=AverageWeek.objects.filter(areacode=areacode,week__range=[RANGE_WEEK[0],RANGE_WEEK[0]+count-1])	
 	
 	if averages:
 		_data=True
@@ -35,37 +47,47 @@ def excess_deaths_district(place='Birmingham',save=False):
 			av.excess_deaths=excess
 			av.excess_deaths_carehomes=excess_carehomes
 			av.save()
-			print(av.__dict__)
 		else:
 			av.excess_deaths=None
 			av.excess_deaths_carehomes=None
 			av.save()
 
 def excess_deaths():
+	"parse through all districts in database , updating the excess death calc"""
 	for place in district_names():
 		excess_deaths_district(place=place,save=True)
 
-
 def update_cum_deaths():
+	"""parse through all districts in database , updating the cumulative death total"""
 	for d in districts():
+		update_cum_district_death(d)
+
+def update_cum_district_death(d):		
+	"""update cumulative death total in one district"""
+	if True:
 		cum=0
 		print(d)
-		for w in CovidWeek.objects.filter(areacode=d):
-			if w.weeklydeaths:
-				cum+=w.weeklydeaths
+		for w in CovidWeek.objects.filter(areacode=d).order_by('date'):
+			if w.weeklydeaths is not None:
+				cum+=w.weeklydeaths	
 				if cum != w.totcumdeaths:
 					print(f'stored: {w.totcumdeaths} calc {cum}')
 					w.totcumdeaths=cum
 					w.save()
-		
+			else:
+				w.totcumdeaths=None
+				w.save()
 		
 def calc_excess_rates():
+	"""update all the excess death rates for all districts"""
 	for place in district_names():
 		i=CovidScores.objects.get(areaname=place)
 		if i.population and i.excess_deaths:
 			rate=round(i.excess_deaths/i.population*100000,1)
 			i.excess_death_rate=rate
 			i.save()
+		else:
+			print(f'Data missing for {place}')
 
 def calc_new_cases():
 	"""calculate the new cases from cumulative cases"""
@@ -116,12 +138,17 @@ def query_by_nation(nation):
 	return CovidWeek.objects.filter(nation=nation)
 	
 def output_district(place,q=None):
+	"""
+	Output series of data for a place >>> to be served to chart
+	
+	"""
 	if q:
-		district=q.filter(areaname=place,date__range=RANGE)
+		district=q.filter(areaname=place,date__range=RANGE).order_by('date')
 	else:
-		district=CovidWeek.objects.filter(areaname=place,date__range=RANGE)
+		district=CovidWeek.objects.filter(areaname=place,date__range=RANGE).order_by('date')
 	
 	if district:
+		print([f"{i.date:%d/%m}" for i in district])
 		totalcumdeaths=[i.totcumdeaths for i in district]
 		weeklydeaths=[i.weeklydeaths for i in district]
 		weeklycases=[i.weeklycases for i in district]
@@ -232,7 +259,6 @@ def output_tags():
 			placename=item['areaname']
 			print(f"""<option value="{placename}" data-tag="{tag} ">{placename}</option>""")
 			
-
 def add_averages():
 	for wk in AverageWeek.objects.all():
 			_sum=wk.weeklyhospitaldeaths+wk.weeklyelsewheredeaths+wk.weeklyhospicedeaths+wk.weeklyothercommunaldeaths+wk.weeklycarehomedeaths+wk.weeklyhomedeaths

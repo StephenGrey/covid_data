@@ -2,11 +2,56 @@
 from __future__ import unicode_literals, print_function
 from .models import CovidWeek,AverageWeek,CovidScores
 from datetime import datetime
-import csv,pytz, os 
+import csv,pytz, os, requests, codecs, pandas, io
+from contextlib import closing
+
+DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
+
+
 #import ast, iso8601
 #import json, collections
 #pop estimates 2020: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/localauthoritiesinenglandtable2
+##import pandas as pd
+#import io
+#import requests
+#url="https://raw.githubusercontent.com/cs109/2014_data/master/countries.csv"
+#s=requests.get(url).content
+#c=pd.read_csv(io.StringIO(s.decode('utf-8')))
 
+#sorted([int(z[5:]) for z in c['week-number'].unique()])
+
+
+
+class PandaImporter():
+    def __init__(self, data=None):
+        self.data=data
+        self.edition=None
+        self.download_url=None
+        
+    def fetch(self,url):
+        self.session=requests.Session()
+        try:
+            resp=self.session.get(url)
+            if resp.status_code == 404:
+                raise NotFound("URL {} not found".format(url))
+            raw=resp.content
+        except requests.ConnectionError as e:
+            print(e)
+            return 
+        except Exception as e:
+            print(e)
+            return
+        self.data=pandas.read_csv(io.StringIO(raw.decode('utf-8')))
+        
+    
+    def open_csv(self,path):
+        self.data = pandas.read_csv(path, encoding= "utf-8") 
+        
+    
+        
+    def parse(self):
+        pass
+        
 
 class BadPath(Exception):
     pass
@@ -14,13 +59,55 @@ class BadPath(Exception):
 class NullDate(Exception):
     pass
 
+
+url = "http://download-and-process-csv-efficiently/python.csv"
+
+
+
+
+class URLImporter:
+    def __init__(self,url,maxloop=1000000):
+        print('parsing')
+        self.session=requests.Session()
+        self.main(url,maxloop)	
+    
+    def main(self,url,maxloop):
+        with closing(self.session.get(url, stream=True)) as r:
+            
+            reader = csv.reader(codecs.iterdecode(r.iter_lines(), 'utf-8'))
+            #text = r.iter_lines()
+            row=next(reader)
+            counter=0
+            print('Column headers: {}'.format(row))
+            while row:
+                try:
+                    counter+=1
+                    if counter>maxloop:
+                        break
+                    row=next(reader,None) # Don't raise exception if no line exists                
+                    print(row)
+                    if not row:
+                        break
+                    self.parserow(row)
+                except Exception as e:
+                    print('Error after reached row '+str(counter))
+                    print(e)
+                    
+            # print(vars(post))
+            print(str(counter)+' lines parsed')
+        
+    def parserow(self,row):
+        pass
+    
+
+
 class Importer:
     def __init__(self,f,maxloop=1000000):
         print('parsing')
         if not os.path.exists(f) or f is None:
             raise BadPath
         self.main(f,maxloop)
-        print(CovidWeek.objects.all())
+        #print(CovidWeek.objects.all())
         
     def main(self,path,maxloop):
         with open(path) as f:
@@ -29,6 +116,7 @@ class Importer:
             row=next(reader)
             counter=0
             print('Column headers: {}'.format(row))
+            self.columns=row
             while row:
                 try:
                     counter+=1
@@ -171,12 +259,13 @@ class AddAverages(Importer):
 
 
 class AddPop(Importer):
-	
+	#areacode,areaname,type,population2019
 	def parserow(self,row):
 		try:
+			print(row)
 			areacode=row[0]
 			district=row[1]
-			population=int(row[2])
+			population=int(row[3])
 			print(f'Parsing: Area: {district} pop {population}')
 			
 			e,created=CovidScores.objects.get_or_create(areaname=district)

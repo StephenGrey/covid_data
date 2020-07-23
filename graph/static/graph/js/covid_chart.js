@@ -1,14 +1,6 @@
 
-
-
-
-function get_data(placename)
-    {
-    var dataset=all_data[placename];
-    
-    if (dataset){
-    		
-    		console.log(dataset)//alert(data.results.progress);
+function parse_data(dataset)
+{
     		var chart_title=dataset.placename;
     		var excess=dataset.excess;
     		var series1=dataset[1].data;
@@ -37,7 +29,35 @@ function get_data(placename)
 
             ;
             draw_chart(chart_title,excess,series1,series2,series3,series4,series5,series6,series7,series8,label1,label2,label3,label4,label5,label6,label7,label8);
+
+};
+
+var api_url="/graph/api/"
+
+function get_data(placename)
+    {
+    if (api_fetch="true")
+    {
+    	$.get( api_url+placename, function( data ) 
+      {
+	    var dataset=data.dataset
+	    //console.log(dataset);
+	    if (dataset){
+	    		//alert(data.results.progress);
+     	    parse_data(dataset);
+     	         	};
+       });
+     }
+    else
+    {
+    var dataset=all_data[placename];
+    if (dataset){
+    		
+    		//console.log(dataset)//alert(data.results.progress);
+    parse_data(dataset);
+
     		};
+     };
      };
 
 function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,series6,series7,series8,label1,label2,label3,label4,label5,label6,label7,label8)
@@ -47,8 +67,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     	type: 'line',
     	data: {
         	labels: [
-			'Feb 7','Feb 14','Feb 21','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 24','May 1','May 8','May 15','May 22','May 29','Jun 5', 'Jun 12','Jun 17','Jun 21','Jun 28','Jul 5'
-					],
+			'Feb 7','Feb 14','Feb 21','Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17'					],
         	datasets: [
         		{
             		label: label1,
@@ -97,8 +116,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
             	borderWidth: 1 ,
      			yAxisID: "y-axis-2"
     			}, 
-    			
-    			
+
 
         ]},
         options: {
@@ -143,7 +161,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
         		}
     		} //end of options
     	};
-	console.log(params);
+	//console.log(params);
 	myChart.destroy();
 	myChart = new Chart(ctx, params);
 	
@@ -153,8 +171,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     	type: 'line',
     	data: {
         	labels: [
-			'Feb 7','Feb 14','Feb 21','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 24','May 1','May 8','May 15','May 22','May 29','Jun 5', 'Jun 12','Jun 17','Jun 21','Jun 28','Jul 5'
-					],
+			'Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17'		],
         	datasets: [
 //        		{
 //            		label: label1,
@@ -248,27 +265,35 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
                         	},
                         id: "y-axis-1",
                     }, 
-                                        {
-                        type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
-                        display: true,
-                        position: "right",
-                        scaleLabel: {
-                            display: true,
-                            labelString: '',
-                            fontColor: "red",
-      								},
-                        id: "y-axis-2",
+//                    {
+//                        type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+//                        display: true,
+//                        position: "right",
+//                        ticks: {
+//                         beginAtZero: true,
+//                          max: 45,
+//                          min: 0,
+//                          stepSize: 5
+//                          },
+//                        //scaleLabel: {
+//                        //    display: true,
+//                        //    labelString: '',
+//                        //    fontColor: "red",
+//      					//			},
+//      					
+//                         id: "y-axis-2",
+//                        // grid line settings
+//                    gridLines: {
+//                            drawOnChartArea: false, // only want the grid lines for one axis to show up
+//                        	},
+//                   }
+                   ]
+                }
+                       
                         
-                        // grid line settings
-                        gridLines: {
-                            drawOnChartArea: false, // only want the grid lines for one axis to show up
-                        	},
-     				}
-                   ],
-        		}
     		} //end of options
     	};
-	console.log(params);
+	//console.log(params);
 	myNewChart.destroy();
 	myNewChart = new Chart(new_ctx, params);
 		};
@@ -292,13 +317,14 @@ function updateChart() {
 		var determineChart = $("#FilterNI").val();
 		};
 
+     //console.log(determineChart);
      get_data(determineChart);
  };
 
 
 function updateNation() {
 	var nation_select=$("#Filter2").val();
-	console.log(nation_select);
+	//console.log(nation_select);
 	nat_code=nation_select;
 	if (nation_select=='1'){
 		console.log('England');
@@ -331,6 +357,7 @@ function updateNation() {
 		};
 	new_nation=nations[nation_select];
 	all_data=new_data[new_nation];
+	updateChart();
  };
 
 var all_data= new_data['England'];

@@ -1,10 +1,11 @@
 import os,json,requests
 from .models import DailyCases,CovidWeek
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,date
 import pytz
 from . import ons_week, model_calcs
 
-
+import configs
+from configs import userconfig
 
 URL="https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json"
 TIMEOUT=60
@@ -20,13 +21,47 @@ class NoEntry(Exception):
 
 class Fetch_PHE():
 	def __init__(self):
-		self.fetch()    
+		self.today=date.today()
+		self.edition=None
+		self.fetch()
+		self.sequences=['ltlas','utlas','countries','regions']
+	
+	def process(self):
+		if self.update_check():
+			self.ingest_all()
+			self.update_totals()
+		else:
+			print('PHE cases up to date')
+		
+	def ingest_all(self):
+		"""pull all daily cases from all PHE areas"""
+		for sequence in self.sequences:
+			self.sequence_ingest(sequence)
+		if self.edition:
+			configs.userconfig.update('PHE','latest_cases',self.edition)
+
+	def update_totals(self):
+		update_weekly_cases()
+
+	def update_check(self):
+		PHEstored=configs.config.get('PHE')
+		if PHEstored:
+			self.last_update=PHEstored.get('latest_cases')
+			if self.last_update:
+				if self.edition == self.last_update:
+					return False
+		return True
 
 	def fetch(self,url=URL):
 		""" get the latest cases data"""
+		print('downloading latest PHE case data')
 		self.data=lookup_json(url)
+		
+		self.edition=self.data['metadata']['lastUpdatedAt']
+		print(f'Last updated on {self.edition}')
 
 	def sequence_ingest(self,sequence):
+		"""ingest from a particular sequence"""
 		data=self.data
 		counter=0
 		for item in data[sequence]:

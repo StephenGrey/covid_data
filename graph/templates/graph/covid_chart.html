@@ -455,26 +455,64 @@ var all_data= new_data['England'];
 var nations={"1": "England", "2":"Wales", "3": "Scotland", "4": "Northern Ireland"};
 
 
+var api_url="/graph/api/"
+//$.get( api_url+place, function( data ) {
+//  console.log(data.dataset);
+//})
+
+//$.getJSON({
+//    url: api_url
+//}).done(function (result, status, xhr) {
+//    alert(result)
+//}).fail(function (xhr, status, error) {
+//    alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+//});
+
+var api_fetch={{api_status}}
+
+function parse_data(dataset)
+{
+	    		var chart_title=dataset.placename;
+	    		console.log(chart_title)
+	    		var series1=dataset[1].data;
+	    		var label1=dataset[1].label;
+	
+	    		var series2=dataset[2].data;
+	    		var label2=dataset[2].label;
+	
+	    		var series3=dataset[3].data;
+	    		var label3=dataset[3].label;
+	
+	    		var series4=dataset[4].data;
+	    		var label4=dataset[4].label;
+	            ;
+	            draw_chart(chart_title,series1,series2,series3,series4,label1,label2,label3,label4);
+
+};
 function get_data(placename)
     {
-    var dataset=all_data[placename];
-    if (dataset){
-    		//alert(data.results.progress);
-    		var chart_title=dataset.placename;
-    		var series1=dataset[1].data;
-    		var label1=dataset[1].label;
-
-    		var series2=dataset[2].data;
-    		var label2=dataset[2].label;
-
-    		var series3=dataset[3].data;
-    		var label3=dataset[3].label;
-
-    		var series4=dataset[4].data;
-    		var label4=dataset[4].label;
-            ;
-            draw_chart(chart_title,series1,series2,series3,series4,label1,label2,label3,label4);
-    		};
+    //var dataset=all_data[placename]; //FETCH DATA FROM STORED DATA
+    if (api_fetch="true")
+    {
+    	$.get( api_url+placename, function( data ) 
+      {
+	    var dataset=data.dataset
+	    console.log(dataset);
+	    if (dataset){
+	    		//alert(data.results.progress);
+     	    parse_data(dataset);
+     	         	};
+       });
+     }
+     else
+     	{
+     var dataset=all_data[placename]; //FETCH DATA FROM STORED DATA
+	 if (dataset){
+	    		//alert(data.results.progress);
+     	    parse_data(dataset);
+     	         	};
+     
+        }
      };
 
 
@@ -485,7 +523,7 @@ function draw_chart(chart_title,series1,series2,series3,series4,label1,label2,la
     	type: 'line',
     	data: {
         	labels: [
-			'Feb 7','Feb 14','Feb 21','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 17','June 21','June 28',
+			'Feb 7','Feb 14','Feb 21','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17'
 					],
         	datasets: [
         		{
@@ -595,7 +633,9 @@ ctx.height = 100;
 var myChart;
 myChart=new Chart(ctx, {});
 
-get_data("Birmingham");
+
+
+get_data(place);
 
 function updateChart() {
 

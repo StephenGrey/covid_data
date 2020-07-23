@@ -14,7 +14,6 @@
 <script src="{% static 'graph/js/covid_data.js' %}"></script>
 
 
-
 <body onload="firstload();">
 
  <style type="text/css">
@@ -466,7 +465,8 @@ Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Ch
 
 <script src="{% static 'graph/js/covid_chart.js' %}"></script>
 <script>
-	
+
+var api_fetch={{api_status}}	
 function firstload(){
 get_data("{{place}}");
 };
