@@ -46,6 +46,8 @@ class Scot_Importer(PandaImporter):
         scotupdate=configs.config.get('Scotland')
         if scotupdate:
             self.last_update=scotupdate.get('latest_deaths')
+        else:
+            self.last_update=None
         
         res=requests.get(INFO_URL)
         if res:
@@ -58,7 +60,8 @@ class Scot_Importer(PandaImporter):
                 self.edition=el[el.find('(')+1:el.find(')')]
                 print(f"Last update: {self.edition}")
                 #datetime. strptime(self.edition, '%d %B %Y')
-        if self.edition==self.last_update:
+        
+        if self.edition and self.edition==self.last_update:
             print('Up to date')
             return False
         else:
