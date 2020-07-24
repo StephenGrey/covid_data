@@ -19,10 +19,11 @@ def excess_deaths_district(place='Birmingham',save=False):
 	all_carehome_deaths_2020=0
 	count=0 #count the number of weeks with data
 	for i in district:
-		if not i.weeklyalldeaths or not i.weeklycarehomedeaths: #check for when data runs out
+		if i.weeklyalldeaths is None: #check for when data runs out
 			break
 		all_deaths_2020+=i.weeklyalldeaths
-		all_carehome_deaths_2020+=i.weeklycarehomedeaths
+		if i.weeklycarehomedeaths is not None:
+			all_carehome_deaths_2020+=i.weeklycarehomedeaths
 		count+=1
 	
 	#gather the dates for same weeks
