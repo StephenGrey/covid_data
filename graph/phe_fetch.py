@@ -92,7 +92,7 @@ def update_weekly_total(areacode=AREACODE,areaname=AREA):
     start,stop=model_calcs.RANGE_WEEK
     print(f'Processing {areaname}')
     for week in range(start,stop+1):
-        end_day=ons_week.week(week)+timedelta(2) #FIX : DEATH RATES ARE CALCULATED TO TWO DAYS EARLIER
+        end_day=ons_week.week(week)
         week_total=weekly_total(end_day,areacode=areacode,areaname=areaname)
         print(f'{areaname}: Weektotal for week number {week} ending {end_day}: {week_total}')
         
@@ -107,8 +107,8 @@ def update_weekly_total(areacode=AREACODE,areaname=AREA):
                     stored.save()
                 if created:
                     stored.nation=ons_week.nation[areacode]
+                    stored.areaname=areaname
                     stored.save()
-                    #should add nation here when creating new entry
             except Exception as e:
                 print(e)
                 print(f'No data stored for week {week}')

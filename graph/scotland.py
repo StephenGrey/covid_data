@@ -186,8 +186,6 @@ class Scot_Average(Scot_Importer):
     
     
 class Scot_Cases(Scot_Importer):
-    
-    
     def process(self,f=CASES_URL,live=True):
         if live:
             self.fetch_csv(f)
@@ -215,7 +213,6 @@ class Scot_Cases(Scot_Importer):
             print('Scottish cases up to date')
             return False
         
-    
     def fetch_csv(self,url=CASES_URL):
         path=os.path.join(DATA_STORE,'Scotland_latestcases.csv')
         res=requests.get(url)

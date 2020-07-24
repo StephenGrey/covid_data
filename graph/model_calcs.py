@@ -3,8 +3,8 @@ import datetime,json,os
 one_week=datetime.timedelta(7)
 from . import ons_week
 
-RANGE=["2020-02-09", "2020-07-19"]
-RANGE_WEEK=[6, 29]
+RANGE=["2020-02-09", "2020-07-26"]
+RANGE_WEEK=[6, 30]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 #NOTE: current we are measuring weeks up to Sunday; but using England and Wales data to Friday. Scotland runs to Sunday.
