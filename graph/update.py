@@ -136,6 +136,9 @@ class Updater():
     def check_excess(self):
         model_calcs.excess_deaths()
 
+def update():
+    u=Updater()
+    u.process()
 
 def sums():
     weeks=[w['date'] for w in CovidWeek.objects.values('date').distinct().order_by('date')]

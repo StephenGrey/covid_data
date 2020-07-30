@@ -1,13 +1,20 @@
-import os,json,requests
+import os,json,requests,csv
+from bs4 import BeautifulSoup as BS
 from .models import DailyCases,CovidWeek
 from datetime import datetime,timedelta,date
 import pytz
+from contextlib import closing
 from . import ons_week, model_calcs
+from .import_csv import DATA_STORE
 
 import configs
 from configs import userconfig
 
 URL="https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json"
+URL_CSV="https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
+DASHBOARD="https://coronavirus.data.gov.uk/"
+MSOA: "https://c19downloads.azureedge.net/downloads/msoa_data/MSOAs_latest.csv"
+
 TIMEOUT=60
 DATALOAD={}
 AREACODE="E08000025"
@@ -19,6 +26,42 @@ class NoContent(Exception):
 class NoEntry(Exception):
     pass
 
+
+class Check_PHE():
+	def __init__(self):
+		PHEstored=configs.config.get('PHE')
+		if PHEstored:
+			self.England_cases=PHEstored.get('england_total_cases')
+		else:
+			self.England_cases=None
+		self.top()
+		
+	def top(self,url=URL_CSV):
+		
+		
+		with closing(requests.get(url, stream=True)) as r:
+			f = (line.decode('utf-8') for line in r.iter_lines())
+			reader = csv.reader(f, delimiter=',', quotechar='"')
+			fields=next(reader,None)
+			england=next(reader,None)
+			self.latest_total=england[7]
+			print(f'England latest total: {self.latest_total}')
+			
+		if True:
+			if self.latest_total:
+				if self.England_cases:
+					if str(self.England_cases) ==self.latest_total:
+						print('nothing new here')
+						self._update=False
+						return False
+				userconfig.update('PHE','england_total_cases',str(self.latest_total))
+				self._update=True
+				return True
+				
+#			for count, row in enumerate(reader, start=1):
+#				print(row[7])
+#				if count == 1:
+#					break
 class Fetch_PHE():
 	def __init__(self):
 		self.today=date.today()
@@ -40,6 +83,12 @@ class Fetch_PHE():
 		if self.edition:
 			configs.userconfig.update('PHE','latest_cases',self.edition)
 
+	def save(self):
+		filename=f"{date.today()}-PHE-cases.json"
+		filepath=os.path.join(DATA_STORE,filename)
+		with open(filepath, 'w') as outfile:
+			json.dump(self.data, outfile)
+		
 	def update_totals(self):
 		update_weekly_cases()
 
@@ -80,6 +129,21 @@ class Fetch_PHE():
 			counter+=1
 		print(f'Processed: {counter} rows')
 
+
+def check():
+    ck=Check_PHE()
+    return ck._update
+
+def check_and_download():
+    if check():
+        f=Fetch_PHE()
+        if f.update_check():
+            print('Saving latest PHE cases')
+            f.save()
+    else:
+        print('No need to download')
+
+
 def update_weekly_cases():
     q=CovidWeek.objects.filter(nation='England')
     for place in q.values('areacode','areaname').distinct():
@@ -108,6 +172,8 @@ def update_weekly_total(areacode=AREACODE,areaname=AREA):
                 if created:
                     stored.nation=ons_week.nation[areacode]
                     stored.areaname=areaname
+                    print(f'Created new entry for week {week} for {areaname}')
+                    stored.week=week
                     stored.save()
             except Exception as e:
                 print(e)

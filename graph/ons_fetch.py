@@ -1,10 +1,10 @@
 import requests,json,csv
-from .ons_week import week as ons_week,sunday,stored_names,nation
+from .ons_week import week as ons_week,sunday,stored_names,nation,weeks
 from .models import CovidWeek
 from .import_csv import URLImporter,PandaImporter
 import configs
 from configs import userconfig
-
+from datetime import date,timedelta
 #WEEKLY_DEATHS_FILTER=configs.config['ONS']['weekly_deaths_filter'] #get base path of the docstore
 #print(WEEKLY_DEATHS_FILTER)
 
@@ -86,7 +86,7 @@ class ONS_Importer(PandaImporter):
         careh19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
         hosp19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Hospital')]['v4_0'].sum()
         print(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
-        qrow=CovidWeek.objects.filter(date=sunday(week),areacode=district)
+        qrow=CovidWeek.objects.filter(date=ons_week(week),areacode=district)
         if qrow:
             row=qrow[0]
             #print(row)
@@ -96,7 +96,7 @@ class ONS_Importer(PandaImporter):
             if _update:
                 areaname=stored_names[district]
                 _nation=nation[district]
-                row=CovidWeek(date=sunday(week),areacode=district,nation=_nation,areaname=areaname)
+                row=CovidWeek(date=ons_week(week),areacode=district,nation=_nation,areaname=areaname,week=week)
                 print(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
@@ -380,3 +380,26 @@ def get_dimensions(_id=ID,url=""):
     ids=[(i['name'],i['label']) for i in _items]
     return ids
 
+def correct_dates():
+    l=[]
+    count=0
+    rv=rev_week()
+    for x in CovidWeek.objects.filter(nation='Wales'):
+        _date=x.date-timedelta(2)
+        print(_date)
+        this=(_date.day,_date.month,_date.year)
+        lookup=rv.get(this)
+        if lookup:
+            x.date=_date
+            x.save()
+            count+=1
+    print(f'{count} updated')
+        
+def rev_week():
+    x={}
+    for key in weeks:
+        x[weeks[key]]=key
+    return x
+    
+    
+    

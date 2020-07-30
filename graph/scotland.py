@@ -81,7 +81,7 @@ class Scot_Importer(PandaImporter):
         
     def fix(self):
         self.data=self.data[self.data.columns[:5]].dropna()
-        self.data['deaths'] = self.data['deaths'].astype(int)
+        self.data['Deaths'] = self.data['Deaths'].astype(int)
         self.data['Week of occurrence'] = self.data['Week of occurrence'].astype(int)
 #        self.data.columns=['Week of occurrence','Health Board','Location of death','Cause of Death','deaths']
 #        #self.data.dropna() #drop any columns with null values
@@ -108,11 +108,11 @@ class Scot_Importer(PandaImporter):
     def parse_week(self,week,district,_update=True):
         week_str=str(week)
         sub=self.data[(self.data['Health Board']==district)&(self.data['Week of occurrence']==week)]
-        _allc19=sub[(sub['Cause of Death']=='COVID-19')]['deaths'].sum()
-        _all=sub['deaths'].sum()
-        careh=sub[(sub['Location of death']=='Care Home')]['deaths'].sum()
-        careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['deaths'].sum()
-        hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['deaths'].sum()
+        _allc19=sub[(sub['Cause of Death']=='COVID-19')]['Deaths'].sum()
+        _all=sub['Deaths'].sum()
+        careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
+        careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
+        hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
         print(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
         qrow=CovidWeek.objects.filter(date=sunday(week),areaname=district)
         if qrow:
