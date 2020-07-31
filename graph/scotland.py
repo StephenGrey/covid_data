@@ -124,7 +124,7 @@ class Scot_Importer(PandaImporter):
             if _update:
                 areacode=scotcode[district]
                 _nation='Scotland'
-                row=CovidWeek(date=sunday(week),areacode=areacode,nation=_nation,areaname=district)
+                row=CovidWeek(date=sunday(week),areacode=areacode,nation=_nation,areaname=district,week=week)
                 print(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
