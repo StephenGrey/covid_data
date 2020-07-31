@@ -162,7 +162,7 @@ def update_weekly_total(areacode=AREACODE,areaname=AREA):
         
         if week_total is not None:
             try:
-                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,date=end_day)
+                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week)
                 #print(stored.weeklycases)
                 if stored.weeklycases != week_total:
                     print(f'{areaname}: updating week {week} from {stored.weeklycases} to {week_total}')
