@@ -10,6 +10,11 @@ from .import_csv import DATA_STORE
 import configs
 from configs import userconfig
 
+#pip install uk-covid19
+from uk_covid19 import Cov19API
+#https://github.com/publichealthengland/coronavirus-dashboard-api-python-sdk
+
+
 URL="https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json"
 URL_CSV="https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
 DASHBOARD="https://coronavirus.data.gov.uk/"
@@ -28,6 +33,122 @@ class NoEntry(Exception):
 
 
 class Check_PHE():
+    def __init__(self):
+        self.api = Cov19API(filters=self.filters, structure=self.structure)
+        PHEstored=configs.config.get('PHE')
+        if PHEstored:
+            self.England_cases=PHEstored.get('england_total_cases')
+        else:
+            self.England_cases=None
+        self.top()
+    
+    def top(self):
+        """get latest total"""
+        self.api.latest_by='cumCasesByPublishDate'
+        self.get()
+        self.latest_total=self.data['data'][0]['cumCasesByPublishDate']
+        print(f'England latest total: {self.latest_total}')
+        if self.latest_total:
+            if self.England_cases:
+                if int(self.England_cases)==self.latest_total:
+                    print('nothing new here')
+                    self._update=False
+                    return False
+                userconfig.update('PHE','england_total_cases',str(self.latest_total))
+        self._update=True
+        return True
+        
+        
+    @property
+    def filters(self):
+        """override to any filter"""
+        return self.England_filter
+        
+    @property
+    def structure(self):
+        """override to any structure"""
+        return self.cases_and_deaths
+        
+    def get(self):
+        self.data=self.api.get_json()  # Returns a dictionary
+        
+    @property
+    def cases_and_deaths(self):
+        return {
+        "date": "date",
+        "areaName": "areaName",
+        "areaCode": "areaCode",
+        "newCasesByPublishDate": "newCasesByPublishDate",
+        "cumCasesByPublishDate": "cumCasesByPublishDate",
+        "newDeathsByDeathDate": "newDeathsByDeathDate",
+        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
+        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
+        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+        }
+    
+    @property
+    def England_filter(self):
+        return ['areaType=nation','areaName=England']
+        
+    
+    @property
+    def local_filter(self):
+        return ['areaType=ltla']
+
+    @property
+    def updated(self):
+        return self.api.last_update
+        
+    @property
+    def newcases(self):
+        return{
+        "specimenDate": "date",
+        "areaName": "areaName",
+        "areaCode": "areaCode",
+#        "newCasesByPublishDate": "newCasesByPublishDate",
+#        "cumCasesByPublishDate": "cumCasesByPublishDate",
+#        "newDeathsByDeathDate": "newDeathsByDeathDate",
+#        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
+        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
+        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
+        }
+        
+    def ingest(self,check=True):
+        """ingest from a particular sequence"""
+        data=self.data.get('data')
+        counter=0
+        for item in data:
+            datestring=item['specimenDate']
+            date=fetchdate(datestring)
+            row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
+            row.areaname=item['areaName']
+            daily=item['newCasesBySpecimenDate']
+            total=item['cumCasesBySpecimenDate']
+            if not created:
+                existing_daily=row.dailyLabConfirmedCases
+                existing_total=row.totalLabConfirmedCases
+            row.dailyLabConfirmedCases=daily
+            row.totalLabConfirmedCases=total
+            if not created:
+                print(f'Daily: old: {existing_daily} new: {daily}   Total: old: {existing_total} new: {total}')
+#			row.changeInDailyCases=None
+#			row.dailyTotalLabConfirmedCasesRate=Nonitem['dailyTotalLabConfirmedCasesRate']
+#			row.previouslyReportedDailyCases=item['previouslyReportedDailyCases']
+#			row.previouslyReportedTotalCases=item['previouslyReportedTotalCases']
+#			row.changeInTotalCases=item['changeInTotalCases']
+            row.save()
+            counter+=1
+        print(f'Processed: {counter} rows')
+
+    def save(self):
+        filename=f"{date.today()}-PHE-cases.json"
+        filepath=os.path.join(DATA_STORE,filename)
+        with open(filepath, 'w') as outfile:
+            json.dump(self.data, outfile)
+
+
+
+class OLDCheck_PHE():
 	def __init__(self):
 		PHEstored=configs.config.get('PHE')
 		if PHEstored:
@@ -37,7 +158,7 @@ class Check_PHE():
 		self.top()
 		
 	def top(self,url=URL_CSV):
-		
+		"""get lastest England total"""
 		
 		with closing(requests.get(url, stream=True)) as r:
 			f = (line.decode('utf-8') for line in r.iter_lines())
