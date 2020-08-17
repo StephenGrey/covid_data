@@ -19,7 +19,7 @@
 
 //var lagb = "https://raw.githubusercontent.com/kierandriscoll/UK-Topojson/master/Local-Authorities/Local_Auths_Dec16_Gen_Clip_GB.json"
 //    var shape_url = "/static/graph/json/Local_Auths_Dec16_Gen_Clip_UK.json"
-    var shape_url = "/static/graph/json/ScotMap.json"
+    var shape_url = "/static/graph/json/UKmerged_redux_topo.json"
 //document.getElementById("shape_location").value;
     var map_data_url="/graph/api_rates"
     var layers = {};
@@ -99,7 +99,7 @@ function addTopoData(topoData) {
 // Set the style of the boundary data layer (fill color based on data values)
 function handleLayer(layer) {
    //console.log(mapLookup.get(layer.feature.properties.lad16nm));
-   layer.setStyle({ fillColor : getColor(mapLookup.get(layer.feature.properties.lad16nm)),
+   layer.setStyle({ fillColor : getColor(mapLookup.get(layer.feature.properties.areaname)),
                      fillOpacity: 0.6,
                      color: 'black',
                      weight:0.5,
@@ -110,7 +110,7 @@ function handleLayer(layer) {
                click: clicklayer,  });
    
    layers[layer._leaflet_id] = layer;
-   references[layer.feature.properties.lad16nm]=layer;
+   references[layer.feature.properties.areaname]=layer;
   } //End of handleLayer function
 
 function zoom2place(place) {
@@ -161,8 +161,8 @@ function loadData(src) {
   // Behaviour when mouseover an area
   function enterLayer(){  
        this.setStyle({ weight: 2, opacity: 1 });
-       var areaname = this.feature.properties.lad16nm; // Local Authority Name
-       var areaid = this.feature.properties.lad16cd;   // LA code 
+       var areaname = this.feature.properties.areaname; // Local Authority Name
+       var areaid = this.feature.properties.areacode;   // LA code 
        var excess=mapLookup.get(areaname)
        // method that we will use to update the tooltip feature
        info.update = function () {
@@ -171,7 +171,7 @@ function loadData(src) {
   };
 
   function clicklayer(){
-      clickplace= this.feature.properties.lad16nm
+      clickplace= this.feature.properties.areaname;
       console.log('clicked on '+clickplace);
       //zoomToFeature(this.feature);
       get_data(clickplace);

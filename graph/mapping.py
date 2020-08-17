@@ -2,7 +2,7 @@ import json,os
 from django.contrib.staticfiles import finders
 
 
-SCOTLANDMAP_PATH='graph/json/scotland_topojson.json'
+SCOTLANDMAP_PATH='graph/json/Scotsimplified.json'
 
 print(SCOTLANDMAP_PATH)
 
@@ -14,8 +14,8 @@ def convert_scotland():
     with open(map_path) as json_file:
         mapdata = json.load(json_file)
         
-    #print(mapdata['objects']['scotland_geojson'].keys())
-    geo=mapdata['objects']['scotland_geojson']['geometries']
+    print(mapdata['objects'].keys())
+    geo=mapdata['objects']['Scotsimplified']['geometries']
     newgeo=[]
     for x in geo:
         name=x['properties'].pop('HBName')
@@ -26,7 +26,7 @@ def convert_scotland():
         x['properties']['lad16cd']=areacode
         print(x)
         newgeo.append(x)
-    mapdata['objects']['scotland_geojson']['geometries']=newgeo
+    mapdata['objects']['Scotsimplified']['geometries']=newgeo
     
     new_map_path=os.path.join(folder,'ScotMap.json')
     with open(new_map_path, 'w') as outfile:
