@@ -7,6 +7,8 @@ RANGE=["2020-02-07", "2020-07-26"]
 RANGE_WEEK=[6, 30]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
+MAP_PATH='graph/json/Local_Auths_Dec16_Gen_Clip_UK.json'
+
 #NOTE: current we are measuring weeks up to Sunday; but using England and Wales data to Friday. Scotland runs to Sunday.
 #so the above date range is ONS date + 2 days.
 
@@ -209,6 +211,27 @@ def output_all():
 			nationset[place]=output_district(place,q=None)	
 		all_data[nation]=nationset
 	return all_data
+
+
+def output_rates():
+	"""output rates into an array """
+	data=[]
+	q=CovidScores.objects.all()
+	for score in q:
+		excess=float(score.excess_death_rate) if score.excess_death_rate else None
+		data.append({
+    "areaname": score.areaname,
+    "excess": excess,
+    	})
+	return data
+
+
+def save_all_rates(filename):
+	"""dump all Covid19 rates to Json"""
+	data=output_rates()
+	with open(filename, 'w') as outfile:
+		json.dump(data, outfile)
+
 
 def district_deaths(place='Birmingham'):
 	district=CovidWeek.objects.filter(areaname=place,date__range=RANGE)

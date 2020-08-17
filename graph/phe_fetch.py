@@ -80,8 +80,6 @@ class Check_PHE():
         "areaCode": "areaCode",
         "newCasesByPublishDate": "newCasesByPublishDate",
         "cumCasesByPublishDate": "cumCasesByPublishDate",
-        "newDeathsByDeathDate": "newDeathsByDeathDate",
-        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
         }
@@ -183,6 +181,8 @@ class OLDCheck_PHE():
 #				print(row[7])
 #				if count == 1:
 #					break
+
+
 class Fetch_PHE():
 	def __init__(self):
 		self.today=date.today()
@@ -221,6 +221,96 @@ class Fetch_PHE():
 				if self.edition == self.last_update:
 					return False
 		return True
+
+	def fetch(self,url=URL):
+		""" get the latest cases data"""
+		print('downloading latest PHE case data')
+		self.data=lookup_json(url)
+		
+		self.edition=self.data['metadata']['lastUpdatedAt']
+		print(f'Last updated on {self.edition}')
+
+	def sequence_ingest(self,sequence):
+		"""ingest from a particular sequence"""
+		data=self.data
+		counter=0
+		for item in data[sequence]:
+			datestring=item['specimenDate']
+			date=fetchdate(datestring)
+			row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
+			row.areaname=item['areaName']
+			row.dailyLabConfirmedCases=item['dailyLabConfirmedCases']
+			row.totalLabConfirmedCases=item['totalLabConfirmedCases']
+			row.changeInDailyCases=item['changeInDailyCases']
+			row.dailyTotalLabConfirmedCasesRate=item['dailyTotalLabConfirmedCasesRate']
+			row.previouslyReportedDailyCases=item['previouslyReportedDailyCases']
+			row.previouslyReportedTotalCases=item['previouslyReportedTotalCases']
+			row.changeInTotalCases=item['changeInTotalCases']
+			row.save()
+			counter+=1
+		print(f'Processed: {counter} rows')
+
+
+
+
+class Fetch_API(Check_PHE):
+	def __init__(self):
+		self.today=date.today()
+		self.api = Cov19API(filters=self.filters, structure=self.structure)
+		self.edition=None
+		self.sequences=['ltla','utla','nation','region']
+		self.api.latest_by='cumCasesBySpecimenDate' #TEMP
+		#self.fetch - get 
+	
+	@property
+	def filters(self):
+		"""override to any filter"""
+		return self.local_filter
+		
+	@property
+	def structure(self):
+		"""override to any structure"""
+		return self.newcases
+	
+	
+	def process(self):
+		if self.update_check():
+			self.ingest_all()
+			self.update_totals()
+		else:
+			print('PHE cases up to date')
+		
+	def ingest_all(self):
+		"""pull all daily cases from all PHE areas"""
+		for sequence in self.sequences:
+			print(f'pulling sequence: {sequence}')
+			self.api.filter=[f'areaType={sequence}']
+			self.get()
+			break
+			
+		#if self.edition:
+		#	configs.userconfig.update('PHE','latest_cases',self.edition)
+	
+
+	def save(self):
+		filename=f"{date.today()}-PHE-cases.json"
+		filepath=os.path.join(DATA_STORE,filename)
+		with open(filepath, 'w') as outfile:
+			json.dump(self.data, outfile)
+		
+	def update_totals(self):
+		update_weekly_cases()
+
+	def update_check(self):
+		return check()
+#		
+#		PHEstored=configs.config.get('PHE')
+#		if PHEstored:
+#			self.last_update=PHEstored.get('latest_cases')
+#			if self.last_update:
+#				if self.edition == self.last_update:
+#					return False
+#		return True
 
 	def fetch(self,url=URL):
 		""" get the latest cases data"""

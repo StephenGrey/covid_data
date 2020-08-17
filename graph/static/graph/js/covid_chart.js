@@ -58,6 +58,8 @@ function get_data(placename)
 
     		};
      };
+    console.log('getting data and zooming to '+placename);
+    zoom2place(placename);
      };
 
 function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,series6,series7,series8,label1,label2,label3,label4,label5,label6,label7,label8)
@@ -360,18 +362,26 @@ function updateNation() {
 	updateChart();
  };
 
-var all_data= new_data['England'];
+
+//var all_data= new_data['England'];
 var nations={"1": "England", "2":"Wales", "3": "Scotland", "4": "Northern Ireland"};
 var currentChart;
-var nat_code=1
-var place='Birmingham'
-var ctx = document.getElementById('myChart');
-ctx.height = 80;
-var new_ctx = document.getElementById('myDeathChart');
-new_ctx.height = 50;
-
+var nat_code=1;
+var place='Birmingham';
+var new_ctx;
+var ctx;
 var myChart;
 var myNewChart;
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  //the event occurred
+
+ctx = document.getElementById('myChart');
+ctx.height = 80;
+new_ctx = document.getElementById('myDeathChart');
+new_ctx.height = 50;
+
 
 myChart=new Chart(ctx, {});
 myNewChart=new Chart(new_ctx, {});
@@ -392,3 +402,4 @@ $('#Filter2').on('change', updateNation);
 
 updateNation();
 
+})
