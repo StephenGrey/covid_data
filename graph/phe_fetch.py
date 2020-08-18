@@ -1,11 +1,11 @@
-import os,json,requests,csv
+import os,json,requests,csv,pandas
 from bs4 import BeautifulSoup as BS
 from .models import DailyCases,CovidWeek
 from datetime import datetime,timedelta,date
 import pytz
 from contextlib import closing
 from . import ons_week, model_calcs
-from .import_csv import DATA_STORE
+from .import_csv import DATA_STORE,PandaImporter
 
 import configs
 from configs import userconfig
@@ -183,32 +183,42 @@ class OLDCheck_PHE():
 #					break
 
 
-class Fetch_PHE():
+class Fetch_PHE(PandaImporter):
+	"""fetch PHE cases for England and Wales from CSV"""
+	
 	def __init__(self):
 		self.today=date.today()
 		self.edition=None
 		self.fetch()
-		self.sequences=['ltlas','utlas','countries','regions']
-	
+		self.sequences=['ltla', 'nation', 'region', 'utla']
+		
 	def process(self):
+		"""ingest cases into database & update weekly totals"""
 		if self.update_check():
 			self.ingest_all()
 			self.update_totals()
 		else:
 			print('PHE cases up to date')
-		
+	
+	def district_codes(self):
+		return sorted([z for z in self.data['Area code'].unique()])
+	
 	def ingest_all(self):
 		"""pull all daily cases from all PHE areas"""
-		for sequence in self.sequences:
-			self.sequence_ingest(sequence)
+		for place in self.district_codes():
+			self.sequence_ingest(place)
 		if self.edition:
 			configs.userconfig.update('PHE','latest_cases',self.edition)
 
 	def save(self):
-		filename=f"{date.today()}-PHE-cases.json"
+		filename=f"{date.today()}-PHE-cases.csv"
+		filename2=f"{date.today()}-PHE-cases.json"
 		filepath=os.path.join(DATA_STORE,filename)
-		with open(filepath, 'w') as outfile:
-			json.dump(self.data, outfile)
+		filepath2=os.path.join(DATA_STORE,filename2)
+		self.data.to_csv(filepath)
+		self.data.to_json(filepath2)
+#		with open(filepath, 'w') as outfile:
+#			json.dump(self.data, outfile)
 		
 	def update_totals(self):
 		update_weekly_cases()
@@ -222,35 +232,50 @@ class Fetch_PHE():
 					return False
 		return True
 
+	@property
+	def total_cases(self):
+		return self.data[self.data['Area type']=='utla']['Daily lab-confirmed cases'].sum()
+	
+	@property
+	def latest_samples(self):
+		return self.data['Specimen date'].max()
+	
 	def fetch(self,url=URL):
 		""" get the latest cases data"""
 		print('downloading latest PHE case data')
-		self.data=lookup_json(url)
-		
-		self.edition=self.data['metadata']['lastUpdatedAt']
-		print(f'Last updated on {self.edition}')
+#		self.data=lookup_json(url)
+		self.fetch_csv() #JSON discontinued; switched back to CSV
+		self.edition=self.latest_samples
+		print(f'Last samples from {self.edition}')
 
-	def sequence_ingest(self,sequence):
-		"""ingest from a particular sequence"""
-		data=self.data
+	def fetch_csv(self,url=URL_CSV):
+		path=os.path.join(DATA_STORE,'PHE_latestcases.csv')
+		res=requests.get(url)
+		with open(path, 'wb') as f:
+			f.write(res.content)
+		self.open_csv(path)
+
+	def open_csv(self,f):
+		self.data=pandas.read_csv(f, encoding= "iso-8859-1")
+
+	def sequence_ingest(self,areacode):
+		"""ingest from a particular areacode"""
+		data=self.data[self.data['Area code']==areacode]
+		areaname=data['Area name'].unique().item()
+		print(f'Ingesting cases from {areacode}: {areaname}')
+		
 		counter=0
-		for item in data[sequence]:
-			datestring=item['specimenDate']
-			date=fetchdate(datestring)
-			row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
-			row.areaname=item['areaName']
-			row.dailyLabConfirmedCases=item['dailyLabConfirmedCases']
-			row.totalLabConfirmedCases=item['totalLabConfirmedCases']
-			row.changeInDailyCases=item['changeInDailyCases']
-			row.dailyTotalLabConfirmedCasesRate=item['dailyTotalLabConfirmedCasesRate']
-			row.previouslyReportedDailyCases=item['previouslyReportedDailyCases']
-			row.previouslyReportedTotalCases=item['previouslyReportedTotalCases']
-			row.changeInTotalCases=item['changeInTotalCases']
+		for day in data['Specimen date']:
+			date=fetchdate(day)
+			row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=areacode)
+			this_day=data[data['Specimen date']==day]
+			row.areaname=areaname 
+			#add head(1) (faster than unique() ) to deal with some areas returned twice as part of both UTLA AND LTLA sequences
+			row.dailyLabConfirmedCases=this_day['Daily lab-confirmed cases'].head(1).item()
+			row.totalLabConfirmedCases=this_day['Cumulative lab-confirmed cases'].head(1).item()
 			row.save()
 			counter+=1
 		print(f'Processed: {counter} rows')
-
-
 
 
 class Fetch_API(Check_PHE):
@@ -323,7 +348,9 @@ class Fetch_API(Check_PHE):
 	def sequence_ingest(self,sequence):
 		"""ingest from a particular sequence"""
 		data=self.data
+		
 		counter=0
+
 		for item in data[sequence]:
 			datestring=item['specimenDate']
 			date=fetchdate(datestring)
@@ -373,7 +400,7 @@ def update_weekly_total(areacode=AREACODE,areaname=AREA):
         
         if week_total is not None:
             try:
-                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week)
+                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week,date=end_day)
                 #print(stored.weeklycases)
                 if stored.weeklycases != week_total:
                     print(f'{areaname}: updating week {week} from {stored.weeklycases} to {week_total}')
@@ -461,7 +488,6 @@ def get_api_result(session,url):
 
 
 def fetchdate(datestring):
-        print(datestring)
         try:
             if not datestring:
                 raise NullDate

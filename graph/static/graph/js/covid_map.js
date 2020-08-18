@@ -1,11 +1,40 @@
 //https://data.gov.uk/dataset/daaafdcc-f7c7-41ff-80eb-b0b15efd1414/local-authority-districts-december-2017-generalised-clipped-boundaries-in-united-kingdom-wgs84
-//code credit: https://bl.ocks.org/kierandriscoll/93f75337ee73d89e764378cd2d3cc0dd
+//Adapted from https://bl.ocks.org/kierandriscoll/93f75337ee73d89e764378cd2d3cc0dd
+//
+/*
+WORKFLOW FOR IMPORTING MAP SHAPES:
+Shape file from UK official sources:
+http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/SG_NHS_HealthBoards_2019.zip
 
-//https://mapshaper.org/  convert maps to topojson
 
-   var legend0 = 20, legend1 = 40, legend2 = 70, legend3 = 90, legend4 = 110, legend5 = 130; // Must be 6 ranges
-   var stat_name = 'Excess deaths above 5-year average';    // This will be displayed on the map 
+Load UK local authorities and Scottish health districts into QGIS
+Delete districts in Buckinghamsire; cut and paste shape of Bucks
+Delete Scottish local authorities; load Scottish health districts
+Rename columns (field attributes)  to areaname, areacode (so as to match) - using 'Processing Toolbox - Refactor Fields'
+Reduce size of file with simplify - Vector - Geometry Tools - Simplify (applying 0.001 degrees)
+Save as GeoJson - with options - add Bounding Box
+Import into mapshaper and then save as TopoJson  https://mapshaper.org/  
+Put file in graph/static/graph/json/ folder
+Adjust shape_url variable in line elow for new file name.
+*/
+   var display_value='cases_rate'
+   var shape_url = "/static/graph/json/UK_corrected_topo.json"
+//document.getElementById("shape_location").value;
+   var map_data_url="/graph/api_rates"
+   
+   if (display_value=='cases_rate'){
+	var legend0 = 5, legend1 = 10, legend2 = 20, legend3 = 30, legend4 = 40, legend5 = 50; // Must be 6 ranges
+   var stat_name = 'Covid-19 cases last 7 days';    // This will be displayed on the map 
+   var colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+	
+	
+	}
+	else{
+	var legend0 = 20, legend1 = 40, legend2 = 70, legend3 = 90, legend4 = 110, legend5 = 130; // Must be 6 ranges	
+  var stat_name = 'Excess deaths per 100,000 people';    // This will be displayed on the map 
    var colour_scheme = 'Red';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+
+	}
    var map;
    var topoLayer;
    var colourmatrix = {
@@ -19,9 +48,7 @@
 
 //var lagb = "https://raw.githubusercontent.com/kierandriscoll/UK-Topojson/master/Local-Authorities/Local_Auths_Dec16_Gen_Clip_GB.json"
 //    var shape_url = "/static/graph/json/Local_Auths_Dec16_Gen_Clip_UK.json"
-    var shape_url = "/static/graph/json/UKmerged_redux_topo.json"
-//document.getElementById("shape_location").value;
-    var map_data_url="/graph/api_rates"
+
     var layers = {};
     var references={};
     var startplace="Birmingham";
@@ -68,7 +95,7 @@ function loadmap(){
 d3.json(map_data_url, function (data) {
     console.log(data);
     data.dataset.forEach( function(d) {
-    	mapLookup.set(d.areaname,+d.excess);
+    	mapLookup.set(d.areaname,+d.cases_rate);   //+d.excess
     	});
     $.getJSON(shape_url).done(addTopoData);
     
@@ -99,7 +126,8 @@ function addTopoData(topoData) {
 // Set the style of the boundary data layer (fill color based on data values)
 function handleLayer(layer) {
    //console.log(mapLookup.get(layer.feature.properties.lad16nm));
-   layer.setStyle({ fillColor : getColor(mapLookup.get(layer.feature.properties.areaname)),
+   layer_value=mapLookup.get(layer.feature.properties.areaname);
+   layer.setStyle({ fillColor : getColor(layer_value),
                      fillOpacity: 0.6,
                      color: 'black',
                      weight:0.5,
@@ -166,8 +194,15 @@ function loadData(src) {
        var excess=mapLookup.get(areaname)
        // method that we will use to update the tooltip feature
        info.update = function () {
-            this._div.innerHTML = stat_name + ' <br/> <b>' + areaname + '</b> <br/> '+ excess+ ' deaths per 100,000 people';        };
-       info.addTo(map); 
+         if (display_value=='cases_rate')
+            {
+            this._div.innerHTML = stat_name + ' <br/> <b>' + areaname + '</b> <br/> '+ excess+ ' cases per 100,000 people';
+         }else
+        	{
+        this._div.innerHTML = stat_name + ' <br/> <b>' + areaname + '</b> <br/> '+ excess+ ' deaths per 100,000 people';
+        };
+    };
+        info.addTo(map); 
   };
 
   function clicklayer(){

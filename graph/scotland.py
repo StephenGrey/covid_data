@@ -81,7 +81,10 @@ class Scot_Importer(PandaImporter):
         
     def fix(self):
         self.data=self.data[self.data.columns[:5]].dropna()
-        self.data['Deaths'] = self.data['Deaths'].astype(int)
+        
+        deaths_field='deaths' if 'deaths' in self.data.columns else 'Deaths'
+        
+        self.data['Deaths'] = self.data[deaths_field].astype(int)
         self.data['Week of occurrence'] = self.data['Week of occurrence'].astype(int)
 #        self.data.columns=['Week of occurrence','Health Board','Location of death','Cause of Death','deaths']
 #        #self.data.dropna() #drop any columns with null values

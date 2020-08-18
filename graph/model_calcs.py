@@ -1,13 +1,14 @@
-from .models import CovidWeek,AverageWeek,CovidScores
+from .models import CovidWeek,AverageWeek,CovidScores,DailyCases
+from django.db.models import Sum
 import datetime,json,os
 one_week=datetime.timedelta(7)
 from . import ons_week
 
-RANGE=["2020-02-07", "2020-07-26"]
-RANGE_WEEK=[6, 30]
+RANGE=["2020-02-07", "2020-08-16"]
+RANGE_WEEK=[6, 33]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
-MAP_PATH='graph/json/Local_Auths_Dec16_Gen_Clip_UK.json'
+MAP_PATH='graph/json/UK_corrected_topo.json'
 
 #NOTE: current we are measuring weeks up to Sunday; but using England and Wales data to Friday. Scotland runs to Sunday.
 #so the above date range is ONS date + 2 days.
@@ -87,10 +88,36 @@ def calc_excess_rates():
 		i=CovidScores.objects.get(areaname=place)
 		if i.population and i.excess_deaths:
 			rate=round(i.excess_deaths/i.population*100000,1)
+			print(rate)
 			i.excess_death_rate=rate
 			i.save()
 		else:
 			print(f'Data missing for {place}')
+
+def calc_newcases_rates():
+	"""update all the new cases rates for all districts"""
+	_today=datetime.date.today()
+	_range=[_today-one_week,_today]
+	rates={}	
+	for place in district_names():
+		i=CovidScores.objects.get(areaname=place)
+		total_cases=DailyCases.objects.filter(specimenDate__range=_range,areaname=place).aggregate(Sum('dailyLabConfirmedCases'))['dailyLabConfirmedCases__sum']
+		
+		newcases_rate=round(total_cases/i.population*100000,1) if total_cases and i.population else 0
+		rates[place]=newcases_rate
+		i.latest_case_rate=newcases_rate
+		print(f'Place: {place} Cases: {total_cases} Rate:{newcases_rate}')
+		i.save()
+		
+		#print([(k, v) for k, v in sorted(rates.items(), key=lambda item: item[1]) if v])
+#i=CovidScores.objects.get(areaname=place)
+#		if i.population and i.excess_deaths:
+#			rate=round(i.excess_deaths/i.population*100000,1)
+#			i.excess_death_rate=rate
+#			i.save()
+#		else:
+#			print(f'Data missing for {place}')
+	
 
 def calc_new_cases():
 	"""calculate the new cases from cumulative cases"""
@@ -151,8 +178,9 @@ def output_district(place,q=None):
 		district=CovidWeek.objects.filter(areaname=place,date__range=RANGE).order_by('date')
 	
 	if district:
-		print([f"{i.date:%d/%m}" for i in district])
+		#print([f"{i.date:%d/%m}" for i in district])
 		totalcumdeaths=[i.totcumdeaths for i in district]
+		print(totalcumdeaths)
 		weeklydeaths=[i.weeklydeaths for i in district]
 		weeklycases=[i.weeklycases for i in district]
 		estcasesweekly=[i.estcasesweekly for i in district]
@@ -166,8 +194,8 @@ def output_district(place,q=None):
 		totavdeaths=[str(i.weeklyalldeaths) for i in averages]
 		avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
 		
-		print(place)
-		print(weeklycases)
+		#print(place)
+		#print(weeklycases)
 		sc=CovidScores.objects.get(areaname=place)
 		if sc:
 			excess=sc.excess_deaths
@@ -196,7 +224,7 @@ def output_district(place,q=None):
 			}
 	else:
 		dataset={}
-	print(dataset)
+	#print(dataset)
 	return dataset
 	
 
@@ -219,9 +247,11 @@ def output_rates():
 	q=CovidScores.objects.all()
 	for score in q:
 		excess=float(score.excess_death_rate) if score.excess_death_rate else None
+		cases_rate=float(score.latest_case_rate) if score.latest_case_rate else None
 		data.append({
     "areaname": score.areaname,
     "excess": excess,
+    "cases_rate":cases_rate,
     	})
 	return data
 

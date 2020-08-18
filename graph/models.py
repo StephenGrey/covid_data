@@ -22,6 +22,7 @@ class CovidScores(models.Model):
     excess_deaths_carehomes=models.IntegerField('estimated_carehomes_excess_deaths',blank=True,null=True)
     population=models.IntegerField('population',blank=True,null=True)
     excess_death_rate=models.DecimalField('excess_death_rate',max_digits=7, decimal_places=1,blank=True,null=True)
+    latest_case_rate=models.DecimalField('excess_death_rate',max_digits=7, decimal_places=1,blank=True,null=True)
 
 
 class CovidWeek(models.Model):
@@ -36,9 +37,9 @@ class CovidWeek(models.Model):
     weeklyhospitaldeaths=models.IntegerField('weekly_hospital_deaths',blank=True,null=True)
     weeklyC19carehomedeaths=models.IntegerField('weekly_covid19_carehome_deaths',blank=True,null=True)
     weeklycarehomedeaths=models.IntegerField('weekly_carehome_deaths',blank=True,null=True)
-    totcumdeaths=models.IntegerField('cum_deaths',default=0,blank=True,null=True)
-    weeklycases= models.IntegerField('weekly_cases',default=0,null=True,blank=True)
-    totcumcases= models.IntegerField('cum_cases',default=0,null=True,blank=True)
+    totcumdeaths=models.IntegerField('cum_deaths',default=None,blank=True,null=True)
+    weeklycases= models.IntegerField('weekly_cases',default=None,null=True,blank=True)
+    totcumcases= models.IntegerField('cum_cases',default=None,null=True,blank=True)
     estcasesweekly= models.IntegerField('est_cases_weekly',blank=True,null=True)
     estinfectionscum=models.IntegerField('est_cases_cum',blank=True,null=True)
     def __str__(self):
