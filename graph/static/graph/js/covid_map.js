@@ -23,15 +23,15 @@ Adjust shape_url variable in line elow for new file name.
    var map_data_url="/graph/api_rates"
    
    if (display_value=='cases_rate'){
-	var legend0 = 0, legend1 = 10, legend2 = 20, legend3 = 30, legend4 = 40, legend5 = 50; // Must be 6 ranges
-   var stat_name = 'Covid-19 cases last 7 days';    // This will be displayed on the map 
+	var legend0 = -1, legend1 = 5, legend2 = 10, legend3 = 20, legend4 = 40, legend5 = 50; // Must be 6 ranges
+   var stat_name = 'Covid-19 cases last 7 days';           // This will be displayed on the map 
    var colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
 	
 	
 	}
 	else{
 	var legend0 = 20, legend1 = 40, legend2 = 70, legend3 = 90, legend4 = 110, legend5 = 130; // Must be 6 ranges	
-  var stat_name = 'Excess deaths per 100,000 people';    // This will be displayed on the map 
+  var stat_name = 'Excess deaths per 100,000 people';     // This will be displayed on the map 
    var colour_scheme = 'Red';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
 
 	}
@@ -99,17 +99,17 @@ d3.json(map_data_url, function (data) {
 };
 
 // Colours used (uses parameters defined at start)
+
   function getColor(d) {
-    return 
-           d > legend5 ? 'red' :  //colourmatrix[colour_scheme][5]
+    return d == null ? 'white': 
+           d > legend5 ? colourmatrix[colour_scheme][5] :
            d > legend4 ? colourmatrix[colour_scheme][4] :
            d > legend3 ? colourmatrix[colour_scheme][3] :
            d > legend2 ? colourmatrix[colour_scheme][2] :
            d > legend1 ? colourmatrix[colour_scheme][1] :
            d > legend0 ? colourmatrix[colour_scheme][0] :
-          'red';
+                         'grey';
   }
-
   // Draws the boundary data on the map
 function addTopoData(topoData) { 
            topoLayer.addData(topoData);

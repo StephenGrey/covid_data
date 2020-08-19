@@ -246,8 +246,8 @@ def output_rates():
 	data=[]
 	q=CovidScores.objects.all()
 	for score in q:
-		excess=float(score.excess_death_rate) if score.excess_death_rate else None
-		cases_rate=float(score.latest_case_rate) if score.latest_case_rate else None
+		excess=float(score.excess_death_rate) if score.excess_death_rate is not None else None
+		cases_rate=float(score.latest_case_rate) if score.latest_case_rate is not None else None
 		data.append({
     "areaname": score.areaname,
     "excess": excess,
