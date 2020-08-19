@@ -391,16 +391,18 @@ def update_weekly_cases():
             update_weekly_total(areacode=areacode,areaname=area)
 
 def update_weekly_total(areacode=AREACODE,areaname=AREA):
+    """add up all daily cases into week calculation"""
     start,stop=model_calcs.RANGE_WEEK
     print(f'Processing {areaname}')
     for week in range(start,stop+1):
         end_day=ons_week.week(week)
+        
         week_total=weekly_total(end_day,areacode=areacode,areaname=areaname)
         print(f'{areaname}: Weektotal for week number {week} ending {end_day}: {week_total}')
         
         if week_total is not None:
             try:
-                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week,date=end_day)
+                stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week)
                 #print(stored.weeklycases)
                 if stored.weeklycases != week_total:
                     print(f'{areaname}: updating week {week} from {stored.weeklycases} to {week_total}')

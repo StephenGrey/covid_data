@@ -10,12 +10,13 @@ DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
 
-#NOTE: current we are measuring weeks up to Sunday; but using England and Wales data to Friday. Scotland runs to Sunday.
-#so the above date range is ONS date + 2 days.
+#MOVING TO USING ONLY WEEK NUMBERS - TO AVOID DISCREPANCY SCOT AND E+W ON WEEK ENDING
 
 def excess_deaths_district(place='Birmingham',save=False):
 	"""calculate rate of excess death for one district; for weeks when 2020 data existss"""
-	district=CovidWeek.objects.filter(areaname=place,date__range=RANGE).order_by('date')
+	print(place)
+	district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
+	print(district)
 	areacode=district[0].areacode
 
 	all_deaths_2020=0
@@ -71,7 +72,7 @@ def update_cum_district_death(d):
 	if True:
 		cum=0
 		print(d)
-		for w in CovidWeek.objects.filter(areacode=d).order_by('date'):
+		for w in CovidWeek.objects.filter(areacode=d).order_by('week'):
 			if w.weeklydeaths is not None:
 				cum+=w.weeklydeaths	
 				if cum != w.totcumdeaths:
@@ -103,7 +104,7 @@ def calc_newcases_rates():
 		i=CovidScores.objects.get(areaname=place)
 		total_cases=DailyCases.objects.filter(specimenDate__range=_range,areaname=place).aggregate(Sum('dailyLabConfirmedCases'))['dailyLabConfirmedCases__sum']
 		
-		newcases_rate=round(total_cases/i.population*100000,1) if total_cases and i.population else 0
+		newcases_rate=round(total_cases/i.population*100000,1) if total_cases is not None and i.population else None
 		rates[place]=newcases_rate
 		i.latest_case_rate=newcases_rate
 		print(f'Place: {place} Cases: {total_cases} Rate:{newcases_rate}')
@@ -117,13 +118,12 @@ def calc_newcases_rates():
 #			i.save()
 #		else:
 #			print(f'Data missing for {place}')
-	
 
 def calc_new_cases():
 	"""calculate the new cases from cumulative cases"""
 	for d in districts():
 		for w in CovidWeek.objects.filter(areacode=d):
-			lastweek=CovidWeek.objects.filter(areacode=d,date=w.date-one_week)
+			lastweek=CovidWeek.objects.filter(areacode=d,week=w.week-1)
 			if lastweek:
 				lasttotal=lastweek[0].totcumcases
 			else:
@@ -173,9 +173,9 @@ def output_district(place,q=None):
 	
 	"""
 	if q:
-		district=q.filter(areaname=place,date__range=RANGE).order_by('date')
+		district=q.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
 	else:
-		district=CovidWeek.objects.filter(areaname=place,date__range=RANGE).order_by('date')
+		district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
 	
 	if district:
 		#print([f"{i.date:%d/%m}" for i in district])
@@ -264,7 +264,7 @@ def save_all_rates(filename):
 
 
 def district_deaths(place='Birmingham'):
-	district=CovidWeek.objects.filter(areaname=place,date__range=RANGE)
+	district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK)
 	areacode=district[0].areacode
 	print(areacode)	
 	totalcumdeaths=[i.totcumdeaths for i in district]

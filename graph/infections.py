@@ -3,7 +3,7 @@ from datetime import timedelta
 
 IFR=0.01 #infection fatality rate ((IFR)
 INV_IFR=1/IFR #inverse IFR
-ONSET_TO_DEATH=21 #days
+ONSET_TO_DEATH=3 #weeks
 
 def calc():
 	"""calculate infection for all stored places"""
@@ -12,11 +12,11 @@ def calc():
 
 def calc_district(place='Birmingham'):
 	"""calculate infections based on deaths in 3 weeks"""
-	for week in CovidWeek.objects.filter(areaname=place).order_by('date'):
-		future_week=CovidWeek.objects.filter(areaname=place,date=week.date+timedelta(ONSET_TO_DEATH))
+	for week in CovidWeek.objects.filter(areaname=place).order_by('week'):
+		future_week=CovidWeek.objects.filter(areaname=place,week=week.week+ONSET_TO_DEATH)
 		
 		try:
-			last_total=CovidWeek.objects.get(areaname=place,date=week.date-timedelta(7)).estinfectionscum
+			last_total=CovidWeek.objects.get(areaname=place,week=week.week-1).estinfectionscum
 			if last_total is None:
 				last_total=0
 		except:

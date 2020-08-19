@@ -78,7 +78,7 @@ class NI_Importer():
         _all=zero_null(self.data2[(self.data2['Registration Week']==week)][district])
         careh19=zero_null(self.data3[(self.data3['Registration Week']==week)][district])
         
-        qrow=CovidWeek.objects.filter(date=sunday(week+1),areacode=areacode) # week +1 to bring in line with ONS weeks.
+        qrow=CovidWeek.objects.filter(week=week+1,areacode=areacode) # week +1 to bring in line with ONS weeks.
         if qrow:
             row=qrow[0]
             if _update:
@@ -101,7 +101,7 @@ class NI_Importer():
             if _update:
                 areaname=stored_names[areacode]
                 _nation='Northern Ireland'
-                row=CovidWeek(date=sunday(week+1),areacode=areacode,nation=_nation,areaname=areaname)
+                row=CovidWeek(week=week+1,areacode=areacode,nation=_nation,areaname=areaname)
                 print(f'Created week {sunday(week)} for {district}')
                 row.weeklydeaths=_allc19
                 row.weeklyalldeaths=_all

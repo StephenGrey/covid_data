@@ -115,6 +115,7 @@ class Updater():
         self.scot2=scotland.Scot_Cases()
         self.scot2.process()
         
+        model_calcs.calc_newcases_rates()
 
     def load_constants(self):
         

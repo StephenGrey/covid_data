@@ -9,6 +9,7 @@ from .model_calcs import update_cum_district_death,DATA_STORE
 from .ons_fetch import update_row
 from .phe_fetch import update_weekly_total
 
+
 import configs
 from configs import userconfig
 
@@ -38,8 +39,16 @@ Footnotes:
 1) figures are provisional and subject to future changes					
 2) Weeks run from Monday to Sunday and are based on the ISO8601 international standard for week numbering. Note that weeks at the beginning and end of a year can overlap with the previous and subsequent year, so counts may not sum to annual totals published elsewhere.			
 3) Other institutions include clinics, medical centres, prisons and schools.					
-					
-"""
+
+The figures are produced using same definition as those published by the ONS
+for England and Wales, so are broadly comparable.
+One minor difference is how the registration weeks are defined:
+Weeks used by ONS (for England and Wales) run from Saturday to
+Friday
+NRS weeks (for Scotland) run from Monday to Sunday (this is the
+ISO8601 standard week)."""
+
+
 class Scot_Importer(PandaImporter):
     
     def update_check(self):
@@ -117,7 +126,7 @@ class Scot_Importer(PandaImporter):
         careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
         hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
         print(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
-        qrow=CovidWeek.objects.filter(date=sunday(week),areaname=district)
+        qrow=CovidWeek.objects.filter(week=week,areaname=district)
         if qrow:
             row=qrow[0]
             #print(row)

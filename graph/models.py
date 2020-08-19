@@ -29,8 +29,8 @@ class CovidWeek(models.Model):
     areacode=models.CharField('area_code',max_length=200,default='')
     areaname=models.CharField('areaname',max_length=200,default='')
     nation=models.CharField('areaname',max_length=50,default='')
-    date=models.DateTimeField('date',blank=True)
-    week=models.IntegerField('week',blank=True,null=True) #use ONS standard week
+    date=models.DateTimeField('date',blank=True,null=True)
+    week=models.IntegerField('week',blank=True) #use ONS standard week
     weeklydeaths=models.IntegerField('weekly_deaths',blank=True,null=True)
     weeklyalldeaths=models.IntegerField('weekly_all_deaths',blank=True,null=True)
     weeklyC19hospitaldeaths=models.IntegerField('weekly_covid_hospital_deaths',blank=True,null=True)

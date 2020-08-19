@@ -23,7 +23,7 @@ Adjust shape_url variable in line elow for new file name.
    var map_data_url="/graph/api_rates"
    
    if (display_value=='cases_rate'){
-	var legend0 = 5, legend1 = 10, legend2 = 20, legend3 = 30, legend4 = 40, legend5 = 50; // Must be 6 ranges
+	var legend0 = 0, legend1 = 10, legend2 = 20, legend3 = 30, legend4 = 40, legend5 = 50; // Must be 6 ranges
    var stat_name = 'Covid-19 cases last 7 days';    // This will be displayed on the map 
    var colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
 	
@@ -88,14 +88,10 @@ function loadmap(){
     mapLookup = d3.map();
 
 
-
-
-
-	
 d3.json(map_data_url, function (data) {
     console.log(data);
     data.dataset.forEach( function(d) {
-    	mapLookup.set(d.areaname,+d.cases_rate);   //+d.excess
+    	mapLookup.set(d.areaname,d.cases_rate);   //+d.excess
     	});
     $.getJSON(shape_url).done(addTopoData);
     
@@ -104,13 +100,14 @@ d3.json(map_data_url, function (data) {
 
 // Colours used (uses parameters defined at start)
   function getColor(d) {
-    return d > legend5 ? colourmatrix[colour_scheme][5] :
+    return 
+           d > legend5 ? 'red' :  //colourmatrix[colour_scheme][5]
            d > legend4 ? colourmatrix[colour_scheme][4] :
            d > legend3 ? colourmatrix[colour_scheme][3] :
            d > legend2 ? colourmatrix[colour_scheme][2] :
            d > legend1 ? colourmatrix[colour_scheme][1] :
            d > legend0 ? colourmatrix[colour_scheme][0] :
-                         'grey';
+          'red';
   }
 
   // Draws the boundary data on the map

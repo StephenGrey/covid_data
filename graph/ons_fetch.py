@@ -14,7 +14,6 @@ MASTER_URL="https://api.beta.ons.gov.uk/v1/datasets"
 POST_URL= "https://api.beta.ons.gov.uk/v1/filters"
 #OUTPUT_URL="https://api.beta.ons.gov.uk/v1/filter-outputs/"
 
-
 """
 mismatch: Isles of Scilly & Cornwall and Isles of Scilly
 
@@ -86,7 +85,7 @@ class ONS_Importer(PandaImporter):
         careh19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
         hosp19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Hospital')]['v4_0'].sum()
         print(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
-        qrow=CovidWeek.objects.filter(date=ons_week(week),areacode=district)
+        qrow=CovidWeek.objects.filter(week=week,areacode=district)
         if qrow:
             row=qrow[0]
             #print(row)
@@ -96,7 +95,7 @@ class ONS_Importer(PandaImporter):
             if _update:
                 areaname=stored_names[district]
                 _nation=nation[district]
-                row=CovidWeek(date=ons_week(week),areacode=district,nation=_nation,areaname=areaname,week=week)
+                row=CovidWeek(areacode=district,nation=_nation,areaname=areaname,week=week)
                 print(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
@@ -228,7 +227,7 @@ def district_week(geography="E06000016",options="",latest_url="",series=ID):
             #print(week_data['all_covid'])
             week_data['total_allcauses']=week_data['care-home_all-causes']+week_data['elsewhere_all-causes']+week_data['home_all-causes']+week_data['hospice_all-causes']+week_data['hospital_all-causes']+week_data['other-communal-establishment_all-causes']
             #print(week_data)
-            qrow=CovidWeek.objects.filter(date=sunday(week),areacode=geography)
+            qrow=CovidWeek.objects.filter(week=week,areacode=geography)
             row=next(iter(qrow), None)
             if row:
                 _allc19=week_data['all_covid']
