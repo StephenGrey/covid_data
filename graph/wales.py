@@ -26,18 +26,18 @@ class Wales_Cases():
         
         
     def parse(self):
-        for district in self.districts():
-            self.parse_district(district)
+        for areacode, district in wales_codes.items():
+            self.parse_district(district,areacode)
             
-    def parse_district(self,district,_update=True):
-        sub=data[data['Local Authority']==district] 
+    def parse_district(self,district,areacode,_update=True):
+        sub=self.data[self.data['Local Authority']==district] 
         for xcldate in sub['Specimen date'].values:
             totalcases,newcases=sub[sub['Specimen date']==xcldate][['Cumulative cases','Cases (new)']].values[0]
             
             i,created=DailyCases.objects.get_or_create(specimenDate=timeaware(pandas.to_datetime(xcldate)),areaname=district)
             i.dailyLabConfirmedCases=newcases
             i.totalLabConfirmedCases=totalcases
-            
+            i.areacode=areacode
             print(newcases,totalcases)
             i.save()
 

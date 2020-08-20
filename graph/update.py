@@ -1,6 +1,6 @@
 import os
 from .models import CovidWeek, CovidScores,AverageWeek
-from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections
+from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections, wales
 from django.db.models import Sum
 from .ons_week import stored_names
 
@@ -109,6 +109,9 @@ class Updater():
         print('Checking PHE case - England and Wales - released daily')
         cz=phe_fetch.Fetch_PHE()
         cz.process()
+        
+        wz=wales.Wales_Cases()
+        wz.process()
         
 #        self.cz.update_totals()
         print('Updating Scottish cases - released daily')
