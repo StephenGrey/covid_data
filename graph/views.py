@@ -12,7 +12,7 @@ from . import ons_fetch, model_calcs
 log = logging.getLogger('api.graph.views')
 
 def index(request,place='Birmingham'):
-    return render(request,'graph/covid_chart2.html',{'place':place, 'api_status':'true', 'covid-rates':model_calcs.output_rates()})
+    return render(request,'graph/covid_chart_map.html',{'place':place, 'api_status':'true', 'covid-rates':model_calcs.output_rates()})
 
 def index_m(request,place='Birmingham'):
     return render(request,'graph/covid_chart_map.html',{'place':place, 'api_status':'false','covid-rates':model_calcs.output_rates()})
