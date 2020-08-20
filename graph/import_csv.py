@@ -266,7 +266,24 @@ class AddAverages(Importer):
 			except Exception as e:
 				print(e)
 				print(wk.__dict__)
-
+				
+				
+def merge_averages(districts2merge,target):
+	"""merge averages for some areacodes into other areacode"""
+	
+	for week in range(1,54):
+		q=AverageWeek.objects.filter(week=week,areacode__in=districts2merge)
+		t,created=AverageWeek.objects.get_or_create(week=week,areacode=target)
+		if created:
+			print(f'Created average data for {target} for week{week}')
+		t.weeklyhospitaldeaths=sum([i.weeklyhospitaldeaths for i in q])
+		t.weeklyelsewheredeaths=sum([i.weeklyelsewheredeaths for i in q])
+		t.weeklyhospicedeaths=sum([i.weeklyhospicedeaths for i in q])
+		t.weeklyothercommunaldeaths=sum([i.weeklyothercommunaldeaths for i in q])
+		t.weeklyhomedeaths=sum([i.weeklyhomedeaths for i in q])
+		t.weeklycarehomedeaths=sum([i.weeklycarehomedeaths for i in q])
+		t.weeklyalldeaths=sum([i.weeklyalldeaths for i in q])
+		t.save()
 
 class AddPop(Importer):
 	#areacode,areaname,type,population2019

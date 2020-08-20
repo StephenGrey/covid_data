@@ -1,7 +1,7 @@
 import requests,json,csv
 from .ons_week import week as ons_week,sunday,stored_names,nation,weeks
 from .models import CovidWeek,CovidScores
-from .import_csv import URLImporter,PandaImporter
+from .import_csv import URLImporter,PandaImporter,merge_averages
 import configs
 from configs import userconfig
 from datetime import date,timedelta
@@ -262,6 +262,16 @@ def correct_smallpops():
     HaCi.population=hack+city
     HaCi.save()
     print('Corrected Hackney and City of London pop')
+    merge_averages(['E07000004','E07000005','E07000006','E07000007'],'E06000060') #merge average data foe Bucks districts into Buckinghamshire
+"""
+TO DO - MERGE THESE AVERAGES DATA FOR THESE 
+Aylesbury Vale (E07000004)
+Chiltern (E07000005)
+South Bucks (E07000006)
+Wycombe (E07000007)
+['E07000004','E07000005','E07000006','E07000007']
+
+"""
     
 def get_latest(_id=ID):
     """latest details of ONS series"""

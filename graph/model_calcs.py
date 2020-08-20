@@ -14,9 +14,7 @@ MAP_PATH='graph/json/UK_corrected_topo.json'
 
 def excess_deaths_district(place='Birmingham',save=False):
 	"""calculate rate of excess death for one district; for weeks when 2020 data existss"""
-	print(place)
 	district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
-	print(district)
 	areacode=district[0].areacode
 
 	all_deaths_2020=0
@@ -193,7 +191,6 @@ def output_district(place,q=None):
 		averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
 		totavdeaths=[str(i.weeklyalldeaths) for i in averages]
 		avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
-		
 		#print(place)
 		#print(weeklycases)
 		sc=CovidScores.objects.get(areaname=place)

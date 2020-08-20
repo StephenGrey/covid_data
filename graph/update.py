@@ -122,11 +122,12 @@ class Updater():
         #all UK population
         import_csv.AddPop(os.path.join(DATA_STORE,POP_FILE))
         
-        
         #add average deaths
         #England and Wales
         aa=import_csv.AddAverages(os.path.join(DATA_STORE,EW_AV_FILE))
         aa.total_averages()
+
+        ons_fetch.correct_smallpops() #merge small places and deal with corrected geographies
         
         #Scotland
         sa=scotland.Scot_Average()

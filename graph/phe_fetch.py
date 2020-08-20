@@ -190,6 +190,7 @@ class Fetch_PHE(PandaImporter):
 		self.today=date.today()
 		self.edition=None
 		self.fetch()
+		self.fix()
 		self.sequences=['ltla', 'nation', 'region', 'utla']
 		
 	def process(self):
@@ -221,7 +222,7 @@ class Fetch_PHE(PandaImporter):
 #			json.dump(self.data, outfile)
 		
 	def update_totals(self):
-		update_weekly_cases()
+		update_weekly_cases('England')
 
 
 	def update_check(self):
@@ -255,6 +256,10 @@ class Fetch_PHE(PandaImporter):
 		with open(path, 'wb') as f:
 			f.write(res.content)
 		self.open_csv(path)
+
+	def fix(self):
+		self.data.loc[self.data['Area name']=='Buckinghamshire','Area code']='E06000060'
+		print('Fixed wrong areacode for Bucks in PHE data')
 
 	def open_csv(self,f):
 		self.data=pandas.read_csv(f, encoding= "iso-8859-1")
