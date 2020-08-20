@@ -70,15 +70,17 @@ legend.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
         grades = [legend0, legend1, legend2, legend3, legend4,legend5],
-        labels = [];
+        labels = ['Cases last 7 days <br>per 100,000 people'];
 
     // loop through our density intervals and generate a label with a colored square for each interval
+    div.innerHTML += labels.join('<br>');
+    div.innerHTML += '<br>';
     for (var i = 0; i < grades.length; i++) {
         div.innerHTML +=
             '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
             grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
     }
-
+    
     return div;
 };
 
