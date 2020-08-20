@@ -54,7 +54,7 @@ class Check_PHE():
                     print('nothing new here')
                     self._update=False
                     return False
-                userconfig.update('PHE','england_total_cases',str(self.latest_total))
+            userconfig.update('PHE','england_total_cases',str(self.latest_total))
         self._update=True
         return True
         
