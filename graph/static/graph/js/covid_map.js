@@ -23,10 +23,10 @@ Adjust shape_url variable in line elow for new file name.
    var map_data_url="/graph/api_rates"
    
    if (display_value=='cases_rate'){
-	var legend0 = -1, legend1 = 5, legend2 = 10, legend3 = 20, legend4 = 40, legend5 = 50; // Must be 6 ranges
+	var legend0 = 0, legend1 = 5, legend2 = 10, legend3 = 20, legend4 = 40, legend5 = 50; // Must be 6 ranges
    var stat_name = 'Covid-19 cases last 7 days';           // This will be displayed on the map 
    var colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
-	
+   var highlighted_feature =null	
 	
 	}
 	else{
@@ -42,9 +42,19 @@ Adjust shape_url variable in line elow for new file name.
                     ,Green:["#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32"]
                     ,Purple: ['#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#4a1486']
                     ,Red: ["#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#99000d"]
-                    ,Blue:["#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#085192", "#08306b"]
+                    ,Blue:["white", "#6baed6", "#4292c6", "#2171b5", "#085192", "#08306b"]
                     ,Orange:["#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#8c2d04"]
                     }
+var highlight = {
+    'color': 'red',
+    'weight': 6,
+    'opacity': 1
+};
+
+var unhighlight=
+{'color': 'black',
+'weight':0.5,
+ 'opacity': 1 };
 
 //var lagb = "https://raw.githubusercontent.com/kierandriscoll/UK-Topojson/master/Local-Authorities/Local_Auths_Dec16_Gen_Clip_GB.json"
 //    var shape_url = "/static/graph/json/Local_Auths_Dec16_Gen_Clip_UK.json"
@@ -53,6 +63,28 @@ Adjust shape_url variable in line elow for new file name.
     var references={};
     var startplace="Birmingham";
     var mapLookup;
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [legend0, legend1, legend2, legend3, legend4,legend5],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+
+
+
 
 function loadmap(){
 	   
@@ -68,7 +100,7 @@ function loadmap(){
    map = new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
    var layer = new L.StamenTileLayer("terrain");
    map.addLayer(layer); // Optional
-
+   legend.addTo(map);
    //Code to convert TopoJson to GeoJson
    L.TopoJSON = L.GeoJSON.extend({ 
                   addData: function(jsonData) {   
@@ -101,13 +133,13 @@ d3.json(map_data_url, function (data) {
 // Colours used (uses parameters defined at start)
 
   function getColor(d) {
-    return d == null ? 'white': 
+    return d == null ? 'grey': 
            d > legend5 ? colourmatrix[colour_scheme][5] :
            d > legend4 ? colourmatrix[colour_scheme][4] :
            d > legend3 ? colourmatrix[colour_scheme][3] :
            d > legend2 ? colourmatrix[colour_scheme][2] :
            d > legend1 ? colourmatrix[colour_scheme][1] :
-           d > legend0 ? colourmatrix[colour_scheme][0] :
+           d >= legend0 ? colourmatrix[colour_scheme][0] :
                          'grey';
   }
   // Draws the boundary data on the map
@@ -142,7 +174,9 @@ function zoom2place(place) {
     console.log('zooming to : '+place);
     
     try {
-    map.fitBounds(references[place]._bounds)
+    var feat = references[place]
+    map.fitBounds(feat._bounds)
+    highlightLayer(feat);
     }
      catch(err) {
     console.log(err);
@@ -164,16 +198,20 @@ function loadData(src) {
     });
 }
 
-   function zoomToFeature(e) {
-        console.log(e)
+function zoomToFeature(e) {
         var feature = L.geoJson(e).addTo(map);
 		map.fitBounds(feature.getBounds());
-        //map.fitBounds(e.getBounds());
-//        country = e.target.feature.properties.name;		// To update the select
-//            $("#state").val(country);
         }
 
-
+function highlightLayer(layerID) {
+	if (highlighted_feature) {
+	highlighted_feature.setStyle(unhighlight);
+    }
+	_this=map._layers[layerID._leaflet_id]
+    _this.setStyle(highlight);
+    highlighted_feature=_this;
+}
+ 
   // Add Tooltip feature
   var info = L.control();
  
