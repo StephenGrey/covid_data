@@ -122,6 +122,7 @@ class Updater():
         #all UK population
         import_csv.AddPop(os.path.join(DATA_STORE,POP_FILE))
         
+        
         #add average deaths
         #England and Wales
         aa=import_csv.AddAverages(os.path.join(DATA_STORE,EW_AV_FILE))

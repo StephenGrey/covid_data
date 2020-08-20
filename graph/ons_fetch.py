@@ -1,6 +1,6 @@
 import requests,json,csv
 from .ons_week import week as ons_week,sunday,stored_names,nation,weeks
-from .models import CovidWeek
+from .models import CovidWeek,CovidScores
 from .import_csv import URLImporter,PandaImporter
 import configs
 from configs import userconfig
@@ -246,9 +246,23 @@ def district_week(geography="E06000016",options="",latest_url="",series=ID):
 
     return data
 
-
+def correct_smallpops():
+    cornwall=CovidScores.objects.get(areaname="Cornwall").population
+    IoS=CovidScores.objects.get(areaname="Isles of Scilly").population
     
+    CwIoS,created=CovidScores.objects.get_or_create(areaname="Cornwall and Isles of Scilly")
+    CwIoS.population=cornwall+IoS
+    CwIoS.save()
+    print('Corrected Cornwall and Isles of Scilly pop')
 
+    hack=CovidScores.objects.get(areaname="Hackney").population
+    city=CovidScores.objects.get(areaname="City of London").population
+
+    HaCi,created=CovidScores.objects.get_or_create(areaname="Hackney and City of London")
+    HaCi.population=hack+city
+    HaCi.save()
+    print('Corrected Hackney and City of London pop')
+    
 def get_latest(_id=ID):
     """latest details of ONS series"""
     info=lookup_index(series=_id)[0]

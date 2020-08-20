@@ -285,6 +285,8 @@ class AddPop(Importer):
 
 		except Exception as e:
 			print(e)
+			
+	
 
 def total_averages():
 	if True:	

@@ -223,6 +223,7 @@ class Fetch_PHE(PandaImporter):
 	def update_totals(self):
 		update_weekly_cases()
 
+
 	def update_check(self):
 		PHEstored=configs.config.get('PHE')
 		if PHEstored:
@@ -324,7 +325,7 @@ class Fetch_API(Check_PHE):
 			json.dump(self.data, outfile)
 		
 	def update_totals(self):
-		update_weekly_cases()
+		update_weekly_cases('England')
 
 	def update_check(self):
 		return check()
@@ -382,8 +383,8 @@ def check_and_download():
         print('No need to download')
 
 
-def update_weekly_cases():
-    q=CovidWeek.objects.filter(nation='England')
+def update_weekly_cases(nation):
+    q=CovidWeek.objects.filter(nation=nation)
     for place in q.values('areacode','areaname').distinct():
         areacode=place['areacode']
         area=place['areaname']

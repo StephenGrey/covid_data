@@ -87,7 +87,7 @@ def calc_excess_rates():
 	"""update all the excess death rates for all districts"""
 	for place in district_names():
 		i=CovidScores.objects.get(areaname=place)
-		if i.population and i.excess_deaths:
+		if i.population and i.excess_deaths is not None:
 			rate=round(i.excess_deaths/i.population*100000,1)
 			print(rate)
 			i.excess_death_rate=rate

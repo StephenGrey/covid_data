@@ -5,7 +5,7 @@ from django.test import TestCase
 #    from django.core.urlresolvers import reverse,resolve
 #except ImportError:
 #    from django.urls import reverse,resolve,NoReverseMatch
-from graph.models import CovidWeek
+from graph.models import CovidWeek,DailyCases,CovidScores
 from graph import ons_week,model_calcs
 #from documents.management.commands import setup
 #from documents.management.commands.setup import make_admin_or_login
@@ -45,6 +45,15 @@ class MapTest(GraphTest):
                 #Bournemouth, Christchurch and PPoole
                 print(areacode)
                 knownmissing=[]
+                self.assertTrue(areacode in knownmissing)
+                
+    def test_Cornwall(self):
+        print(DailyCases.objects.filter(areacode='E06000052'))
+         
+         
+
+                
+                
 #                
 #        'E06000058',
 #		'E06000059', #Dorset
@@ -66,10 +75,3 @@ class MapTest(GraphTest):
 #'S08000030',
 #'S08000031',
 #'S08000032']
-                self.assertTrue(areacode in knownmissing)
-                
-
-    
-    
-    	
-    	

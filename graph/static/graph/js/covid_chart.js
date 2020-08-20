@@ -373,7 +373,6 @@ var ctx;
 var myChart;
 var myNewChart;
 
-
 document.addEventListener('DOMContentLoaded', (event) => {
   //the event occurred
 
