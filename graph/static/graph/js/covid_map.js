@@ -100,10 +100,34 @@ zoomplace=place
    var fmtph = d3.format(".1%");  // Formats percentages with % and 1dp (only for hover)
    var fmtpl = d3.format(".0%");  // Formats percentages with % and 0dp (only for legend)
  
-   // Define Map area/position and any background tiles
-   map = new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
-   var layer = new L.StamenTileLayer("terrain");
-   map.addLayer(layer); // Optional
+  
+  // initialize Leaflet
+map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
+//L.map('mapid').setView([51.505, -0.09], 13);
+
+var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+});
+
+ layer.addTo(map);
+ 
+/*   // Define Map area/position and any background tiles
+   map =  L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
+//   = new L.StamenTileLayer("terrain");
+//   var layer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//	maxZoom: 19,
+//	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+//});
+   
+  var layer = new L.TileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: ['a','b','c']
+});
+//.addTo( map );
+   
+   layer.addTo(map);
+*/
+//   map.addLayer(layer); // Optional
    legend.addTo(map);
    //Code to convert TopoJson to GeoJson
    L.TopoJSON = L.GeoJSON.extend({ 
@@ -118,17 +142,18 @@ zoomplace=place
     }}});
  
   topoLayer = new L.TopoJSON();
-  topoLayer.on('data:loaded',function(e){
-  console.log("loaded");   
-  });
+  console.log(topoLayer);
+//  topoLayer.on('data:loaded',function(e){
+//  console.log("loaded");   
+//  });
     // Possible Colour Schemes
 
   // Imports boundary data and passes to the addTopoData function
-    mapLookup = d3.map();
+  mapLookup = d3.map();
 
 
 d3.json(map_data_url, function (data) {
-    console.log(data);
+ //   console.log(data);
     data.dataset.forEach( function(d) {
     	mapLookup.set(d.areaname,d.cases_rate);   //+d.excess
     	});
