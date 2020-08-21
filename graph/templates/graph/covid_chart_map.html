@@ -7,8 +7,9 @@
 --><!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 -->
 <link rel="stylesheet" href="https://www.reuters.com/investigates/static/4-3-1/en/styles/main.css?v=090816300620">
-<link rel="shortcut icon" href="https://www.reuters.com/investigates/static/4-3-1/en/favicon.ico?v=353616290620">
- <style type="text/css">
+
+<!--<link rel="shortcut icon" href="https://www.reuters.com/investigates/static/4-3-1/en/favicon.ico?v=353616290620">
+--> <style type="text/css">
  .row-full{
  width: 90vw;
 margin-left: -10vw;
@@ -90,7 +91,7 @@ margin-left: -10vw;
   	<div class="row">
   		<div class="col-md-1">
 			<select id="Filter2">
-			<option value="1" selected>England</option>
+			<option value="1">England</option>
 			<option value="2">Wales</option>
 			<option value="3">Scotland</option>
 			<option value="4">Northern Ireland</option>
@@ -116,7 +117,7 @@ margin-left: -10vw;
 <option value="Bath and North East Somerset" data-tag="1">Bath and North East Somerset</option>
 <option value="Bedford" data-tag="1">Bedford</option>
 <option value="Bexley" data-tag="1">Bexley</option>
-<option value="Birmingham" data-tag="1" selected>Birmingham</option>
+<option value="Birmingham" data-tag="1">Birmingham</option>
 <option value="Blaby" data-tag="1">Blaby</option>
 <option value="Blackburn with Darwen" data-tag="1">Blackburn with Darwen</option>
 <option value="Blackpool" data-tag="1">Blackpool</option>
@@ -528,8 +529,13 @@ Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Ch
 var api_fetch={{api_status}}
 
 function firstload(){
-loadmap();
+loadmap("{{place}}");
 get_data("{{place}}");
+var sel2 = document.getElementById("Filter2");
+selectOption(sel2,"{{nation_index}}");
+updateNation();
+var sel = document.getElementById("Filter{{nation}}");
+selectOption(sel, "{{place}}");
 };
 
 </script>

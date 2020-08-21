@@ -26,7 +26,8 @@ function parse_data(dataset)
     		
     		var series8=dataset[8].data;
     		var label8=dataset[8].label;
-
+    		
+            ;
             ;
             draw_chart(chart_title,excess,series1,series2,series3,series4,series5,series6,series7,series8,label1,label2,label3,label4,label5,label6,label7,label8);
 
@@ -34,18 +35,48 @@ function parse_data(dataset)
 
 var api_url="/graph/api/"
 
+function selectOption(sel, val) {
+    var opt; 
+
+    // loop through options in select list
+    for ( var i = 0, len = sel.options.length; i < len; i++ ) {
+        opt = sel.options[i]; //
+
+        if ( opt.value === val ) {
+            opt.selected = true;
+            break;
+        }
+    }
+}
+
+
+
 function get_data(placename)
     {
     if (api_fetch="true")
     {
     	$.get( api_url+placename, function( data ) 
       {
+	    
+	    var nation=data.nation
+    	var nation_index=data.nation_index
+    	var areacode=data.areacode
 	    var dataset=data.dataset
 	    //console.log(dataset);
 	    if (dataset){
 	    		//alert(data.results.progress);
      	    parse_data(dataset);
-     	         	};
+     	    
+     	    if (nat_code!=nation_index)
+     	    {
+     	    console.log('Switch nation');
+     	    var sel2 = document.getElementById("Filter2");
+            selectOption(sel2,nation_index.toString());
+            updateNation();
+     	    };
+     	    var sel = document.getElementById("Filter"+nation);
+            selectOption(sel,placename);
+     	};
        });
      }
     else
@@ -55,11 +86,12 @@ function get_data(placename)
     		
     		//console.log(dataset)//alert(data.results.progress);
     parse_data(dataset);
-
+    
+    
+    
     		};
      };
-    console.log('getting data and zooming to '+placename);
-    zoom2place(placename);
+    console.log('getting data for '+placename);
      };
 
 function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,series6,series7,series8,label1,label2,label3,label4,label5,label6,label7,label8)
@@ -319,9 +351,16 @@ function updateChart() {
 		var determineChart = $("#FilterNI").val();
 		};
 
-     //console.log(determineChart);
+     console.log('getting data here');
      get_data(determineChart);
+     zoom2place(determineChart);
  };
+
+function adjustFilter(place){
+
+
+	
+};
 
 
 function updateNation() {
@@ -358,9 +397,10 @@ function updateNation() {
 		$('#FilterWales').hide();
 		};
 	new_nation=nations[nation_select];
-	all_data=new_data[new_nation];
+//	all_data=new_data[new_nation];
 	updateChart();
  };
+
 
 
 //var all_data= new_data['England'];

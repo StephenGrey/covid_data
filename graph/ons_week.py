@@ -32,7 +32,7 @@ def sunday(number):
 
 def make_index():
     _i={}
-    for name,areacode in stored_names:
+    for name,areacode in stored_names.items():
         _i[areacode]=name
     return _i
     

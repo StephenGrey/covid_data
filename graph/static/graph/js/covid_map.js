@@ -36,6 +36,7 @@ Adjust shape_url variable in line elow for new file name.
 
 	}
    var map;
+   var zoomplace;
    var topoLayer;
    var colourmatrix = {
                     R2G:["#cb181d","#fb6a4a","#fcbba1","#c7e9c0","#74c476","#238b45"]
@@ -88,9 +89,10 @@ legend.onAdd = function (map) {
 
 
 
-function loadmap(){
+function loadmap(place){
 	   
-
+console.log('Load map for '+place)
+zoomplace=place
    // Local Authority Boundaries data source
  //  var lagb = '{% static 'graph/json/Local_Auths_Dec16_Gen_Clip_GB.json' %}';
  
@@ -116,6 +118,9 @@ function loadmap(){
     }}});
  
   topoLayer = new L.TopoJSON();
+  topoLayer.on('data:loaded',function(e){
+  console.log("loaded");   
+  });
     // Possible Colour Schemes
 
   // Imports boundary data and passes to the addTopoData function
@@ -128,8 +133,9 @@ d3.json(map_data_url, function (data) {
     	mapLookup.set(d.areaname,d.cases_rate);   //+d.excess
     	});
     $.getJSON(shape_url).done(addTopoData);
-    
 });
+
+
 };
 
 // Colours used (uses parameters defined at start)
@@ -149,8 +155,7 @@ function addTopoData(topoData) {
            topoLayer.addData(topoData);
            topoLayer.addTo(map);
            topoLayer.eachLayer(handleLayer);
-           zoom2place(startplace);
-           
+           zoom2place(zoomplace);
    }
  
  
@@ -179,11 +184,16 @@ function zoom2place(place) {
     var feat = references[place]
     map.fitBounds(feat._bounds)
     highlightLayer(feat);
+    window.history.pushState(place,'COVID Kingdom: the UK COVID-19 Tracker','/graph/place='+place);
+    
     }
      catch(err) {
     console.log(err);
     };
    };
+
+
+
 
 function loadData(src) {
 
@@ -246,6 +256,7 @@ function highlightLayer(layerID) {
       clickplace= this.feature.properties.areaname;
       console.log('clicked on '+clickplace);
       //zoomToFeature(this.feature);
+      zoom2place(clickplace);
       get_data(clickplace);
   };
 
