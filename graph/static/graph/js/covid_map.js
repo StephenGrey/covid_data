@@ -21,20 +21,14 @@ Adjust shape_url variable in line elow for new file name.
    var shape_url = "/static/graph/json/UK_corrected_topo.json"
 //document.getElementById("shape_location").value;
    var map_data_url="/graph/api_rates"
-   
-   if (display_value=='cases_rate'){
-	var legend0 = 0, legend1 = 5, legend2 = 10, legend3 = 20, legend4 = 40, legend5 = 50; // Must be 6 ranges
-   var stat_name = 'Covid-19 cases last 7 days';           // This will be displayed on the map 
-   var colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
-   var highlighted_feature =null	
-	
-	}
-	else{
-	var legend0 = 20, legend1 = 40, legend2 = 70, legend3 = 90, legend4 = 110, legend5 = 130; // Must be 6 ranges	
-  var stat_name = 'Excess deaths per 100,000 people';     // This will be displayed on the map 
-   var colour_scheme = 'Red';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+   var legend_values={
+	'cases_rate':   [0,5,10,20,40,50],
+	'excess_death':[0,40,70,90,110, 130],
+};
 
-	}
+   var display_value, stat_name, legend0,legend1,legend2, legend3,legend4,legend5,colour_scheme,highlighted_feature
+   loadcolour_scheme()
+
    var map;
    var zoomplace;
    var topoLayer;
@@ -65,13 +59,30 @@ var unhighlight=
     var startplace="Birmingham";
     var mapLookup;
 
-var legend = L.control({position: 'bottomright'});
+var legend_map={}
+legend_map['cases_rate'] = L.control({position: 'bottomright'});
+legend_map['excess_death'] = L.control({position: 'bottomright'});
 
-legend.onAdd = function (map) {
+legend_map['cases_rate'].onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [legend0,legend1,legend2,legend3, legend4,legend5],
+        labels = ['Cases last 7 days <p>per 100,000 people'];
 
+    // loop through our density intervals and generate a label with a colored square for each interval
+    div.innerHTML += labels.join('<br>');
+    div.innerHTML += '<br>';
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+    
+    return div;
+};
+legend_map['excess_death'].onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend'),
         grades = [legend0, legend1, legend2, legend3, legend4,legend5],
-        labels = ['Cases last 7 days <br>per 100,000 people'];
+        labels = ['Excess deaths'];
 
     // loop through our density intervals and generate a label with a colored square for each interval
     div.innerHTML += labels.join('<br>');
@@ -85,7 +96,21 @@ legend.onAdd = function (map) {
     return div;
 };
 
-
+function loadcolour_scheme(){
+   var legends=legend_values[display_value];
+   console.log(legends);
+   legend0 = legends[0], legend1 = legends[1], legend2=legends[2], legend3=legends[3], legend4=legends[4], legend5=legends[5]; // Must be 6 ranges
+   highlighted_feature =null	
+   if (display_value=='cases_rate'){
+   console.log(legends);
+   stat_name = 'Covid-19 cases last 7 days';           // This will be displayed on the map 
+   colour_scheme = 'Blue';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+	}
+	else{
+    stat_name = 'Excess deaths per 100,000 people';     // This will be displayed on the map 
+    colour_scheme = 'Red';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+	}	
+};
 
 
 
@@ -111,24 +136,14 @@ var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
  layer.addTo(map);
  
-/*   // Define Map area/position and any background tiles
-   map =  L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
-//   = new L.StamenTileLayer("terrain");
-//   var layer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//	maxZoom: 19,
-//	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-//});
-   
-  var layer = new L.TileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: ['a','b','c']
-});
-//.addTo( map );
-   
-   layer.addTo(map);
-*/
-//   map.addLayer(layer); // Optional
-   legend.addTo(map);
+//add the default legend to the map
+legend_map['cases_rate'].addTo(map);
+
+add_shades();
+
+};
+
+  function add_shades(){
    //Code to convert TopoJson to GeoJson
    L.TopoJSON = L.GeoJSON.extend({ 
                   addData: function(jsonData) {   
@@ -155,13 +170,20 @@ var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 d3.json(map_data_url, function (data) {
  //   console.log(data);
     data.dataset.forEach( function(d) {
+    	if (display_value=='cases_rate'){
     	mapLookup.set(d.areaname,d.cases_rate);   //+d.excess
+    	}else{
+    	mapLookup.set(d.areaname,d.excess);
+    	};
+    	
     	});
     $.getJSON(shape_url).done(addTopoData);
 });
+  	
+  	
+  	
+  };
 
-
-};
 
 // Colours used (uses parameters defined at start)
 
@@ -201,6 +223,23 @@ function handleLayer(layer) {
    layers[layer._leaflet_id] = layer;
    references[layer.feature.properties.areaname]=layer;
   } //End of handleLayer function
+
+function updateData(){
+console.log('update data');
+display_value= $("#FilterData").val();
+console.log(display_value);
+loadcolour_scheme()
+map.removeLayer(topoLayer);
+add_shades();
+
+if (display_value === 'cases_rate') {
+        map.removeControl(legend_map['excess_death']);
+        legend_map['cases_rate'].addTo(map);
+    } else { // Or switch to the Population Change legend...
+        map.removeControl(legend_map['cases_rate']);
+        legend_map['excess_death'].addTo(map);
+    };
+};
 
 function zoom2place(place) {
     console.log('zooming to : '+place);

@@ -352,8 +352,9 @@ function updateChart() {
 		};
 
      console.log('getting data here');
-     get_data(determineChart);
-     zoom2place(determineChart);
+     focus_place=determineChart
+     get_data(focus_place);
+     zoom2place(focus_place);
  };
 
 function adjustFilter(place){
@@ -438,6 +439,7 @@ $('#FilterNI').on('change', updateChart);
 $('#FilterWales').on('change', updateChart);
 $('#FilterScotland').on('change', updateChart);
 $('#Filter2').on('change', updateNation);
+$('#FilterData').on('change', updateData);
 
 //updateNation();
 

@@ -3,6 +3,11 @@
 **/migrations/
 usersettings.config
 
+#data files
+data/2020*
+data/PHE_latestcases.csv
+data/Scotland_latestcases.csv
+
 #OS junk files
 [Tt]humbs.db
 *.DS_Store

@@ -281,9 +281,11 @@ class Fetch_API(Check_PHE):
 		"""override to any structure"""
 		return self.newcases
 	
+	def fix(self):
+		self.data.loc[self.data['Area name']=='Buckinghamshire','Area code']='E06000060'
+		print('Fixed wrong areacode for Bucks in PHE data')
 	
 	def process(self):
-		
 		if self.update_check():
 			self.ingest()
 			self.update_totals()

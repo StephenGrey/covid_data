@@ -109,7 +109,7 @@ margin-left: -10vw;
 			</select>	
 		</div>
 		<div class="col-md-1"></div>
-		<div class="col-md-4">
+		<div class="col-md-3">
 <select id="FilterEngland">
 <option value="Adur" data-tag="1">Adur</option>
 <option value="Allerdale" data-tag="1">Allerdale</option>
@@ -480,7 +480,11 @@ margin-left: -10vw;
 </select>
 </div>
 <div class="col-md-1"></div>
-<div class="col-md-4"><div id="new_cases">New Cases</div>&nbsp;&nbsp;<div id="new_cases">Excess Deaths</div>
+<div class="col-md-2">
+<select id="FilterData">Displaying 
+<option value="cases_rate" data-tag="1">New Cases</option>
+<option value="excess_death" data-tag="1">Excess Deaths</option>
+</select>
 </div>
 <br><br>
 <p>
@@ -539,7 +543,7 @@ Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Ch
 
 <script>
 var api_fetch={{api_status}}
-
+var focus_place="{{place}}"
 function firstload(){
 loadmap("{{place}}");
 get_data("{{place}}");
