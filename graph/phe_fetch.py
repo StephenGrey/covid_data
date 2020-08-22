@@ -70,6 +70,7 @@ class Check_PHE():
         return self.cases_and_deaths
         
     def get(self):
+        print('Fetching PHE cases from API')
         self.data=self.api.get_json()  # Returns a dictionary
         
     @property
@@ -111,32 +112,6 @@ class Check_PHE():
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
         }
         
-    def ingest(self,check=True):
-        """ingest from a particular sequence"""
-        data=self.data.get('data')
-        counter=0
-        for item in data:
-            datestring=item['specimenDate']
-            date=fetchdate(datestring)
-            row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
-            row.areaname=item['areaName']
-            daily=item['newCasesBySpecimenDate']
-            total=item['cumCasesBySpecimenDate']
-            if not created:
-                existing_daily=row.dailyLabConfirmedCases
-                existing_total=row.totalLabConfirmedCases
-            row.dailyLabConfirmedCases=daily
-            row.totalLabConfirmedCases=total
-            if not created:
-                print(f'Daily: old: {existing_daily} new: {daily}   Total: old: {existing_total} new: {total}')
-#			row.changeInDailyCases=None
-#			row.dailyTotalLabConfirmedCasesRate=Nonitem['dailyTotalLabConfirmedCasesRate']
-#			row.previouslyReportedDailyCases=item['previouslyReportedDailyCases']
-#			row.previouslyReportedTotalCases=item['previouslyReportedTotalCases']
-#			row.changeInTotalCases=item['changeInTotalCases']
-            row.save()
-            counter+=1
-        print(f'Processed: {counter} rows')
 
     def save(self):
         filename=f"{date.today()}-PHE-cases.json"
@@ -203,6 +178,7 @@ class Fetch_PHE(PandaImporter):
 	
 	def district_codes(self):
 		return sorted([z for z in self.data['Area code'].unique()])
+
 	
 	def ingest_all(self):
 		"""pull all daily cases from all PHE areas"""
@@ -290,8 +266,10 @@ class Fetch_API(Check_PHE):
 		self.api = Cov19API(filters=self.filters, structure=self.structure)
 		self.edition=None
 		self.sequences=['ltla','utla','nation','region']
-		self.api.latest_by='cumCasesBySpecimenDate' #TEMP
-		#self.fetch - get 
+		#self.api.latest_by='cumCasesBySpecimenDate' - this fetches only latest cases
+		#self.fetch - get
+		self.get()
+		
 	
 	@property
 	def filters(self):
@@ -305,19 +283,59 @@ class Fetch_API(Check_PHE):
 	
 	
 	def process(self):
+		
 		if self.update_check():
-			self.ingest_all()
+			self.ingest()
 			self.update_totals()
 		else:
 			print('PHE cases up to date')
+	
+	
+	def areacodes():
+		output=set()
+		for x in zz.data['data']:
+			output.add(x['areaCode'])
+		return output
+
+	def ingest(self,check=True):
+		"""ingest from a particular sequence"""
+		data=self.data.get('data')
+		counter=0
+		for item in data:
+			datestring=item['specimenDate']
+			date=fetchdate(datestring)
+			row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
+			row.areaname=item['areaName']
+			print(f'{row.areaname}: {datestring}')
+			daily=item['newCasesBySpecimenDate']
+			total=item['cumCasesBySpecimenDate']
+			if created:
+				row.dailyLabConfirmedCases=daily
+				row.totalLabConfirmedCases=total
+				row.save()
+			if not created:
+				existing_daily=row.dailyLabConfirmedCases
+				existing_total=row.totalLabConfirmedCases
+				if existing_daily !=daily or existing_total!=total:
+					print(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
+					row.dailyLabConfirmedCases=daily
+					row.totalLabConfirmedCases=total
+					row.save()
+			counter+=1
+			if counter%100==0:
+				print(f'Processing row {counter}')
+		print(f'Processed: {counter} rows')
 		
 	def ingest_all(self):
 		"""pull all daily cases from all PHE areas"""
-		for sequence in self.sequences:
-			print(f'pulling sequence: {sequence}')
-			self.api.filter=[f'areaType={sequence}']
-			self.get()
-			break
+		self.get()
+		
+
+#		for sequence in self.sequences:
+#			print(f'pulling sequence: {sequence}')
+#			self.api.filter=[f'areaType={sequence}']
+#			self.get()
+#			
 			
 		#if self.edition:
 		#	configs.userconfig.update('PHE','latest_cases',self.edition)
@@ -513,7 +531,21 @@ def timeaware(dumbtimeobject):
 #Mac / Linux stores all file times etc in GMT, so localise to GMT
 
 
-
-
-
-
+def ingest_cases(data):
+	count=0
+	print('Checking for new data')
+	try:
+		for index,row in data.iterrows():
+			try:
+				count+=1
+				if count%100==0:
+					print(count)
+				i,created=DailyCases.objects.get_or_create(areacode=row['Area code'], specimenDate=fetchdate(row['Specimen date']))
+				i.dailyLabConfirmedCases = row['Daily lab-confirmed cases']
+				i.totalLabConfirmedCases = row['Cumulative lab-confirmed cases']
+			except DailyCases.DoesNotExist:
+				print('entry does not exist')
+			
+	finally:
+		print(count)
+			

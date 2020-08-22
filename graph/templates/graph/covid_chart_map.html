@@ -65,11 +65,12 @@ margin-left: -10vw;
 
 <script src="{% static 'graph/js/d3.v3.min.js' %}"></script>
 
-<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+<!--<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
    crossorigin=""></script>
-<!--<script src="{% static 'graph/js/leaflet.js' %}"></script>
 -->
+<script src="{% static 'graph/js/leaflet.js' %}"></script>
+
 
 <!--<script src="{% static 'graph/js/tile.stamen.js' %}"></script>
 -->
@@ -108,7 +109,7 @@ margin-left: -10vw;
 			</select>	
 		</div>
 		<div class="col-md-1"></div>
-		<div class="col-md-1">
+		<div class="col-md-4">
 <select id="FilterEngland">
 <option value="Adur" data-tag="1">Adur</option>
 <option value="Allerdale" data-tag="1">Allerdale</option>
@@ -478,12 +479,13 @@ margin-left: -10vw;
 <option value="Wrexham" data-tag="2">Wrexham</option>
 </select>
 </div>
-
+<div class="col-md-1"></div>
+<div class="col-md-4"><div id="new_cases">New Cases</div>&nbsp;&nbsp;<div id="new_cases">Excess Deaths</div>
+</div>
 <br><br>
 <p>
 <div id="mapid"></div>
 <p>
-	
 
 </div>
 
