@@ -4,8 +4,8 @@ import datetime,json,os
 one_week=datetime.timedelta(7)
 from . import ons_week
 
-RANGE=["2020-02-07", "2020-08-16"]
-RANGE_WEEK=[6, 33]
+RANGE=["2020-02-07", "2020-08-23"]
+RANGE_WEEK=[6, 34]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
