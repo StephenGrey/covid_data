@@ -31,6 +31,98 @@ class NoContent(Exception):
 class NoEntry(Exception):
     pass
 
+
+class Check_PHE():
+    def __init__(self):
+        self.api = Cov19API(filters=self.filters, structure=self.structure)
+        PHEstored=configs.config.get('PHE')
+        if PHEstored:
+            self.England_cases=PHEstored.get('england_total_cases')
+        else:
+            self.England_cases=None
+        self.top()
+    
+    def top(self):
+        """get latest total"""
+        self.api.latest_by='cumCasesByPublishDate'
+        self.get()
+        self.latest_total=self.data['data'][0]['cumCasesByPublishDate']
+        print(f'England latest total: {self.latest_total}')
+        if self.latest_total:
+            if self.England_cases:
+                if int(self.England_cases)==self.latest_total:
+                    print('nothing new here')
+                    self._update=False
+                    return False
+            userconfig.update('PHE','england_total_cases',str(self.latest_total))
+        self._update=True
+        return True
+        
+        
+    @property
+    def filters(self):
+        """override to any filter"""
+        return self.England_filter
+        
+    @property
+    def structure(self):
+        """override to any structure"""
+        return self.cases_and_deaths
+        
+    def get(self):
+        print('Fetching PHE cases from API')
+        self.data=self.api.get_json()  # Returns a dictionary
+        
+    @property
+    def cases_and_deaths(self):
+        return {
+        "date": "date",
+        "areaName": "areaName",
+        "areaCode": "areaCode",
+        "newCasesByPublishDate": "newCasesByPublishDate",
+        "cumCasesByPublishDate": "cumCasesByPublishDate",
+        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
+        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+        }
+    
+    @property
+    def England_filter(self):
+        return ['areaType=nation','areaName=England']
+        
+    
+    @property
+    def local_filter(self):
+        return ['areaType=ltla']
+
+    @property
+    def local_filter(self):
+        return ['areaType=ltla']
+
+    @property
+    def updated(self):
+        return self.api.last_update
+        
+    @property
+    def newcases(self):
+        return{
+        "specimenDate": "date",
+        "areaName": "areaName",
+        "areaCode": "areaCode",
+#        "newCasesByPublishDate": "newCasesByPublishDate",
+#        "cumCasesByPublishDate": "cumCasesByPublishDate",
+#        "newDeathsByDeathDate": "newDeathsByDeathDate",
+#        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
+        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
+        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
+        }
+        
+
+    def save(self):
+        filename=f"{date.today()}-PHE-cases.json"
+        filepath=os.path.join(DATA_STORE,filename)
+        with open(filepath, 'w') as outfile:
+            json.dump(self.data, outfile)
+
 class Fetch_API(Check_PHE):
 	def __init__(self,force_update=False):
 		self.today=date.today()
@@ -176,97 +268,6 @@ class Fetch_API(Check_PHE):
 			row.save()
 			counter+=1
 		print(f'Processed: {counter} rows')
-
-class Check_PHE():
-    def __init__(self):
-        self.api = Cov19API(filters=self.filters, structure=self.structure)
-        PHEstored=configs.config.get('PHE')
-        if PHEstored:
-            self.England_cases=PHEstored.get('england_total_cases')
-        else:
-            self.England_cases=None
-        self.top()
-    
-    def top(self):
-        """get latest total"""
-        self.api.latest_by='cumCasesByPublishDate'
-        self.get()
-        self.latest_total=self.data['data'][0]['cumCasesByPublishDate']
-        print(f'England latest total: {self.latest_total}')
-        if self.latest_total:
-            if self.England_cases:
-                if int(self.England_cases)==self.latest_total:
-                    print('nothing new here')
-                    self._update=False
-                    return False
-            userconfig.update('PHE','england_total_cases',str(self.latest_total))
-        self._update=True
-        return True
-        
-        
-    @property
-    def filters(self):
-        """override to any filter"""
-        return self.England_filter
-        
-    @property
-    def structure(self):
-        """override to any structure"""
-        return self.cases_and_deaths
-        
-    def get(self):
-        print('Fetching PHE cases from API')
-        self.data=self.api.get_json()  # Returns a dictionary
-        
-    @property
-    def cases_and_deaths(self):
-        return {
-        "date": "date",
-        "areaName": "areaName",
-        "areaCode": "areaCode",
-        "newCasesByPublishDate": "newCasesByPublishDate",
-        "cumCasesByPublishDate": "cumCasesByPublishDate",
-        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
-        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
-        }
-    
-    @property
-    def England_filter(self):
-        return ['areaType=nation','areaName=England']
-        
-    
-    @property
-    def local_filter(self):
-        return ['areaType=ltla']
-
-    @property
-    def local_filter(self):
-        return ['areaType=ltla']
-
-    @property
-    def updated(self):
-        return self.api.last_update
-        
-    @property
-    def newcases(self):
-        return{
-        "specimenDate": "date",
-        "areaName": "areaName",
-        "areaCode": "areaCode",
-#        "newCasesByPublishDate": "newCasesByPublishDate",
-#        "cumCasesByPublishDate": "cumCasesByPublishDate",
-#        "newDeathsByDeathDate": "newDeathsByDeathDate",
-#        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
-        "newCasesBySpecimenDate":"newCasesBySpecimenDate",
-        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
-        }
-        
-
-    def save(self):
-        filename=f"{date.today()}-PHE-cases.json"
-        filepath=os.path.join(DATA_STORE,filename)
-        with open(filepath, 'w') as outfile:
-            json.dump(self.data, outfile)
 
 
 class OLDCheck_PHE():
