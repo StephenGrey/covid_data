@@ -107,7 +107,7 @@ class Updater():
             infections.calc()
 
         print('Checking PHE case - England and Wales - released daily')
-        cz=phe_fetch.Fetch_PHE()
+        cz=phe_fetch.Fetch_API()
         cz.process()
         
 #        #Welsh cases now on PHE API
