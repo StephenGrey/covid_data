@@ -110,11 +110,12 @@ class Updater():
         cz=phe_fetch.Fetch_PHE()
         cz.process()
         
-        wck=wales.Wales_Check()
-        if wck._update:
-            print('Updating Welsh cases')
-            wz=wales.Wales_Cases()
-            wz.process()
+#        #Welsh cases now on PHE API
+#        wck=wales.Wales_Check()
+#        if wck._update:
+#            print('Updating Welsh cases')
+#            wz=wales.Wales_Cases()
+#            wz.process()
         
 #        self.cz.update_totals()
         print('Updating Scottish cases - released daily')
