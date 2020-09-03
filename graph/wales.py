@@ -78,6 +78,14 @@ class Wales_Cases():
             print(newcases,totalcases)
             i.save()
 
+
+
+#latency calcs
+
+
+
+
+
             
             
 #        

@@ -1,5 +1,6 @@
 import os,json,requests,csv,pandas
 from bs4 import BeautifulSoup as BS
+from utils import time_utils
 from .models import DailyCases,CovidWeek
 from datetime import datetime,timedelta,date
 import pytz
@@ -38,9 +39,17 @@ class Check_PHE():
         PHEstored=configs.config.get('PHE')
         if PHEstored:
             self.England_cases=PHEstored.get('england_total_cases')
+            self.edition=PHEstored.get('latest_update')
+
         else:
             self.England_cases=None
-        self.top()
+        try:
+            self.top()
+        except Exception as e:
+            print(e)
+            print('Check PHE failed - default to needs update')
+            self._update=True
+            
     
     def top(self):
         """get latest total"""
@@ -51,9 +60,12 @@ class Check_PHE():
         if self.latest_total:
             if self.England_cases:
                 if int(self.England_cases)==self.latest_total:
-                    print('nothing new here')
-                    self._update=False
-                    return False
+                    if self.edition==self.latest_update:
+                        print('Database up to date')
+                        self._update=False
+                        return False
+                    else:
+                        print(f'Database needs update: PHE latest: {self.latest_update}  Stored update:{self.edition}')
             userconfig.update('PHE','england_total_cases',str(self.latest_total))
         self._update=True
         return True
@@ -71,8 +83,16 @@ class Check_PHE():
         
     def get(self):
         print('Fetching PHE cases from API')
-        self.data=self.api.get_json()  # Returns a dictionary
-        
+        try:
+            self.data=self.api.get_json()  # Returns a dictionary
+        except Exception as e:
+            print(e)
+            print('Failed to download cases')
+            
+    @property
+    def latest_update(self):
+        return self.data.get('lastUpdate')
+
     @property
     def cases_and_deaths(self):
         return {
@@ -123,6 +143,13 @@ class Check_PHE():
         with open(filepath, 'w') as outfile:
             json.dump(self.data, outfile)
 
+class LocalLatest(Check_PHE):
+    def __init__(self):
+        self.api = Cov19API(filters=self.local_filter, structure=self.structure)
+        self.api.latest_by='cumCasesByPublishDate'
+        self.get()
+
+
 class Fetch_API(Check_PHE):
 	def __init__(self,force_update=False):
 		self.today=date.today()
@@ -166,9 +193,6 @@ class Fetch_API(Check_PHE):
 		"""override to any structure"""
 		return self.newcases
 	
-	@property
-	def latest_update(self):
-		return self.data.get('lastUpdate')
 
 	def process(self):
 		if self.update_check() or self.force_update:
@@ -176,6 +200,7 @@ class Fetch_API(Check_PHE):
 			self.fix() #fix data anomalies - e.g add in Bucks.
 			self.ingest() #add data to models
 			self.update_totals() #calculate weekly data
+			self.save() #store a copy of the data
 		else:
 			print('PHE cases up to date')
 	
@@ -189,15 +214,23 @@ class Fetch_API(Check_PHE):
 	def ingest(self,check=True):
 		"""ingest all the data"""
 		data=self.data_all
+		pubdate=self.edition
+		
 		counter=0
 		for item in data:
 			datestring=item['specimenDate']
-			date=fetchdate(datestring)
-			row,created=DailyCases.objects.get_or_create(specimenDate=date,areacode=item['areaCode'])
+			_date=fetchdate(datestring)
+			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=item['areaCode'])
 			row.areaname=item['areaName']
 			print(f'{row.areaname}: {datestring}')
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
+			
+#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publishDate=pubdate,areacode=item['areaCode'])
+#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days#
+#			print(lag)
+#			break
+			#TEMP ±±
 			if created:
 				row.dailyLabConfirmedCases=daily
 				row.totalLabConfirmedCases=total
@@ -214,6 +247,7 @@ class Fetch_API(Check_PHE):
 			if counter%100==0:
 				print(f'Processing row {counter}')
 		print(f'Processed: {counter} rows')
+
 		if self.edition:
 			configs.userconfig.update('PHE','latest_update',self.edition)
 	
@@ -221,7 +255,7 @@ class Fetch_API(Check_PHE):
 		filename=f"{date.today()}-PHE-cases.json"
 		filepath=os.path.join(DATA_STORE,filename)
 		with open(filepath, 'w') as outfile:
-			json.dump(self.data, outfile)
+			json.dump(self.data_all, outfile)
 		
 	def update_totals(self):
 		update_weekly_cases('England')
@@ -230,6 +264,10 @@ class Fetch_API(Check_PHE):
 		
 	def update_check(self):
 		return check()
+		
+		
+			
+		
 #		
 #		PHEstored=configs.config.get('PHE')
 #		if PHEstored:
@@ -476,6 +514,7 @@ def weekly_total(end_day,areacode=AREACODE,areaname=AREA):
     return week_total
                 
 def sum_cases(nation='England'):
+    """add up total cases for a nation - for integrity checks"""
     _sum=0
     for _code in ons_week.stored_names:
         if ons_week.nation[_code]==nation:
@@ -487,8 +526,55 @@ def sum_cases(nation='England'):
                print(f'No total for {place}')
     return _sum
 
-
-
+def check_sum_cases(nation='England'):
+    """check total data"""
+    ck=LocalLatest()
+    fail=False
+    data=ck.data.get('data')
+    latest={}
+    
+    #check latest data matches stored data for nation
+    for i in data:
+        _code=i['areaCode']
+        latest[_code]=i
+        try:
+            _nation=ons_week.nation[_code]
+        except Exception as e:
+            print(e)
+            print(i['areaName'])
+            continue
+        if _nation==nation:
+            if _code in ons_week.stored_names:
+                place=ons_week.stored_names[_code]
+                _total=DailyCases.objects.filter(areaname=place).aggregate(Max('totalLabConfirmedCases')).get('totalLabConfirmedCases__max')
+                _latest=i['cumCasesByPublishDate']
+                if _total !=_latest:
+                    print(f'Mismatch: {place} Latest total{_latest} != stored {_total}')
+                    fail=True
+                else:
+                    #print(f'{place} up to date')
+                    pass
+            else:
+                place=i['areaName']
+                print(f'{place} not counted / not in TR tally')
+                
+    sumtotal=0
+    for _code in ons_week.stored_names:
+        if ons_week.nation[_code]==nation:
+            i=latest.get(_code)
+            if i:
+                _latest=i['cumCasesByPublishDate']
+                _total=DailyCases.objects.filter(areacode=_code).aggregate(Max('totalLabConfirmedCases')).get('totalLabConfirmedCases__max')
+                if _latest!=_total:
+                    print(f'Mismatch: {_code} Latest total{_latest} != stored {_total}')
+                else:
+                    if latest:
+                        sumtotal +=_latest
+            else:
+                print(f'Missing place {_code} in PHE published cases')
+    print(f'Sum total of stored names for {nation} is {sumtotal}')
+    
+    return fail
 
 #DATALOAD=main()
 
@@ -512,8 +598,6 @@ def name_index():
 		area=place['areaname']
 		_i[areacode]=area
 	return _i
-
-
 
 
 	
@@ -579,3 +663,70 @@ def ingest_cases(data):
 	finally:
 		print(count)
 			
+
+#
+#i=DailyCase(specimenDate=d
+#i.casesReported=n  
+#reportinglag:{[p0]:x0,[p1]:x1,[p2]:x3} where x0+x1+x3 = n
+#p0=pubday-
+
+class LagCalc():
+	def __init__(self,pubdate,data,start_date=date(2020,8,20)):
+		self.pubdate=time_utils.parseISO(pubdate).date() #date when data published
+		self.data=data #list of entries
+		self.start_date=start_date
+		
+	def process(self):
+		for i in self.data:
+			datestring=i['specimenDate']
+			new_daily=i['newCasesBySpecimenDate']
+			if not new_daily: #ignore dates with no cases
+				continue
+			specimen_datetime=fetchdate(datestring)
+			specimen_date=specimen_datetime.date()
+			
+			if specimen_date < self.start_date:
+				continue
+			
+			
+			row=DailyCases.objects.get(specimenDate=specimen_datetime,areacode=i['areaCode'])
+			place=i['areaName']
+			
+			lag=(self.pubdate-specimen_date).days
+
+			
+			try:
+				assert row.cases_lag is not ''
+				stored_lags_raw=eval(row.cases_lag)
+				lags=stored_lags_raw
+				#lags={n[0]:n[1] for n in stored_lags_raw}
+				maxlag=max(lags.keys())
+				daytotal=lags[maxlag]
+				
+				print(f"Place: {place} SpecimenDate: {specimen_date} lag:{lag} lags:{lags} maxlag:{maxlag} storedtotal:{daytotal} newtotal:{new_daily}")
+				
+				if new_daily!=daytotal:
+					if lags.get(lag):
+						print(f'Data already entered for {pubdate}')
+					else:
+						lags[lag]=new_daily
+						new_lags=str(lags)
+						row.cases_lag=new_lags
+						row.save()
+				print('No new Data')
+				
+			except Exception as e:
+				print(e)
+				lags={}
+				lags[lag]=new_daily
+				new_lags=str(lags)
+				row.cases_lag=new_lags
+				row.save()
+			
+			
+
+			
+	
+	
+	
+	

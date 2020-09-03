@@ -24,9 +24,8 @@ u.process()   >> download and install up to date covid deaths and cases
 
 
 data glitches:  #TO DO AUTO FIXING OF GLITCHES
-MISSING AVERAGES AND CASES DATA FOR N IRELAND
+MISSING AVERAGES FOR N IRELAND
 
-Buckinghamshire combined
 Isles of Scilly sometimes part of Cornwall and Isles of Scilly
 City of London soemetimes part of Hackney and City of London
 
@@ -68,6 +67,10 @@ class Updater():
         print(f"Average data : av. hospital data MISSING in {av_h} places, all deaths data MISSING in {av_deaths} places out of {av_all} all places")
         
     
+#    def check_cases(self):
+#        
+        
+        
     def process(self):
         """check for updates of deaths and cases data & download updates"""
         
@@ -107,15 +110,21 @@ class Updater():
             infections.calc()
 
         print('Checking PHE case - England and Wales - released daily')
-        cz=phe_fetch.Fetch_API()
-        cz.process()
         
+        try:
+            cz=phe_fetch.Fetch_API()
+            cz.process()
+        except Exception as e:
+            print('PHE API failure ... using old CSV')
+            cz=phe_fetch.Fetch_PHE()
+            cz.process()
+
 #        #Welsh cases now on PHE API
-#        wck=wales.Wales_Check()
-#        if wck._update:
-#            print('Updating Welsh cases')
-#            wz=wales.Wales_Cases()
-#            wz.process()
+            wck=wales.Wales_Check()
+            if wck._update:
+                print('Updating Welsh cases')
+                wz=wales.Wales_Cases()
+                wz.process()
         
 #        self.cz.update_totals()
         print('Updating Scottish cases - released daily')

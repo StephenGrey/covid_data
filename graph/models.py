@@ -3,6 +3,13 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import Group, User
 
+class DailyReport(models.Model):
+    areacode=models.CharField('area_code',max_length=200,default='')
+    specimenDate=models.DateTimeField('date')
+    dailycases=models.IntegerField('dailyLabConfirmedCases')
+    publag=models.IntegerField('publication_delay')
+
+
 class DailyCases(models.Model):
     areacode=models.CharField('area_code',max_length=200,default='')
     areaname=models.CharField('areaname',max_length=200,default='')
@@ -14,7 +21,7 @@ class DailyCases(models.Model):
     previouslyReportedTotalCases=models.IntegerField('previouslyReportedTotalCases',blank=True,null=True)
     changeInTotalCases=models.IntegerField('changeInTotalCases',blank=True,null=True)
     dailyTotalLabConfirmedCasesRate=models.DecimalField('dailyTotalLabConfirmedCasesRate',max_digits=7, decimal_places=1,blank=True,null=True)
-
+    cases_lag=models.CharField('cases_lag',max_length=200,default='',null=True)
 
 class CovidScores(models.Model):
     areaname=models.CharField('areaname',max_length=200,default='')
