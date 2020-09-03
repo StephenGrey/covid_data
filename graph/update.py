@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 import os
 from .models import CovidWeek, CovidScores,AverageWeek
 from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections, wales
@@ -186,7 +187,3 @@ def nations_filter():
     return nations_set
     
     
-    
-#    CovidWeek.objects.filter(areaname=place,date__range=RANGE)
-    
-

@@ -97,7 +97,7 @@ margin-left: -10vw;
 		
 
 		
-	<h4>Explore the map of latest Covid-19 cases in Britain - and select an area on the map (or in the menu below) to see how the virus spread through Britain, including the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived.</h4>
+	<h4>Explore the map of latest Covid-19 cases in Britain - and select an area on the map (or in the menu below) to see how the virus spread through Britain, including the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived.</h4>Last updated: {{last_update}}
 
   	<div class="row">
   		<div class="col-md-1">
@@ -485,6 +485,7 @@ margin-left: -10vw;
 <option value="cases_rate" data-tag="1">New Cases</option>
 <option value="excess_death" data-tag="1">Excess Deaths</option>
 </select>
+
 </div>
 <br><br>
 <p>
@@ -543,6 +544,7 @@ Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Ch
 
 <script>
 var api_fetch={{api_status}}
+var last_update="{{last_update}}"
 var focus_place="{{place}}"
 function firstload(){
 loadmap("{{place}}");

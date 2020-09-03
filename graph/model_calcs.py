@@ -3,6 +3,8 @@ from django.db.models import Sum
 import datetime,json,os
 one_week=datetime.timedelta(7)
 from . import ons_week
+import configs
+from configs import userconfig
 
 RANGE=["2020-02-07", "2020-08-23"]
 RANGE_WEEK=[6, 34]

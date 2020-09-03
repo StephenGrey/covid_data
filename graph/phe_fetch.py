@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*- 
 import os,json,requests,csv,pandas
 from bs4 import BeautifulSoup as BS
 from utils import time_utils
-from .models import DailyCases,CovidWeek
+from .models import DailyCases,CovidWeek, DailyReport
 from datetime import datetime,timedelta,date
 import pytz
 from contextlib import closing
@@ -15,6 +16,7 @@ from configs import userconfig
 #pip install uk-covid19
 from uk_covid19 import Cov19API
 #https://github.com/publichealthengland/coronavirus-dashboard-api-python-sdk
+
 
 URL="https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json"
 URL_CSV="https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
@@ -211,6 +213,32 @@ class Fetch_API(Check_PHE):
 			output.add(x['areaCode'])
 		return output
 
+	def _test_ingest(self,check=True):
+		"""ingest all the data"""
+		data=self.data_all
+		pubdate=self.edition
+		
+		counter=0
+		for item in data:
+			areacode=item['areaCode']
+			datestring=item['specimenDate']
+			_date=fetchdate(datestring)
+			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=areacode)
+			row.areaname=item['areaName']
+			daily=item['newCasesBySpecimenDate']
+			total=item['cumCasesBySpecimenDate']
+			row,created=DailyReport.objects.get_or_create(specimenDate=date,publag=lag)
+			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days
+			print(f'{row.areaname}: Pubdate{pubdate}, SpecimenDate {_date.date},  Lag: {lag}')
+			
+			if counter==10:
+				break
+			
+#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publishDate=pubdate,areacode=item['areaCode'])
+#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days#
+#			print(lag)
+ 		
+ 		
 	def ingest(self,check=True):
 		"""ingest all the data"""
 		data=self.data_all
@@ -226,11 +254,6 @@ class Fetch_API(Check_PHE):
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
 			
-#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publishDate=pubdate,areacode=item['areaCode'])
-#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days#
-#			print(lag)
-#			break
-			#TEMP ±±
 			if created:
 				row.dailyLabConfirmedCases=daily
 				row.totalLabConfirmedCases=total
@@ -599,10 +622,6 @@ def name_index():
 		_i[areacode]=area
 	return _i
 
-
-	
-#{'areaCode': 'E09000033', 'areaName': 'Westminster', 'specimenDate': '2020-07-09', 'dailyLabConfirmedCases': 0, 'previouslyReportedDailyCases': None, 'changeInDailyCases': None, 'totalLabConfirmedCases': 773, 'previouslyReportedTotalCases': None, 'changeInTotalCases': None, 'dailyTotalLabConfirmedCasesRate': 302.8}
-
 def lookup_json(url):
     """fetch and decode json from an api"""
     session=requests.Session()
@@ -664,11 +683,6 @@ def ingest_cases(data):
 		print(count)
 			
 
-#
-#i=DailyCase(specimenDate=d
-#i.casesReported=n  
-#reportinglag:{[p0]:x0,[p1]:x1,[p2]:x3} where x0+x1+x3 = n
-#p0=pubday-
 
 class LagCalc():
 	def __init__(self,pubdate,data,start_date=date(2020,8,20)):
@@ -724,9 +738,92 @@ class LagCalc():
 				row.save()
 			
 			
+class ImportLags(Fetch_PHE):
+	def __init__(self,filepath):
+		self.filepath=filepath
+		self.open_csv(self.filepath)
+		self.pubdate=fetchdate(os.path.basename(filepath)[:10]).date()
+		print(f'Processing case data published {self.pubdate}')
+	
+	def open_csv(self,path):
+		self.data = pandas.read_csv(path, encoding= "utf-8") 
+		
+	def ingest_all(self):
+		"""pull all daily cases from all PHE areas"""
+		for place in self.district_codes():
+			self.sequence_ingest(place)
 
 			
-	
-	
-	
-	
+	def sequence_ingest(self,areacode):
+		"""ingest from a particular areacode"""
+		data=self.data[self.data['Area code']==areacode]
+		areaname=data['Area name'].unique().item()
+		print(f'Ingesting cases from {areacode}: {areaname}')
+		
+		counter=0
+		for day in data['Specimen date'].unique():
+			date=fetchdate(day)
+#			try:
+#				row=DailyCases.objects.get(specimenDate=date,areacode=areacode)
+#			except DailyCases.DoesNotExist:
+#				print(f'No record for {areaname} {date}')
+#				continue
+			this_day=data[data['Specimen date']==day]
+			cases=this_day['Daily lab-confirmed cases'].head(1).item()
+			lag=(self.pubdate-date.date()).days
+			rows=DailyReport.objects.filter(areacode=areacode,specimenDate=date).order_by('-specimenDate')
+			if rows:
+				lastentry=rows[0]
+				if lastentry.dailycases !=cases:
+					print('mismatch')
+					row=DailyReport.objects.filter(areacode=areacode,specimenDate=date,publag=lag)
+					row.dailycases=cases
+					row.save()
+				else:
+					pass
+			else:
+				row=DailyReport(areacode=areacode,specimenDate=date,publag=lag)
+				row.dailycases=cases
+				row.save()
+			
+			
+			
+def import_csvfiles(dirpath):
+	""" import csv files of daily published cases to calculate lags"""
+	files=[x for x in os.listdir(dirpath) if '.csv' ==x[-4:]]
+	for f in files:
+		filepath=os.path.join(dirpath,f)
+		print(filepath)
+		i=ImportLags(filepath)
+		i.ingest_all()
+			
+
+#		datestring=item['specimenDate']
+#		_date=fetchdate(datestring)
+			
+#			row.areaname=areaname 
+#			#add head(1) (faster than unique() ) to deal with some areas returned twice as part of both UTLA AND LTLA sequences
+#			row.dailyLabConfirmedCases=this_day['Daily lab-confirmed cases'].head(1).item()
+#			row.totalLabConfirmedCases=this_day['Cumulative lab-confirmed cases'].head(1).item()
+#			row.save()
+#			counter+=1
+#		print(f'Processed: {counter} rows')
+
+
+#			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=areacode)
+#			row.areaname=item['areaName']
+#			daily=item['newCasesBySpecimenDate']
+#			total=item['cumCasesBySpecimenDate']
+#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publag=lag)
+#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days
+#			print(f'{row.areaname}: Pubdate{pubdate}, SpecimenDate {_date.date},  Lag: {lag}')
+#			
+#			if counter==10:
+#				break
+#			
+#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publishDate=pubdate,areacode=item['areaCode'])
+#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days#
+#			print(lag)
+
+    
+
