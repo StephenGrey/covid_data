@@ -16,7 +16,7 @@ log = logging.getLogger('api.graph.views')
 places=ons_week.make_index()
 
 def index(request,place='Birmingham'):
-    log.debug('loading page')
+    log.info('loading page')
     try:
         areacode=places[place]
         nation=ons_week.nation[areacode]

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*- 
-import os,json,requests,csv,pandas
+import os,json,requests,csv,pandas,logging
 from bs4 import BeautifulSoup as BS
 from utils import time_utils
 from .models import DailyCases,CovidWeek, DailyReport
@@ -9,6 +9,7 @@ from contextlib import closing
 from . import ons_week, model_calcs
 from .import_csv import DATA_STORE,PandaImporter
 from django.db.models import Max
+from collections import defaultdict
 
 import configs
 from configs import userconfig
@@ -16,7 +17,7 @@ from configs import userconfig
 #pip install uk-covid19
 from uk_covid19 import Cov19API
 #https://github.com/publichealthengland/coronavirus-dashboard-api-python-sdk
-
+log = logging.getLogger('api.graph.phe_fetch')
 
 URL="https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json"
 URL_CSV="https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
@@ -94,7 +95,15 @@ class Check_PHE():
     @property
     def latest_update(self):
         return self.data.get('lastUpdate')
+        
+    @property
+    def latest_date_str(self):
+        return f'{time_utils.parseISO(self.api.last_update):%Y-%m-%dT%H-%M}'
 
+    def update_edition(self):
+        self.edition=self.api.last_update
+        self.edition_date=time_utils.parseISO(self.edition).date()
+        
     @property
     def cases_and_deaths(self):
         return {
@@ -138,12 +147,19 @@ class Check_PHE():
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
         }
         
-
     def save(self):
-        filename=f"{date.today()}-PHE-cases.json"
+        _date=self.latest_date_str #fetches date of latest published update
+        filename=f"{_date}-PHE-cases.json"
         filepath=os.path.join(DATA_STORE,filename)
         with open(filepath, 'w') as outfile:
             json.dump(self.data, outfile)
+            
+    def save_all(self):
+        _date=self.latest_date_str #fetches date of latest published update
+        filename=f"{_date}-PHE-cases.json"
+        filepath=os.path.join(DATA_STORE,filename)
+        with open(filepath, 'w') as outfile:
+            json.dump(self.data_all, outfile)
 
 class LocalLatest(Check_PHE):
     def __init__(self):
@@ -195,17 +211,15 @@ class Fetch_API(Check_PHE):
 		"""override to any structure"""
 		return self.newcases
 	
-
 	def process(self):
 		if self.update_check() or self.force_update:
 			self.fetch() #pull all local data and regions
 			self.fix() #fix data anomalies - e.g add in Bucks.
+			self.save_all() #store a copy of the data
 			self.ingest() #add data to models
 			self.update_totals() #calculate weekly data
-			self.save() #store a copy of the data
 		else:
 			print('PHE cases up to date')
-	
 	
 	def areacodes():
 		output=set()
@@ -213,10 +227,10 @@ class Fetch_API(Check_PHE):
 			output.add(x['areaCode'])
 		return output
 
-	def _test_ingest(self,check=True):
+	def ingest(self,check=True):
 		"""ingest all the data"""
 		data=self.data_all
-		pubdate=self.edition
+		pubdate=time_utils.parseISO(self.api.last_update).date()
 		
 		counter=0
 		for item in data:
@@ -227,45 +241,31 @@ class Fetch_API(Check_PHE):
 			row.areaname=item['areaName']
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
-			row,created=DailyReport.objects.get_or_create(specimenDate=date,publag=lag)
-			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days
-			print(f'{row.areaname}: Pubdate{pubdate}, SpecimenDate {_date.date},  Lag: {lag}')
-			
-			if counter==10:
-				break
-			
-#			row,created=DailyReport.objects.get_or_create(specimenDate=date,publishDate=pubdate,areacode=item['areaCode'])
-#			lag=(time_utils.parseISO(self.edition).date()-_date.date()).days#
-#			print(lag)
- 		
- 		
-	def ingest(self,check=True):
-		"""ingest all the data"""
-		data=self.data_all
-		pubdate=self.edition
-		
-		counter=0
-		for item in data:
-			datestring=item['specimenDate']
-			_date=fetchdate(datestring)
-			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=item['areaCode'])
-			row.areaname=item['areaName']
-			print(f'{row.areaname}: {datestring}')
-			daily=item['newCasesBySpecimenDate']
-			total=item['cumCasesBySpecimenDate']
-			
+			log.debug(f'{row.areaname}: {datestring}')			
+												
 			if created:
 				row.dailyLabConfirmedCases=daily
 				row.totalLabConfirmedCases=total
 				row.save()
+				
+				lag=(pubdate-_date.date()).days
+				drow=DailyReport(specimenDate=_date,areacode=areacode,dailycases=daily,publag=lag)
+				drow.save()
+			
 			if not created:
 				existing_daily=row.dailyLabConfirmedCases
 				existing_total=row.totalLabConfirmedCases
 				if existing_daily !=daily or existing_total!=total:
-					print(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
+					log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
 					row.dailyLabConfirmedCases=daily
 					row.totalLabConfirmedCases=total
 					row.save()
+					
+					lag=(pubdate-_date.date()).days
+					drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag)
+					drow.dailycases=daily
+					drow.save()
+					
 			counter+=1
 			if counter%100==0:
 				print(f'Processing row {counter}')
@@ -273,7 +273,44 @@ class Fetch_API(Check_PHE):
 
 		if self.edition:
 			configs.userconfig.update('PHE','latest_update',self.edition)
-	
+
+#
+#
+#	def ingest(self,check=True):
+#		"""ingest all the data"""
+#		data=self.data_all
+#		pubdate=self.edition
+#		
+#		counter=0
+#		for item in data:
+#			datestring=item['specimenDate']
+#			_date=fetchdate(datestring)
+#			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=item['areaCode'])
+#			row.areaname=item['areaName']
+#			print(f'{row.areaname}: {datestring}')
+#			daily=item['newCasesBySpecimenDate']
+#			total=item['cumCasesBySpecimenDate']
+#			
+#			if created:
+#				row.dailyLabConfirmedCases=daily
+#				row.totalLabConfirmedCases=total
+#				row.save()
+#			if not created:
+#				existing_daily=row.dailyLabConfirmedCases
+#				existing_total=row.totalLabConfirmedCases
+#				if existing_daily !=daily or existing_total!=total:
+#					print(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
+#					row.dailyLabConfirmedCases=daily
+#					row.totalLabConfirmedCases=total
+#					row.save()
+#			counter+=1
+#			if counter%100==0:
+#				print(f'Processing row {counter}')
+#		print(f'Processed: {counter} rows')
+#
+#		if self.edition:
+#			configs.userconfig.update('PHE','latest_update',self.edition)
+#	
 	def save(self):
 		filename=f"{date.today()}-PHE-cases.json"
 		filepath=os.path.join(DATA_STORE,filename)
@@ -475,8 +512,11 @@ def check():
     return ck._update
 
 def check_and_download():
-    if check():
+    ck=Check_PHE()
+    latest=ck.latest_update
+    if ck._update:
         f=Fetch_PHE()
+        f.last_update=latest
         if f.update_check():
             print('Saving latest PHE cases')
             f.save()
@@ -491,37 +531,38 @@ def update_weekly_cases(nation):
         area=place['areaname']
         if areacode and area:
             update_weekly_total(areacode=areacode,areaname=area)
+    log.info(f'Completed updated weekly cases for nation {nation}')
 
 def update_weekly_total(areacode=AREACODE,areaname=AREA):
     """add up all daily cases into week calculation"""
     start,stop=model_calcs.RANGE_WEEK
-    print(f'Processing {areaname}')
+    log.info(f'Processing {areaname}')
     for week in range(start,stop+1):
         end_day=ons_week.week(week)
         
         week_total=weekly_total(end_day,areacode=areacode,areaname=areaname)
-        print(f'{areaname}: Weektotal for week number {week} ending {end_day}: {week_total}')
+        #print(f'{areaname}: Weektotal for week number {week} ending {end_day}: {week_total}')
         
         if week_total is not None:
             try:
                 stored,created=CovidWeek.objects.get_or_create(areacode=areacode,week=week)
                 #print(stored.weeklycases)
                 if stored.weeklycases != week_total:
-                    print(f'{areaname}: updating week {week} from {stored.weeklycases} to {week_total}')
+                    log.debug(f'{areaname}: updating week {week} from {stored.weeklycases} to {week_total}')
                     stored.weeklycases=week_total
                     stored.areaname=areaname
                     stored.save()
                 if created:
                     stored.nation=ons_week.nation[areacode]
                     stored.areaname=areaname
-                    print(f'Created new entry for week {week} for {areaname}')
+                    log.debug(f'Created new entry for week {week} for {areaname}')
                     stored.week=week
                     stored.save()
             except Exception as e:
-                print(e)
-                print(f'No data stored for week {week}')
+                log.error(e)
+                log.error(f'No data stored for {areaname} week {week}')
         else:
-            print(f'Bypassing {areaname} - no data')
+            log.error(f'Bypassing {areaname} - no data')
 
 def weekly_total(end_day,areacode=AREACODE,areaname=AREA):
     if True:
@@ -549,6 +590,25 @@ def sum_cases(nation='England'):
                print(f'No total for {place}')
     return _sum
 
+def clean_cases(data):
+    """adjust for data glitches in PHE data"""
+    newdata=[]
+    #Add up Bucks Data
+    bucks=defaultdict(list)
+    for i in data:
+        if i['areaName'] in ['Chiltern','Aylesbury Vale','South Bucks','Wycombe']:
+            bucks[i['date']].append(i)
+        else:
+            newdata.append(i)
+    print(bucks)
+    for _date,_all in bucks.items():
+        item={'areaName': 'Buckinghamshire','areaCode':'E06000060','specimenDate':_date}
+        item['newCasesBySpecimenDate']=sum([x['newCasesBySpecimenDate'] for x in _all])
+        item['cumCasesBySpecimenDate']=sum([x['cumCasesBySpecimenDate'] for x in _all])
+        newdata.append(item)
+
+    return newdata
+
 def check_sum_cases(nation='England'):
     """check total data"""
     ck=LocalLatest()
@@ -556,6 +616,8 @@ def check_sum_cases(nation='England'):
     data=ck.data.get('data')
     latest={}
     
+    
+    data=clean_cases(data) #repair glitches
     #check latest data matches stored data for nation
     for i in data:
         _code=i['areaCode']
@@ -577,6 +639,7 @@ def check_sum_cases(nation='England'):
                 else:
                     #print(f'{place} up to date')
                     pass
+            
             else:
                 place=i['areaName']
                 print(f'{place} not counted / not in TR tally')
@@ -591,7 +654,7 @@ def check_sum_cases(nation='England'):
                 if _latest!=_total:
                     print(f'Mismatch: {_code} Latest total{_latest} != stored {_total}')
                 else:
-                    if latest:
+                    if _latest:
                         sumtotal +=_latest
             else:
                 print(f'Missing place {_code} in PHE published cases')
@@ -739,6 +802,7 @@ class LagCalc():
 			
 			
 class ImportLags(Fetch_PHE):
+	"""take a day's cases and store the published cases against publication date"""
 	def __init__(self,filepath):
 		self.filepath=filepath
 		self.open_csv(self.filepath)
@@ -770,22 +834,27 @@ class ImportLags(Fetch_PHE):
 #				continue
 			this_day=data[data['Specimen date']==day]
 			cases=this_day['Daily lab-confirmed cases'].head(1).item()
-			lag=(self.pubdate-date.date()).days
-			rows=DailyReport.objects.filter(areacode=areacode,specimenDate=date).order_by('-specimenDate')
-			if rows:
-				lastentry=rows[0]
-				if lastentry.dailycases !=cases:
-					print('mismatch')
-					row=DailyReport.objects.filter(areacode=areacode,specimenDate=date,publag=lag)
-					row.dailycases=cases
-					row.save()
-				else:
-					pass
-			else:
-				row=DailyReport(areacode=areacode,specimenDate=date,publag=lag)
-				row.dailycases=cases
-				row.save()
-			
+			if cases:
+				
+				lag=(self.pubdate-date.date()).days
+				print(f'lag:{lag}, {date}, cases {cases}')
+				rows=DailyReport.objects.filter(areacode=areacode,specimenDate=date).order_by('-publag')
+				if True:
+					if rows:
+						lastentry=rows[0]
+						if lastentry.dailycases !=cases:
+							print(f'mismatch for {lag}, {date}, cases {cases}')
+							row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=date,publag=lag,dailycases=cases)
+							row.save()
+						else:
+							pass
+					else:
+						row=DailyReport(areacode=areacode,specimenDate=date,publag=lag)
+						row.dailycases=cases
+						row.save()
+#				except Exception as e:
+#					print(e)
+#					print (rows, cases,areacode,date,lag)
 			
 			
 def import_csvfiles(dirpath):
@@ -796,7 +865,7 @@ def import_csvfiles(dirpath):
 		print(filepath)
 		i=ImportLags(filepath)
 		i.ingest_all()
-			
+		
 
 #		datestring=item['specimenDate']
 #		_date=fetchdate(datestring)

@@ -6,7 +6,8 @@ from django.contrib.auth.models import Group, User
 class DailyReport(models.Model):
     areacode=models.CharField('area_code',max_length=200,default='')
     specimenDate=models.DateTimeField('date')
-    dailycases=models.IntegerField('dailyLabConfirmedCases')
+    dailycases=models.IntegerField('dailyLabConfirmedCases',blank=True)
+    add_cases=models.IntegerField('add_cases',blank=True,null=True)
     publag=models.IntegerField('publication_delay')
 
 

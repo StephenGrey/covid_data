@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*- 
-import os
+import os, logging
 from .models import CovidWeek, CovidScores,AverageWeek
 from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections, wales
 from django.db.models import Sum
 from .ons_week import stored_names
+log = logging.getLogger('api.graph.update')
 
 
 #constant files:
@@ -43,7 +44,7 @@ class Updater():
             try:
                 q=CovidScores.objects.get(areaname=name)
             except:
-                print(f'data for {name} missing')
+                log.error(f'data for {name} missing')
                 break
             try:
                 assert q.population is not None
@@ -73,25 +74,24 @@ class Updater():
         
         
     def process(self):
+
         """check for updates of deaths and cases data & download updates"""
         
         update_deaths=False
         
-        print('Checking ONS for weekly deaths update - normally released Tuesday')
+        log.info('Checking ONS for weekly deaths update - normally released Tuesday')
         wz=ons_fetch.ONS_Importer()
         if wz.process(): #import and parse if new data available
             update_deaths=True
         
                 
-        print('Updating Scottish deaths - normally released Wednesday')
+        log.info('Updating Scottish deaths - normally released Wednesday')
         self.scot=scotland.Scot_Importer()
         if self.scot.update_check():
             self.scot.process()
             update_deaths=True
-        
-        
-        
-        print('Updating N Irish deaths')
+
+        log.info('Updating N Irish deaths')
         ni=n_ireland.NI_Importer()
         ni.process()
         if ni.check_update():
@@ -100,6 +100,7 @@ class Updater():
 
         
         #READJUST HERE FOR ANY GLITCHES
+
         if update_deaths:
             print('Updating cumulative deaths')
             model_calcs.update_cum_deaths()
@@ -110,25 +111,26 @@ class Updater():
             print('Updating Reuters infection curve')
             infections.calc()
 
-        print('Checking PHE case - England and Wales - released daily')
+        log.info('Checking PHE case - England and Wales - released daily')
         
         try:
             cz=phe_fetch.Fetch_API()
             cz.process()
+            log.info('PHE data successfully processed')
         except Exception as e:
-            print('PHE API failure ... using old CSV')
+            log.error('PHE API failure ... using old CSV')
             cz=phe_fetch.Fetch_PHE()
             cz.process()
 
 #        #Welsh cases now on PHE API
             wck=wales.Wales_Check()
             if wck._update:
-                print('Updating Welsh cases')
+                log.info('Updating Welsh cases')
                 wz=wales.Wales_Cases()
                 wz.process()
         
 #        self.cz.update_totals()
-        print('Updating Scottish cases - released daily')
+        log.info('Updating Scottish cases - released daily')
         self.scot2=scotland.Scot_Cases()
         self.scot2.process()
         
