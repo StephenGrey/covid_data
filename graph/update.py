@@ -102,13 +102,13 @@ class Updater():
         #READJUST HERE FOR ANY GLITCHES
 
         if update_deaths:
-            print('Updating cumulative deaths')
+            log.info('Updating cumulative deaths')
             model_calcs.update_cum_deaths()
 
-            print('Updating excess deaths')
+            log.info('Updating excess deaths')
             self.check_excess()
             model_calcs.calc_excess_rates()
-            print('Updating Reuters infection curve')
+            log.info('Updating Reuters infection curve')
             infections.calc()
 
         log.info('Checking PHE case - England and Wales - released daily')
@@ -135,6 +135,9 @@ class Updater():
         self.scot2.process()
         
         model_calcs.calc_newcases_rates()
+        
+        log.info('Updates complete')
+
 
     def load_constants(self):
         

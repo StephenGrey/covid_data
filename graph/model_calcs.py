@@ -1,13 +1,13 @@
 from .models import CovidWeek,AverageWeek,CovidScores,DailyCases
 from django.db.models import Sum
-import datetime,json,os
+import datetime,json,os,logging
 one_week=datetime.timedelta(7)
 from . import ons_week
 import configs
 from configs import userconfig
-
-RANGE=["2020-02-07", "2020-08-23"]
-RANGE_WEEK=[6, 34]
+log = logging.getLogger('api.graph.model_calcs')
+RANGE=["2020-02-07", "2020-08-30"]
+RANGE_WEEK=[6, 35]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
@@ -64,6 +64,7 @@ def excess_deaths():
 
 def update_cum_deaths():
 	"""parse through all districts in database , updating the cumulative death total"""
+	log.info('Updating cumulative death total')
 	for d in districts():
 		update_cum_district_death(d)
 
@@ -71,12 +72,12 @@ def update_cum_district_death(d):
 	"""update cumulative death total in one district"""
 	if True:
 		cum=0
-		print(d)
+		
 		for w in CovidWeek.objects.filter(areacode=d).order_by('week'):
 			if w.weeklydeaths is not None:
 				cum+=w.weeklydeaths	
 				if cum != w.totcumdeaths:
-					print(f'stored: {w.totcumdeaths} calc {cum}')
+					log.debug(f'District {d} stored: {w.totcumdeaths} calc {cum}')
 					w.totcumdeaths=cum
 					w.save()
 			else:
@@ -89,14 +90,15 @@ def calc_excess_rates():
 		i=CovidScores.objects.get(areaname=place)
 		if i.population and i.excess_deaths is not None:
 			rate=round(i.excess_deaths/i.population*100000,1)
-			print(rate)
+			#print(rate)
 			i.excess_death_rate=rate
 			i.save()
 		else:
-			print(f'Data missing for {place}')
+			log.info(f'Data missing for {place}')
 
 def calc_newcases_rates():
 	"""update all the new cases rates for all districts"""
+	log.info('Beginning calc of new cases rates')
 	_today=datetime.date.today()
 	_range=[_today-one_week,_today]
 	rates={}	
@@ -107,9 +109,9 @@ def calc_newcases_rates():
 		newcases_rate=round(total_cases/i.population*100000,1) if total_cases is not None and i.population else None
 		rates[place]=newcases_rate
 		i.latest_case_rate=newcases_rate
-		print(f'Place: {place} Cases: {total_cases} Rate:{newcases_rate}')
+		log.debug(f'Place: {place} Cases: {total_cases} Rate:{newcases_rate}')
 		i.save()
-		
+	log.info('Completed newcase rate calculations')
 		#print([(k, v) for k, v in sorted(rates.items(), key=lambda item: item[1]) if v])
 #i=CovidScores.objects.get(areaname=place)
 #		if i.population and i.excess_deaths:
@@ -139,7 +141,7 @@ def fix_names():
     _i=ons_week.stored_names
     for missing in CovidWeek.objects.filter(areaname='Hartlepool'):
         try:
-            print(f'Areacode {missing.areacode} is {_i[missing.areacode]}')
+            log.info(f'Areacode {missing.areacode} is {_i[missing.areacode]}')
             missing.areaname=_i[missing.areacode]
             missing.save()
         except Exception as e:
@@ -180,7 +182,7 @@ def output_district(place,q=None):
 	if district:
 		#print([f"{i.date:%d/%m}" for i in district])
 		totalcumdeaths=[i.totcumdeaths for i in district]
-		print(totalcumdeaths)
+		#print(totalcumdeaths)
 		weeklydeaths=[i.weeklydeaths for i in district]
 		weeklycases=[i.weeklycases for i in district]
 		estcasesweekly=[i.estcasesweekly for i in district]

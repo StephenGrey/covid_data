@@ -42,9 +42,10 @@ def calc_district(place='Birmingham'):
 			week.estinfectionscum = new_total
 			_updated=True
 		if _updated:
-			log.debug(f"Infections in {place} stored : {week.estcasesweekly} Infections calculated:{est_infections} Deaths in 3 weeks: {future_C19deaths}")
+			log.info(f"Infections in {place} stored : {week.estcasesweekly} Infections calculated:{est_infections} Deaths in 3 weeks: {future_C19deaths}")
 			log.debug(f"Cumulative in {place} total stored: {week.estinfectionscum} and new total {new_total}")
 			week.save()
+		
 
 def districts():
 	q=CovidWeek.objects.values('areacode').distinct()	

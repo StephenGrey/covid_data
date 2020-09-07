@@ -1,4 +1,4 @@
-import requests,json,csv,pandas,os
+import requests,json,csv,pandas,os,logging
 from datetime import datetime
 from bs4 import BeautifulSoup as BS
 from .ons_week import week as ons_week,sunday,stored_names,nation,scotcode
@@ -8,7 +8,7 @@ from .import_csv import URLImporter,PandaImporter,timeaware
 from .model_calcs import update_cum_district_death,DATA_STORE
 from .ons_fetch import update_row
 from .phe_fetch import update_weekly_total
-
+log = logging.getLogger('api.graph.scotland')
 
 import configs
 from configs import userconfig
@@ -65,22 +65,23 @@ class Scot_Importer(PandaImporter):
             el=soup.table.tbody.contents[3].td.next.next.next.text
             target="Weekly deaths by date of occurrence, health board and location"
             if target in el:
-                print("Found target: latest Scotland weekly deaths data")
+                log.info("Found target: latest Scotland weekly deaths data")
                 self.edition=el[el.find('(')+1:el.find(')')]
-                print(f"Last update: {self.edition}")
+                log.info(f"Last update: {self.edition}")
                 #datetime. strptime(self.edition, '%d %B %Y')
         
         if self.edition and self.edition==self.last_update:
-            print('Up to date')
+            log.info('Scotdeaths - Up to date')
             return False
         else:
-            print('Update available')
+            log.info('Scotdeaths - Update available')
             return True
             
     def process(self,f=DEATHS_URL):
         self.fetch_excel(url=f,skiprows=2,sheet_name="Data")
         self.fix()
         self.parse()
+        log.info('Scot deaths processing complete')
         
     def fetch_excel(self,url=DEATHS_URL,skiprows=2,sheet_name="Data"):
         f=requests.get(url)
@@ -125,7 +126,7 @@ class Scot_Importer(PandaImporter):
         careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
         careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
         hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
-        print(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
+        log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
         qrow=CovidWeek.objects.filter(week=week,areaname=district)
         if qrow:
             row=qrow[0]
@@ -192,7 +193,7 @@ class Scot_Average(Scot_Importer):
             wk.weeklycarehomedeaths=sub[(sub['location']=='Care Home')]['number of deaths'].sum()/5
             wk.weeklyhomedeaths=sub[(sub['location']=='Home / Non-institution')]['number of deaths'].sum()/5
             wk.save()
-            print(wk.__dict__)
+            #print(wk.__dict__)
         except Exception as e:
             print(e)
     
@@ -214,15 +215,15 @@ class Scot_Cases(Scot_Importer):
         scotupdate=configs.config.get('Scotland')
         if scotupdate:
             self.last_update=scotupdate.get('latest_cases')
-            print(f'Previously stored Scot cases data:{self.last_update}')
+            log.info(f'Previously stored Scot cases data:{self.last_update}')
         else:
             self.last_update=None
             return True
         if self.last_update != str(self.edition):
-            print('Update Scottish cases')
+            log.info('Update Scottish cases')
             return True
         else:
-            print('Scottish cases up to date')
+            log.info('Scottish cases up to date')
             return False
         
     def fetch_csv(self,url=CASES_URL):
@@ -276,7 +277,7 @@ class Scot_Cases(Scot_Importer):
             else:
                 today=0
             
-            print(f'Place:{place} Date: {day:%d/%m} Yesterday:{yesterday} Today:{today} Total:{totalcases}')
+            log.debug(f'Place:{place} Date: {day:%d/%m} Yesterday:{yesterday} Today:{today} Total:{totalcases}')
             #datestring=item['specimenDate']
             date=day
             areacode=scotcode[place]
@@ -291,7 +292,7 @@ class Scot_Cases(Scot_Importer):
             row.changeInTotalCases=None #item['changeInTotalCases']
             row.save()
             counter+=1
-        print(f'Processed: {counter} rows')
+        log.info(f'Processed: {counter} rows')
         update_weekly_total(areacode=scotcode[place],areaname=place)
 
 

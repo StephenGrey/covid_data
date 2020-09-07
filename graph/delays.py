@@ -5,11 +5,13 @@ import logging
 log = logging.getLogger('api.graph.delays')
 
 def calc():
-	_date='2020-09-01'
+	_date='2020-08-25'
 	nat_totaldelay=0
 	nat_totalcases=0
 	for areacode,areaname in stored_names.items():
+		print(areacode)
 		q=DailyReport.objects.filter(areacode=areacode,specimenDate=_date).order_by('publag')
+		print(q)
 		last_total=0
 		delay_total=0
 		for i in q:

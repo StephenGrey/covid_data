@@ -59,16 +59,16 @@ class Check_PHE():
         self.api.latest_by='cumCasesByPublishDate'
         self.get()
         self.latest_total=self.data['data'][0]['cumCasesByPublishDate']
-        print(f'England latest total: {self.latest_total}')
+        log.info(f'England latest total: {self.latest_total}')
         if self.latest_total:
             if self.England_cases:
                 if int(self.England_cases)==self.latest_total:
                     if self.edition==self.latest_update:
-                        print('Database up to date')
+                        log.info('Database up to date')
                         self._update=False
                         return False
                     else:
-                        print(f'Database needs update: PHE latest: {self.latest_update}  Stored update:{self.edition}')
+                        log.info(f'Database needs update: PHE latest: {self.latest_update}  Stored update:{self.edition}')
             userconfig.update('PHE','england_total_cases',str(self.latest_total))
         self._update=True
         return True
@@ -90,7 +90,7 @@ class Check_PHE():
             self.data=self.api.get_json()  # Returns a dictionary
         except Exception as e:
             print(e)
-            print('Failed to download cases')
+            log.error('Failed to download cases')
             
     @property
     def latest_update(self):
@@ -195,7 +195,6 @@ class Fetch_API(Check_PHE):
 		bucks=self.data.get('data')
 		fixed=[]
 		for row in bucks:
-			print(row)
 			row['areaCode']='E06000060'
 			fixed.append(row)
 		self.data_all+=fixed
@@ -219,7 +218,7 @@ class Fetch_API(Check_PHE):
 			self.ingest() #add data to models
 			self.update_totals() #calculate weekly data
 		else:
-			print('PHE cases up to date')
+			log.info('PHE cases up to date')
 	
 	def areacodes():
 		output=set()
@@ -268,8 +267,8 @@ class Fetch_API(Check_PHE):
 					
 			counter+=1
 			if counter%100==0:
-				print(f'Processing row {counter}')
-		print(f'Processed: {counter} rows')
+				log.info(f'Processing row {counter}')
+		log.info(f'Processed: {counter} rows')
 
 		if self.edition:
 			configs.userconfig.update('PHE','latest_update',self.edition)
@@ -365,7 +364,7 @@ class Fetch_API(Check_PHE):
 			row.changeInTotalCases=item['changeInTotalCases']
 			row.save()
 			counter+=1
-		print(f'Processed: {counter} rows')
+		log.info(f'Processed: {counter} rows')
 
 
 class OLDCheck_PHE():
@@ -386,13 +385,13 @@ class OLDCheck_PHE():
 			fields=next(reader,None)
 			england=next(reader,None)
 			self.latest_total=england[7]
-			print(f'England latest total: {self.latest_total}')
+			log.info(f'England latest total: {self.latest_total}')
 			
 		if True:
 			if self.latest_total:
 				if self.England_cases:
 					if str(self.England_cases) ==self.latest_total:
-						print('nothing new here')
+						log.info('nothing new here')
 						self._update=False
 						return False
 				userconfig.update('PHE','england_total_cases',str(self.latest_total))
@@ -420,7 +419,7 @@ class Fetch_PHE(PandaImporter):
 			self.ingest_all()
 			self.update_totals()
 		else:
-			print('PHE cases up to date')
+			log.info('PHE cases up to date')
 	
 	def district_codes(self):
 		return sorted([z for z in self.data['Area code'].unique()])
@@ -466,7 +465,7 @@ class Fetch_PHE(PandaImporter):
 	
 	def fetch(self,url=URL):
 		""" get the latest cases data"""
-		print('downloading latest PHE case data')
+		log.info('downloading latest PHE case data')
 #		self.data=lookup_json(url)
 		self.fetch_csv() #JSON discontinued; switched back to CSV
 		self.edition=self.latest_samples
@@ -481,7 +480,7 @@ class Fetch_PHE(PandaImporter):
 
 	def fix(self):
 		self.data.loc[self.data['Area name']=='Buckinghamshire','Area code']='E06000060'
-		print('Fixed wrong areacode for Bucks in PHE data')
+		log.info('Fixed wrong areacode for Bucks in PHE data')
 
 	def open_csv(self,f):
 		self.data=pandas.read_csv(f, encoding= "iso-8859-1")
@@ -515,11 +514,13 @@ def check_and_download():
     ck=Check_PHE()
     latest=ck.latest_update
     if ck._update:
-        f=Fetch_PHE()
+        f=Fetch_API()
+        f.fetch()
+        f.fix()
         f.last_update=latest
         if f.update_check():
             print('Saving latest PHE cases')
-            f.save()
+            f.save_all()
     else:
         print('No need to download')
 
@@ -625,8 +626,8 @@ def check_sum_cases(nation='England'):
         try:
             _nation=ons_week.nation[_code]
         except Exception as e:
-            print(e)
-            print(i['areaName'])
+            log.error(e)
+            log.error(i['areaName'])
             continue
         if _nation==nation:
             if _code in ons_week.stored_names:
@@ -822,7 +823,7 @@ class ImportLags(Fetch_PHE):
 		"""ingest from a particular areacode"""
 		data=self.data[self.data['Area code']==areacode]
 		areaname=data['Area name'].unique().item()
-		print(f'Ingesting cases from {areacode}: {areaname}')
+		log.info(f'Ingesting cases from {areacode}: {areaname}')
 		
 		counter=0
 		for day in data['Specimen date'].unique():
