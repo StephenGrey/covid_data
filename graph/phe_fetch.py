@@ -114,6 +114,10 @@ class Check_PHE():
         "cumCasesByPublishDate": "cumCasesByPublishDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+        "newAdmissions":"newAdmissions",
+        "cumAdmissions":"cumAdmissions",
+        "cumTestsByPublishDate":"cumTestsByPublishDate",
+        "newTestsByPublishDate":"newTestsByPublishDate",
         }
     
     @property
@@ -139,12 +143,16 @@ class Check_PHE():
         "specimenDate": "date",
         "areaName": "areaName",
         "areaCode": "areaCode",
-#        "newCasesByPublishDate": "newCasesByPublishDate",
-#        "cumCasesByPublishDate": "cumCasesByPublishDate",
+        "newCasesByPublishDate": "newCasesByPublishDate",
+        "cumCasesByPublishDate": "cumCasesByPublishDate",
 #        "newDeathsByDeathDate": "newDeathsByDeathDate",
 #        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
-        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate"
+        "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+        "newAdmissions":"newAdmissions",
+        "cumAdmissions":"cumAdmissions",
+        "cumTestsByPublishDate":"cumTestsByPublishDate",
+        "newTestsByPublishDate":"newTestsByPublishDate",
         }
         
     def save(self):
@@ -240,30 +248,33 @@ class Fetch_API(Check_PHE):
 			row.areaname=item['areaName']
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
-			log.debug(f'{row.areaname}: {datestring}')			
+			log.info(f'{row.areaname}: {datestring}')			
 												
 			if created:
 				row.dailyLabConfirmedCases=daily
 				row.totalLabConfirmedCases=total
 				row.save()
 				
-				lag=(pubdate-_date.date()).days
-				drow=DailyReport(specimenDate=_date,areacode=areacode,dailycases=daily,publag=lag)
-				drow.save()
+				if daily:
+					lag=(pubdate-_date.date()).days
+					log.debug(f'date:{_date} lag: {lag} daily:{daily}')
+					drow=DailyReport(specimenDate=_date,areacode=areacode,dailycases=daily,publag=lag)
+					drow.save()
 			
 			if not created:
 				existing_daily=row.dailyLabConfirmedCases
 				existing_total=row.totalLabConfirmedCases
-				if existing_daily !=daily or existing_total!=total:
-					log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
-					row.dailyLabConfirmedCases=daily
-					row.totalLabConfirmedCases=total
-					row.save()
-					
-					lag=(pubdate-_date.date()).days
-					drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag)
-					drow.dailycases=daily
-					drow.save()
+				if daily is not None:
+					if existing_daily !=daily or existing_total!=total:
+						log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
+						row.dailyLabConfirmedCases=daily
+						row.totalLabConfirmedCases=total
+						row.save()
+						
+						if existing_daily !=daily:
+							lag=(pubdate-_date.date()).days
+							drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag,dailycases=daily)
+							drow.save()
 					
 			counter+=1
 			if counter%100==0:
@@ -526,6 +537,7 @@ def check_and_download():
 
 
 def update_weekly_cases(nation):
+    log.info(f"update weekly cases for nation: {nation}")
     q=CovidWeek.objects.filter(nation=nation)
     for place in q.values('areacode','areaname').distinct():
         areacode=place['areacode']
@@ -748,125 +760,6 @@ def ingest_cases(data):
 			
 
 
-class LagCalc():
-	def __init__(self,pubdate,data,start_date=date(2020,8,20)):
-		self.pubdate=time_utils.parseISO(pubdate).date() #date when data published
-		self.data=data #list of entries
-		self.start_date=start_date
-		
-	def process(self):
-		for i in self.data:
-			datestring=i['specimenDate']
-			new_daily=i['newCasesBySpecimenDate']
-			if not new_daily: #ignore dates with no cases
-				continue
-			specimen_datetime=fetchdate(datestring)
-			specimen_date=specimen_datetime.date()
-			
-			if specimen_date < self.start_date:
-				continue
-			
-			
-			row=DailyCases.objects.get(specimenDate=specimen_datetime,areacode=i['areaCode'])
-			place=i['areaName']
-			
-			lag=(self.pubdate-specimen_date).days
-
-			
-			try:
-				assert row.cases_lag is not ''
-				stored_lags_raw=eval(row.cases_lag)
-				lags=stored_lags_raw
-				#lags={n[0]:n[1] for n in stored_lags_raw}
-				maxlag=max(lags.keys())
-				daytotal=lags[maxlag]
-				
-				print(f"Place: {place} SpecimenDate: {specimen_date} lag:{lag} lags:{lags} maxlag:{maxlag} storedtotal:{daytotal} newtotal:{new_daily}")
-				
-				if new_daily!=daytotal:
-					if lags.get(lag):
-						print(f'Data already entered for {pubdate}')
-					else:
-						lags[lag]=new_daily
-						new_lags=str(lags)
-						row.cases_lag=new_lags
-						row.save()
-				print('No new Data')
-				
-			except Exception as e:
-				print(e)
-				lags={}
-				lags[lag]=new_daily
-				new_lags=str(lags)
-				row.cases_lag=new_lags
-				row.save()
-			
-			
-class ImportLags(Fetch_PHE):
-	"""take a day's cases and store the published cases against publication date"""
-	def __init__(self,filepath):
-		self.filepath=filepath
-		self.open_csv(self.filepath)
-		self.pubdate=fetchdate(os.path.basename(filepath)[:10]).date()
-		print(f'Processing case data published {self.pubdate}')
-	
-	def open_csv(self,path):
-		self.data = pandas.read_csv(path, encoding= "utf-8") 
-		
-	def ingest_all(self):
-		"""pull all daily cases from all PHE areas"""
-		for place in self.district_codes():
-			self.sequence_ingest(place)
-
-			
-	def sequence_ingest(self,areacode):
-		"""ingest from a particular areacode"""
-		data=self.data[self.data['Area code']==areacode]
-		areaname=data['Area name'].unique().item()
-		log.info(f'Ingesting cases from {areacode}: {areaname}')
-		
-		counter=0
-		for day in data['Specimen date'].unique():
-			date=fetchdate(day)
-#			try:
-#				row=DailyCases.objects.get(specimenDate=date,areacode=areacode)
-#			except DailyCases.DoesNotExist:
-#				print(f'No record for {areaname} {date}')
-#				continue
-			this_day=data[data['Specimen date']==day]
-			cases=this_day['Daily lab-confirmed cases'].head(1).item()
-			if cases:
-				
-				lag=(self.pubdate-date.date()).days
-				print(f'lag:{lag}, {date}, cases {cases}')
-				rows=DailyReport.objects.filter(areacode=areacode,specimenDate=date).order_by('-publag')
-				if True:
-					if rows:
-						lastentry=rows[0]
-						if lastentry.dailycases !=cases:
-							print(f'mismatch for {lag}, {date}, cases {cases}')
-							row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=date,publag=lag,dailycases=cases)
-							row.save()
-						else:
-							pass
-					else:
-						row=DailyReport(areacode=areacode,specimenDate=date,publag=lag)
-						row.dailycases=cases
-						row.save()
-#				except Exception as e:
-#					print(e)
-#					print (rows, cases,areacode,date,lag)
-			
-			
-def import_csvfiles(dirpath):
-	""" import csv files of daily published cases to calculate lags"""
-	files=[x for x in os.listdir(dirpath) if '.csv' ==x[-4:]]
-	for f in files:
-		filepath=os.path.join(dirpath,f)
-		print(filepath)
-		i=ImportLags(filepath)
-		i.ingest_all()
-		
 
 #		datestring=item['specimenDate']
 #		_date=fetchdate(datestring)
