@@ -49,11 +49,11 @@ class Updater():
             try:
                 assert q.population is not None
             except Exception as e:
-                print(f'population data for {name} missing')
+                log.info(f'population data for {name} missing')
             try:
                 assert q.excess_deaths is not None
             except Exception as e:
-                print(f'excess death calculation for {name} missing')
+                log.info(f'excess death calculation for {name} missing')
                 
                 
         for areacode in stored_names.keys():

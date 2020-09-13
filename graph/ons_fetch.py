@@ -1,10 +1,11 @@
-import requests,json,csv
+import requests,json,csv,logging
 from .ons_week import week as ons_week,sunday,stored_names,nation,weeks
 from .models import CovidWeek,CovidScores
 from .import_csv import URLImporter,PandaImporter,merge_averages
 import configs
 from configs import userconfig
 from datetime import date,timedelta
+log = logging.getLogger('api.graph.ons_fetch')
 #WEEKLY_DEATHS_FILTER=configs.config['ONS']['weekly_deaths_filter'] #get base path of the docstore
 #print(WEEKLY_DEATHS_FILTER)
 
@@ -133,7 +134,7 @@ class ONS_Importer(PandaImporter):
 def update_row(row,_all,_allc19,careh,careh19,hosp19):
     _update=False
     
-    print(f"stored weekly C19 deaths: {row.weeklydeaths}")
+    log.debug(f"stored weekly C19 deaths: {row.weeklydeaths}")
     if row.weeklydeaths !=_allc19:
         print(f'update total C19 deaths from {row.weeklydeaths} to {_allc19}')
         _update=True

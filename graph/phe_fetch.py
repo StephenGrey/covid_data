@@ -248,7 +248,7 @@ class Fetch_API(Check_PHE):
 			row.areaname=item['areaName']
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
-			log.info(f'{row.areaname}: {datestring}')			
+			#log.debug(f'{row.areaname}: {datestring}')			
 												
 			if created:
 				row.dailyLabConfirmedCases=daily
@@ -258,7 +258,9 @@ class Fetch_API(Check_PHE):
 				if daily:
 					lag=(pubdate-_date.date()).days
 					log.debug(f'date:{_date} lag: {lag} daily:{daily}')
-					drow=DailyReport(specimenDate=_date,areacode=areacode,dailycases=daily,publag=lag)
+					drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag)
+					drow.dailycases=daily
+					drow.add_cases=daily #if a new daily case, assume no prior report
 					drow.save()
 			
 			if not created:
@@ -272,8 +274,14 @@ class Fetch_API(Check_PHE):
 						row.save()
 						
 						if existing_daily !=daily:
+							if existing_daily:
+								_increase=daily-existing_daily
+							else:
+								_increase=daily
 							lag=(pubdate-_date.date()).days
-							drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag,dailycases=daily)
+							drow,dcreated=DailyReport.objects.get_or_create(specimenDate=_date,areacode=areacode,publag=lag)
+							drow.dailycases=daily
+							drow.add_cases=_increase
 							drow.save()
 					
 			counter+=1
@@ -549,7 +557,7 @@ def update_weekly_cases(nation):
 def update_weekly_total(areacode=AREACODE,areaname=AREA):
     """add up all daily cases into week calculation"""
     start,stop=model_calcs.RANGE_WEEK
-    log.info(f'Processing {areaname}')
+    log.debug(f'Processing {areaname}')
     for week in range(start,stop+1):
         end_day=ons_week.week(week)
         

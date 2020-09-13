@@ -17,6 +17,15 @@ nation={'E06000001': 'England', 'E06000002': 'England', 'E06000003': 'England', 
 
 wales_codes={'W06000001': 'Isle of Anglesey', 'W06000002': 'Gwynedd', 'W06000003': 'Conwy', 'W06000004': 'Denbighshire', 'W06000005': 'Flintshire', 'W06000006': 'Wrexham', 'W06000008': 'Ceredigion', 'W06000009': 'Pembrokeshire', 'W06000010': 'Carmarthenshire', 'W06000011': 'Swansea', 'W06000012': 'Neath Port Talbot', 'W06000013': 'Bridgend', 'W06000014': 'Vale of Glamorgan', 'W06000015': 'Cardiff', 'W06000016': 'Rhondda Cynon Taf', 'W06000018': 'Caerphilly', 'W06000019': 'Blaenau Gwent', 'W06000020': 'Torfaen', 'W06000021': 'Monmouthshire', 'W06000022': 'Newport', 'W06000023': 'Powys', 'W06000024': 'Merthyr Tydfil'}
 
+
+areacodes=stored_names.keys()
+welsh=[x for x in areacodes if nation[x]=='Wales']
+scottish=[x for x in areacodes if nation[x]=='Scotland']
+english=[x for x in areacodes if nation[x]=='England']
+nirish=[x for x in areacodes if nation[x]=='Northern Ireland']
+
+
+
 def week(number):
     day,month,year=weeks[number]
     return pytz.utc.localize(datetime(year, month, day))

@@ -1,7 +1,7 @@
-import pandas,requests
+import pandas,requests,logging
 from .ons_week import ni_codes, week as ons_week,sunday, stored_names
 from .models import CovidWeek
-
+log = logging.getLogger('api.graph.n_ireland')
 
 import configs
 from configs import userconfig
@@ -37,9 +37,9 @@ class NI_Importer():
         if niupdate:
             self.last_update=niupdate.get('latest_deaths')
             if str(self.edition)==self.last_update:
-                print('NI deaths: up to date')
+                log.info('NI deaths: up to date')
                 return False
-        print('NI deaths - update available')
+        log.info('NI deaths - update available')
         return True
         
     def fetch_excel(self,url=DEATHS_URL):
@@ -72,7 +72,7 @@ class NI_Importer():
     def parse_week(self,week,areacode,_update=True):
         district=ni_codes_inv[areacode] #different syntax on import
         
-        print(week,district)
+        #print(week,district)
         
         _allc19=zero_null(self.data[(self.data['Registration Week']==week)][district])
         _all=zero_null(self.data2[(self.data2['Registration Week']==week)][district])
@@ -83,17 +83,17 @@ class NI_Importer():
             row=qrow[0]
             if _update:
                 change=False
-                print(f"stored weekly C19 deaths: {row.weeklydeaths}")
+                #log.debug(f"stored weekly C19 deaths: {row.weeklydeaths}")
                 if row.weeklydeaths !=_allc19:
-                    print(f'update total C19 deaths from {row.weeklydeaths} to {_allc19}')
+                    log.info(f'week {week} update total C19 deaths in {district} from {row.weeklydeaths} to {_allc19}')
                     row.weeklydeaths=_allc19
                     change=True
                 if row.weeklyalldeaths != _all:
-                    print(f'update total all deaths from {row.weeklyalldeaths} to {_all}')
+                    log.info(f'week {week} update total all deaths in {district} from {row.weeklyalldeaths} to {_all}')
                     row.weeklyalldeaths=_all
                     change=True
                 if row.weeklyC19carehomedeaths != careh19:
-                    print(f'update total C19 care home deaths from {row.weeklyC19carehomedeaths} to {careh19}')
+                    log.info(f'week {week} update total C19 care home deaths in {district} from {row.weeklyC19carehomedeaths} to {careh19}')
                     row.weeklyC19carehomedeaths=careh19
                     change=True
                 row.save() if change else None
@@ -102,7 +102,7 @@ class NI_Importer():
                 areaname=stored_names[areacode]
                 _nation='Northern Ireland'
                 row=CovidWeek(week=week+1,areacode=areacode,nation=_nation,areaname=areaname)
-                print(f'Created week {sunday(week)} for {district}')
+                log.info(f'Created week {sunday(week)} for {district}')
                 row.weeklydeaths=_allc19
                 row.weeklyalldeaths=_all
                 row.save()

@@ -40,10 +40,10 @@ def excess_deaths_district(place='Birmingham',save=False):
 	
 		excess=int(all_deaths_2020-average_deaths)
 		excess_carehomes=int(all_carehome_deaths_2020-average_carehome_deaths)
-		print(f'Excess deaths in {place}: {excess} (care homes: {excess_carehomes})')
+		log.debug(f'Excess deaths in {place}: {excess} (care homes: {excess_carehomes})')
 	else:
 		_data=False
-		print(f'No average data for {place}')
+		log.error(f'No average data for {place}')
 	if save:
 		av, created = CovidScores.objects.get_or_create(
 			areaname=place,
@@ -105,7 +105,6 @@ def calc_newcases_rates():
 	for place in district_names():
 		i=CovidScores.objects.get(areaname=place)
 		total_cases=DailyCases.objects.filter(specimenDate__range=_range,areaname=place).aggregate(Sum('dailyLabConfirmedCases'))['dailyLabConfirmedCases__sum']
-		
 		newcases_rate=round(total_cases/i.population*100000,1) if total_cases is not None and i.population else None
 		rates[place]=newcases_rate
 		i.latest_case_rate=newcases_rate
