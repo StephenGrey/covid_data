@@ -52,7 +52,7 @@ class ONS_Importer(PandaImporter):
         return sorted([z for z in self.data['admin-geography'].unique()])
     
     def download(self):
-        print(f'downloading {self.download_url}')
+        log.debug(f'downloading {self.download_url}')
         if self.download_url:
             self.fetch(self.download_url)
             
@@ -60,7 +60,7 @@ class ONS_Importer(PandaImporter):
     def process(self):
         _id,url=self.get_download_link()
         last_update=configs.config['ONS'].get('latest_update')
-        print(f"Latest edition: {_id}   Most recent update {last_update}")
+        log.info(f"Latest edition: {_id}   Most recent update {last_update}")
         if last_update != _id:
             self.download()
             self.parse()
@@ -85,7 +85,7 @@ class ONS_Importer(PandaImporter):
         careh=sub[(sub['causeofdeath']=='All causes')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
         careh19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
         hosp19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Hospital')]['v4_0'].sum()
-        print(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
+        log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
         qrow=CovidWeek.objects.filter(week=week,areacode=district)
         if qrow:
             row=qrow[0]
@@ -97,7 +97,7 @@ class ONS_Importer(PandaImporter):
                 areaname=stored_names[district]
                 _nation=nation[district]
                 row=CovidWeek(areacode=district,nation=_nation,areaname=areaname,week=week)
-                print(f'Created week {sunday(week)} for {district}')
+                log.debug(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
 
@@ -136,7 +136,7 @@ def update_row(row,_all,_allc19,careh,careh19,hosp19):
     
     log.debug(f"stored weekly C19 deaths: {row.weeklydeaths}")
     if row.weeklydeaths !=_allc19:
-        print(f'update total C19 deaths from {row.weeklydeaths} to {_allc19}')
+        log.info(f'update total C19 deaths from {row.weeklydeaths} to {_allc19}')
         _update=True
         row.weeklydeaths=_allc19
         row.save()
@@ -144,25 +144,25 @@ def update_row(row,_all,_allc19,careh,careh19,hosp19):
     
     if row.weeklyC19hospitaldeaths !=hosp19:
         _update=True
-        print(f'updating hospital C19 from {row.weeklycarehomedeaths} to {hosp19}')
+        log.info(f'updating hospital C19 from {row.weeklycarehomedeaths} to {hosp19}')
         row.weeklyC19hospitaldeaths=hosp19
     
     
     if row.weeklycarehomedeaths !=careh:
         _update=True
-        print(f'updating care home deaths from {row.weeklycarehomedeaths} to {careh}')
+        log.info(f'updating care home deaths from {row.weeklycarehomedeaths} to {careh}')
         row.weeklycarehomedeaths=careh
     
     
     if row.weeklyC19carehomedeaths !=careh19:
         _update=True
-        print(f'updating care home C19 deaths from {row.weeklycarehomedeaths} to {careh19}')
+        log.info(f'updating care home C19 deaths from {row.weeklycarehomedeaths} to {careh19}')
         row.weeklyC19carehomedeaths=careh19
     
     
     if row.weeklyalldeaths !=_all:
         _update=True
-        print(f'updating all deaths from {row.weeklyalldeaths} to {_all}')
+        log.info(f'updating all deaths from {row.weeklyalldeaths} to {_all}')
         row.weeklyalldeaths=_all
     
     if _update:
@@ -212,7 +212,7 @@ def district_week(geography="E06000016",options="",latest_url="",series=ID):
     weeks=sorted(raw_weeks)
     data={}
     for week in weeks:
-        print(f"Week: {week}")        
+        log.info(f"Week: {week}")        
         
         week_data={}
         week_str=f"week-{week}"
@@ -241,8 +241,8 @@ def district_week(geography="E06000016",options="",latest_url="",series=ID):
                 
             data[week]=week_data
         except Exception as e:
-            print(e)
-            print('week failed')
+            log.error(e)
+            log.error('week failed')
     
 
     return data
@@ -262,7 +262,7 @@ def correct_smallpops():
     HaCi,created=CovidScores.objects.get_or_create(areaname="Hackney and City of London")
     HaCi.population=hack+city
     HaCi.save()
-    print('Corrected Hackney and City of London pop')
+    log.info('Corrected Hackney and City of London pop')
     merge_averages(['E07000004','E07000005','E07000006','E07000007'],'E06000060') #merge average data foe Bucks districts into Buckinghamshire
 """
 TO DO - MERGE THESE AVERAGES DATA FOR THESE 

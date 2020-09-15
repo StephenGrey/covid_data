@@ -246,7 +246,7 @@ def last7():
 	all_cases=0
 	all_delay=0
 	delay_scores={}
-	
+	national_distro={}
 	#calculate the average for each area
 	try:
 		for areacode,v in sum_delays.items():
@@ -255,12 +255,15 @@ def last7():
 			total_reported=v['total_reported']
 			av_delay=round((delay_total/total_reported),2)
 			distro=v['distribution']
-			log.info(f'{place} : {av_delay} Total:{total_reported} Distrubution:{distro}')
+			for lag in distro:
+				national_distro[lag]=national_distro.get(lag,0)+distro[lag]
+			log.info(f'{place} : {av_delay} Total:{total_reported} Distribution:{distro}')
 			delay_scores[place]=av_delay
 			all_cases+=total_reported
 			all_delay+=delay_total
 		tot_delay=round((all_delay/all_cases),2)
 		log.info(f'Total av delay: {tot_delay}')
+		log.info(f'National delays distribution: {national_distro}')
 	except Exception as e:
 		log.error(e)
 	
@@ -323,7 +326,7 @@ def newcases_by_area(last_update):
 			total_dailyreported=0	
 			try:
 				report=q.get(specimenDate=sd-timedelta(lag),publag=lag)
-				log.info(report.__dict__)
+				#log.info(report.__dict__)
 				newcases=report.dailycases-previous_total(report)
 				total_dailyreported+=newcases
 				delaytotal+=(lag*total_dailyreported)

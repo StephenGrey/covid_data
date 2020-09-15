@@ -1,10 +1,10 @@
-import pandas,requests,pytz
+import pandas,requests,pytz, logging
 from . import n_ireland
 from .models import DailyCases
 from .ons_week import wales_codes
 from .phe_fetch import update_weekly_cases, Check_PHE
 from uk_covid19 import Cov19API
-
+log = logging.getLogger('api.graph.wales')
 import configs
 from configs import userconfig
 
@@ -29,11 +29,11 @@ class Wales_Check(Check_PHE):
         self.api.latest_by='cumCasesByPublishDate'
         self.get()
         self.latest_total=self.data['data'][0]['cumCasesByPublishDate']
-        print(f'Wales latest total: {self.latest_total}')
+        log.info(f'Wales latest total: {self.latest_total}')
         if self.latest_total:
             if self.Wales_cases:
                 if int(self.Wales_cases)==self.latest_total:
-                    print('nothing new here')
+                    log.info('nothing new here')
                     self._update=False
                     return False
             userconfig.update('Wales','wales_total_cases',str(self.latest_total))
@@ -75,7 +75,7 @@ class Wales_Cases():
             i.dailyLabConfirmedCases=newcases
             i.totalLabConfirmedCases=totalcases
             i.areacode=areacode
-            print(newcases,totalcases)
+            #print(newcases,totalcases)
             i.save()
 
 
