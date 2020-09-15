@@ -12,6 +12,16 @@ DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
 
+DELAY_FILE=os.path.join(DATA_STORE,'Last7Delays.json')
+try:
+    with open(DELAY_FILE,'r') as json_file:
+        DELAYS=json.loads(json_file.read())
+except Exception as e:
+    DELAYS={}
+    log.error(e)
+    log.info('Cannot load 7-day delays data')
+    
+
 #MOVING TO USING ONLY WEEK NUMBERS - TO AVOID DISCREPANCY SCOT AND E+W ON WEEK ENDING
 
 def excess_deaths_district(place='Birmingham',save=False):
@@ -252,6 +262,7 @@ def output_rates():
     "areaname": score.areaname,
     "excess": excess,
     "cases_rate":cases_rate,
+    "delays":DELAYS.get(score.areaname),
     	})
 	return data
 

@@ -185,10 +185,10 @@ def calc():
 	_date='2020-08-25'
 	nat_totaldelay=0
 	nat_totalcases=0
+	lagtotals={} #count cases for each daily delay
 	for areacode,areaname in stored_names.items():
-		print(areacode)
+		log.debug(areacode)
 		q=DailyReport.objects.filter(areacode=areacode,specimenDate=_date).order_by('publag')
-		print(q)
 		last_total=0
 		delay_total=0
 		for i in q:
@@ -196,6 +196,7 @@ def calc():
 			cases=i.dailycases
 			add_cases=cases-last_total
 			delay_total+=add_cases*lag
+			lagtotals[lag]=lagtotals.get(lag,0)+add_cases
 			last_total=cases
 			log.info(f'{areaname} - lag: {lag} cases: {cases} addcases: {add_cases}')
 		if last_total:
@@ -227,7 +228,15 @@ def last7():
 		
 			areatotal['delay_total']=areatotal.get('delay_total',0)+v['delay_total']
 			areatotal['total_reported']=areatotal.get('total_reported',0)+v['total_reported']
+		
+			stored_distro=areatotal.get('distribution',{})
+			for lag in v['distribution']:
+				stored_distro[lag]=stored_distro.get(lag,0)+v['distribution'][lag]
+			areatotal['distribution']=stored_distro
+
 			sum_delays[areacode]=areatotal
+		
+		
 		
 		_date-=timedelta(1)
 		#print(_date)
@@ -245,8 +254,8 @@ def last7():
 			delay_total=v['delay_total']
 			total_reported=v['total_reported']
 			av_delay=round((delay_total/total_reported),2)
-
-			log.info(f'{place} : {av_delay}')
+			distro=v['distribution']
+			log.info(f'{place} : {av_delay} Total:{total_reported} Distrubution:{distro}')
 			delay_scores[place]=av_delay
 			all_cases+=total_reported
 			all_delay+=delay_total
@@ -258,7 +267,12 @@ def last7():
 	
 	try:
 		delay_scores={k:v for k,v in sorted(delay_scores.items(), key=lambda item: item[1])}
+		"""save the last 7 days - with pub date"""
 		filepath=os.path.join(DATA_STORE,f"{_date:%Y-%m-%d} Last7Delays.json")
+		with open(filepath, 'w') as outfile:
+			json.dump(delay_scores, outfile)
+		"""save the last 7 days - overwriting last scores"""
+		filepath=os.path.join(DATA_STORE,"Last7Delays.json")
 		with open(filepath, 'w') as outfile:
 			json.dump(delay_scores, outfile)
 	except Exception as e:
@@ -291,9 +305,10 @@ def new_cases(last_update, codes=stored_names.keys()):
 
 
 def newcases_by_area(last_update):
-	""" new casees and delays by area"""
+	""" new cases and delays by area"""
 	delays={}
 	for areacode in codes():
+		log.debug(f'checking {areacode}')
 		place=stored_names.get(areacode)
 		if not place:
 			continue
@@ -302,22 +317,29 @@ def newcases_by_area(last_update):
 		lag=0
 		delaytotal=0
 		total_reported=0
+		local_distro={}
 		while lag<30:
 			lag+=1
 			total_dailyreported=0	
-			for report in q.filter(specimenDate=sd-timedelta(lag),publag=lag):
+			try:
+				report=q.get(specimenDate=sd-timedelta(lag),publag=lag)
+				log.info(report.__dict__)
 				newcases=report.dailycases-previous_total(report)
 				total_dailyreported+=newcases
-			delaytotal+=(lag*total_dailyreported)
-			total_reported+=total_dailyreported
-			log.debug(f'lag: {lag}  total: {total_dailyreported}')
+				delaytotal+=(lag*total_dailyreported)
+				total_reported+=total_dailyreported
+				if total_dailyreported != 0:
+					local_distro[lag]=local_distro.get(lag,0)+total_dailyreported
+				log.debug(f'lag: {lag}  total: {total_dailyreported}')
+			except DailyReport.DoesNotExist:
+				pass
 		if total_reported:
 			av_delay=round((delaytotal/total_reported),2)
 		else:
 			continue
 			#av_delay='N/A'
-		log.info(f'{place}: new cases: {last_update:%d/%m/%Y}: {total_reported} Av delay: {av_delay}')
-		delays[areacode]={'place':place,'total_reported':total_reported,'av_delay':av_delay, 'delay_total':delaytotal}
+		log.info(f'{place}: new cases: {last_update:%d/%m/%Y}: {total_reported} Av delay: {av_delay} Distribution: {local_distro}')
+		delays[areacode]={'place':place,'total_reported':total_reported,'av_delay':av_delay, 'delay_total':delaytotal, 'distribution':local_distro}
 	return delays
 		
 def delays_recent(start=date(2020,8,31)):
