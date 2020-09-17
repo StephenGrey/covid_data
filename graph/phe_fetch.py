@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*- 
-import os,json,requests,csv,pandas,logging
+import os,json,requests,csv,pandas,logging, time
 from bs4 import BeautifulSoup as BS
 from utils import time_utils
 from .models import DailyCases,CovidWeek, DailyReport
@@ -114,16 +114,19 @@ class Check_PHE():
         "cumCasesByPublishDate": "cumCasesByPublishDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
-        "newAdmissions":"newAdmissions",
-        "cumAdmissions":"cumAdmissions",
-        "cumTestsByPublishDate":"cumTestsByPublishDate",
-        "newTestsByPublishDate":"newTestsByPublishDate",
+#        "newAdmissions":"newAdmissions",
+#        "cumAdmissions":"cumAdmissions",
+#        "cumTestsByPublishDate":"cumTestsByPublishDate",
+#        "newTestsByPublishDate":"newTestsByPublishDate",
         }
     
     @property
     def England_filter(self):
         return ['areaType=nation','areaName=England']
         
+    
+    def district_filter(self, district):
+        return ['areaType=ltla',f'areaName={district}']
     
     @property
     def local_filter(self):
@@ -149,10 +152,10 @@ class Check_PHE():
 #        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
-        "newAdmissions":"newAdmissions",
-        "cumAdmissions":"cumAdmissions",
-        "cumTestsByPublishDate":"cumTestsByPublishDate",
-        "newTestsByPublishDate":"newTestsByPublishDate",
+#        "newAdmissions":"newAdmissions",
+#        "cumAdmissions":"cumAdmissions",
+#        "cumTestsByPublishDate":"cumTestsByPublishDate",
+#        "newTestsByPublishDate":"newTestsByPublishDate",
         }
         
     def save(self):
@@ -219,8 +222,21 @@ class Fetch_API(Check_PHE):
 		return self.newcases
 	
 	def process(self):
+		"""pull all the data and process"""
 		if self.update_check() or self.force_update:
 			self.fetch() #pull all local data and regions
+			self.fix() #fix data anomalies - e.g add in Bucks.
+			self.save_all() #store a copy of the data
+			self.ingest() #add data to models
+			self.update_totals() #calculate weekly data
+		else:
+			log.info('PHE cases up to date')
+	
+	
+	def process_by_district(self):
+		"""pull the data district by district"""
+		if self.update_check() or self.force_update:
+			self.district_check() #pull all local data and regions
 			self.fix() #fix data anomalies - e.g add in Bucks.
 			self.save_all() #store a copy of the data
 			self.ingest() #add data to models
@@ -233,6 +249,40 @@ class Fetch_API(Check_PHE):
 		for x in zz.data['data']:
 			output.add(x['areaCode'])
 		return output
+
+	def district_check(self):
+		for place in ons_week.stored_names.values():
+			self.api.filters=self.district_filter(place)
+			tries=0
+			while tries < 5:
+				try:
+					log.info(f'Fetching {place}')
+					self.data=self.api.get_json()  # Returns a dictionary
+					new_data=self.data.get('data')
+					break
+				except Exception as e:
+					log.error(e)
+					log.error('Retrying after 8 secs')
+					time.sleep(8)
+					tries +=1
+					new_data=[]
+			if not new_data:
+				log.error('No data here')
+			else:
+				self.data_all +=new_data
+			time.sleep(0.1)
+
+
+	def count_reports(self):
+		reports={}
+		for i in self.data_all:
+			reports[i['areaCode']]=reports.get(i['areaCode'],0)+1
+		
+		for areacode in ons_week.stored_names:
+			if not reports.get(areacode):
+				log.info(f'missing data for {ons_week.stored_names.get(areacode)}')
+
+		return reports
 
 	def ingest(self,check=True):
 		"""ingest all the data"""

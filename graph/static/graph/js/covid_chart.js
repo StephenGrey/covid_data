@@ -106,6 +106,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
         		{
             		label: label1,
             		data: series1,
+            		pointRadius: 0,
             		borderDash: [10,5],
             		backgroundColor: [
 					'rgba(255, 229, 204,0.4)',
@@ -122,6 +123,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     			{
             	label: label3,
             	data:series3,
+            	pointRadius: 0,
             	borderColor: [ 
             	'orange',
             	],
@@ -133,6 +135,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     			{
             	label: label4,
             	data: series4,
+            	pointRadius: 0,
             	backgroundColor: ['rgba(255,0,0,1)'],
             	borderColor: [ 	'rgba(255, 99, 132, 1)'],
             	borderWidth: 1,    
@@ -142,6 +145,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     			{
     			label:label2,
     			data:series2,
+    			pointRadius: 0,
             	backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
                            	],
@@ -161,13 +165,28 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     			fontSize: 17,
                 
     		 	},
+        	tooltips: {
+                    callback: function(tooltipItem) {
+                        return tooltipItem.yLabel;
+                    }
+                },
+        	
+        	
         	scales: 
         		{
+            	xAxes: [{
+   				    ticks: {
+     				   autoSkip: true,
+				        maxTicksLimit: 10
+  						  }
+					}],
+            	
             	yAxes: 
             		[{            
                         type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
                         display: true,
                         position: "left",
+                        
                         scaleLabel: 
                         	{
                             display: true,
@@ -207,21 +226,11 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
         	labels: [
 			'Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11'],
         	datasets: [
-//        		{
-//            		label: label1,
-//            		data: series1,
-//            		borderDash: [10,5],
-//            		borderColor: [
-//            		'black'
-//					],
-//            		borderWidth: 1,
-//             		yAxisID: "y-axis-1",
-//             		
-//    			}, 
 
     			{
     			label:label5,
     			data:series5,
+    			pointRadius: 0,
             	borderColor: [ 'rgba(255, 99, 132, 1)'
             	],
             	backgroundColor: ['rgba(255,0,0,0.1)'],
@@ -230,10 +239,9 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     			}, 
     			
     			
-
-    			
     			{
             	label: label7,
+            	pointRadius: 0,
             	data: series7,
             	borderColor: [ 'blue'	
             	//'rgba(255, 99, 132, 1)'
@@ -244,6 +252,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
         		},   			
     			{
             	label: label6,
+            	pointRadius: 0,
             	data:series6,
             	backgroundColor: ['rgba(255,128,0,0.3)'],
             	borderColor: [ 
@@ -255,6 +264,7 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
 
     			    			{
     			label:label8,
+    			pointRadius: 0,
     			data:series8,
 				backgroundColor: ['rgba(255,178,102,0.7)'],
             	borderColor: [ 'blue'
@@ -286,6 +296,13 @@ function draw_chart(chart_title,excess,series1,series2,series3,series4,series5,s
     		 	},
         	scales: 
         		{
+        		xAxes: [{
+   				    ticks: {
+     				   autoSkip: true,
+				        maxTicksLimit: 10
+  						  }
+					}],
+     
             	yAxes: 
             		[{            
                         type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
@@ -418,9 +435,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
   //the event occurred
 
 ctx = document.getElementById('myChart');
-ctx.height = 80;
+ctx.height = 90;
 new_ctx = document.getElementById('myDeathChart');
-new_ctx.height = 50;
+new_ctx.height = 80;
 
 
 myChart=new Chart(ctx, {});
