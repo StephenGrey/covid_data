@@ -115,9 +115,10 @@ class Updater():
         
         try:
             cz=phe_fetch.Fetch_API()
-            cz.process_by_district()
+            cz.process()
             log.info('PHE data successfully processed')
         except Exception as e:
+            log.error(e)
             log.error('PHE API failure ... using old CSV')
             cz=phe_fetch.Fetch_PHE()
             cz.process()
