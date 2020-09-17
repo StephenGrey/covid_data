@@ -91,6 +91,8 @@ margin-left: -10vw;
 {% block body_content %}
 
 <div class="container">
+		<div class="row">
+	<div class="col-md-1"></div>
 	<h1>COVID Kingdom: the UK <b>COVID-19 Tracker</b></h1>
 	<p>
 		 
@@ -98,9 +100,13 @@ margin-left: -10vw;
 		
 
 		
-	<h4>Explore the map of latest Covid-19 cases in Britain - and select an area on the map (or in the menu below) to see how the virus spread through Britain, including the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived.</h4>Last updated: {{last_update}}
+	<h4>Explore the map of latest Covid-19 cases in Britain - and select an area on the map (or in the menu below) to see how the virus spread through Britain, including the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived. <b>Last updated: {{last_update}}</b> </h4>
+<div class="col-md-1"></div>
+</div>
 
   	<div class="row">
+  		
+  		<div class="col-md-1"></div>
   		<div class="col-md-1">
 			<select id="Filter2">
 			<option value="1">England</option>
@@ -499,49 +505,89 @@ margin-left: -10vw;
 
 </div>
 
-<div class="container">
 
  	<div class="row">
     	<div class="col-md-1"></div>
     	<div class="col-md-10">
-    		<div class="row-full">
 			<canvas id="myChart" width="200" height="400"</canvas>
-			</div>
+	
 		</div>
 	    <div class="col-md-1"></div>
   	</div>
+
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+
+<p>			
+* The figures for <b>tests with a positive COVID-19 result</b> come from labs run by Public Health England, NHS hospitals, and private "Lighthouse" labs. The figures are updated daily.
+<p>
+		</div>
+	    <div class="col-md-1"></div>
+  	</div>
+<p>
+
+<div class="container">
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+			<canvas id="casechart" width="200" height="400"</canvas>
+		</div>
+	    <div class="col-md-1"></div>
+  	</div>
+
+<p><p>
+
   	 <div class="row">
     	<div class="col-md-1"></div>
     	<div class="col-md-10">
-    		<div class="row-full">
+ Deaths are derived from <b>death certificates where COVID-19 is listed as a cause of death</b>. Location is by place of death. These figures are likely an under-estimate in most areas as the figure is significantly below recorded excess deaths for the time of year, as illustrated in this next chart which compares deaths from all causes against an average deaths in that week in the previous five years.
+<p><p>
+
 			<canvas id="myDeathChart" width="200" height="400"</canvas>
-			</div>
 		</div>
 	    <div class="col-md-1"></div>
   	</div>
-  	<h6>Click on the points for the data.</h6><br>
+ 
+ 
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+    		<p>
+<br />
+Using the official figure for coronavirus cases, based on test results, is an misleading way to view the spread of the pandemic. It is clear from the many deaths that followed, that the new coronavirus was spreading widely in the UK long before significant testing began. With inconsistent and low volumes of testing for COVID-19, one way of estimating real infections is working back from deaths that follow approximately 3 weeks later. 
+<p>
+    		
+			<canvas id="estimates" width="200" height="400"</canvas>
+		</div>
+	    <div class="col-md-1"></div>
+  	</div>
+
+
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+
 Read our full investigation here:  <a href="https://www.reuters.com/investigates/special-report/health-coronavirus-britain-tracing/">Into the fog: How Britain lost track of the coronavirus</a>
   	
 
 
 <p>
-<br />
-Infection was spreading widely in the UK long before people started dying from COVID-19. With inconsistent and low volumes of testing for COVID-19, the best method available for working out infections is working back from deaths that follow approximately 3 weeks later. 
-<p><p>
 Notes:<p> 
 
+* Estimated new infections is a Reuters rough estimate based on a 1% infection fatality rate (IFR) [Most studies currently show IFR at 0.5%-1%] and average time from infection to death of approximately 3 weeks . The IFR will vary based on age distribution, so the number of infections is likely an over-estimate in the later stages of the outbreak when, in most areas, infection spread into care homes.
+<p>
+	
 
-* Estimated new infections [LEFT AXIS]: a Reuters rough estimate based on a 1% infection fatality rate (IFR) [Most studies currently show IFR at 0.5%-1%] and average time from infection to death of approximately 3 weeks . The IFR will vary based on age distribution, so the number of infections is likely an over-estimate in the later stages of the outbreak when, in most areas, infection spread into care homes.
-<p>
-* Tests with a positive COVID-19 result [RIGHT AXIS]: these are tests carried out in Public Health England, NHS labs, and private "Lighthouse" labs. Updated 1/7/20 with tests in all labs with new PHE data.
-
-<p>
-* Deaths [RIGHT AXIS]: derived from death certificates where COVID-19 is listed as a cause of death. Location is by place of death. This figure is significantly below recorded excess deaths for the time of year, suggesting the COVID-19 figures are an under-estimate. Source: <a href="https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/causesofdeath/datasets/deathregistrationsandoccurrencesbylocalauthorityandhealthboard">England</a> 
-<p>
-* All estimates are unreliable in areas with few deaths, e.g. the City of London.<p> 
+* All estimates are unreliable in areas with only a few cases or deaths, e.g. the City of London.<p> 
  
 Source: Office of National Statistics; National Records of Scotland; Northern Ireland Statistics and Research Agency; Public Health England; Public Health Wales; Scottish government.<p>
 Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Chart/programming: <a href="https://twitter.com/StephenGrey">Stephen Grey</a>
+
+		</div>
+	    <div class="col-md-1"></div>
+  	</div>
+
 
 </div>
 

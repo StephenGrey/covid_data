@@ -217,7 +217,10 @@ def output_district(place,q=None):
 			
 		else:
 			excess,excess_ch,excess_rate="N/A","N/A","N/A"
-			
+		
+		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate')[:50][::-1]
+		last_cases=[i.dailyLabConfirmedCases for i in last]
+		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
 		dataset={ 
 			1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
 			2:{'label':'Total Deaths','data':totalcumdeaths},
@@ -229,8 +232,10 @@ def output_district(place,q=None):
 			6:{'label':"All carehome deaths",'data':weeklycarehomedeaths},
 			7:{'label':"5Y average total deaths",'data':totavdeaths},
 			8:{'label':"5Y average carehome deaths",'data':avcaredeaths},
-			'excess':f"Excess deaths: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
-			'placename':place,
+			9:{'label':" Covid19 new cases",'data':last_cases,'labelset':last_dates},
+			'caseslabel':f'Cases in {place} in last 50 days',
+			'excess':f"Excess deaths in {place}: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
+			'placename':place, 'infectlabel':f"Real estimated infections in {place} vs Covid+ tests"
 			}
 	else:
 		dataset={}
