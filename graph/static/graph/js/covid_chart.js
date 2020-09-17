@@ -164,6 +164,8 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 
         ]},
         options: {
+        	  responsive: true,
+    		maintainAspectRatio: false,
     		title: 
     			{
     			display:true,
@@ -293,6 +295,8 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 
         ]},
         options: {
+        	  responsive: true,
+    		maintainAspectRatio: false,
     		title: 
     			{
     			display:true,
@@ -368,6 +372,8 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 
         ]},
         options: {
+        	  responsive: true,
+    		maintainAspectRatio: false,
     		title: 
     			{
     			display:true,
@@ -426,6 +432,8 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
     			
         		]},
         options: {
+        	        	  responsive: true,
+    		maintainAspectRatio: false,
     		title: 
     			{
     			display:true,
