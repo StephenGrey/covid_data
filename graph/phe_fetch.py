@@ -221,7 +221,7 @@ class Fetch_API(Check_PHE):
 		"""override to any structure"""
 		return self.newcases
 	
-	def process(self):
+	def process_all(self):
 		"""pull all the data and process"""
 		if self.update_check() or self.force_update:
 			self.fetch() #pull all local data and regions
@@ -233,7 +233,7 @@ class Fetch_API(Check_PHE):
 			log.info('PHE cases up to date')
 	
 	
-	def process_by_district(self):
+	def process(self):
 		"""pull the data district by district"""
 		if self.update_check() or self.force_update:
 			self.district_check() #pull all local data and regions
@@ -251,8 +251,11 @@ class Fetch_API(Check_PHE):
 		return output
 
 	def district_check(self):
+		"""fetch data from API district by district"""
+		
+		places_2_fetch=list(ons_week.stored_names.values())+ons_week.extra_places
 		self.edition=None
-		for place in ons_week.stored_names.values():
+		for place in places_2_fetch:
 			self.api.filters=self.district_filter(place)
 			tries=0
 			while tries < 5:
@@ -345,42 +348,6 @@ class Fetch_API(Check_PHE):
 		if self.edition:
 			configs.userconfig.update('PHE','latest_update',self.edition)
 
-#
-#
-#	def ingest(self,check=True):
-#		"""ingest all the data"""
-#		data=self.data_all
-#		pubdate=self.edition
-#		
-#		counter=0
-#		for item in data:
-#			datestring=item['specimenDate']
-#			_date=fetchdate(datestring)
-#			row,created=DailyCases.objects.get_or_create(specimenDate=_date,areacode=item['areaCode'])
-#			row.areaname=item['areaName']
-#			print(f'{row.areaname}: {datestring}')
-#			daily=item['newCasesBySpecimenDate']
-#			total=item['cumCasesBySpecimenDate']
-#			
-#			if created:
-#				row.dailyLabConfirmedCases=daily
-#				row.totalLabConfirmedCases=total
-#				row.save()
-#			if not created:
-#				existing_daily=row.dailyLabConfirmedCases
-#				existing_total=row.totalLabConfirmedCases
-#				if existing_daily !=daily or existing_total!=total:
-#					print(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
-#					row.dailyLabConfirmedCases=daily
-#					row.totalLabConfirmedCases=total
-#					row.save()
-#			counter+=1
-#			if counter%100==0:
-#				print(f'Processing row {counter}')
-#		print(f'Processed: {counter} rows')
-#
-#		if self.edition:
-#			configs.userconfig.update('PHE','latest_update',self.edition)
 #	
 	def save(self):
 		filename=f"{date.today()}-PHE-cases.json"
@@ -397,24 +364,6 @@ class Fetch_API(Check_PHE):
 		return check()
 		
 		
-			
-		
-#		
-#		PHEstored=configs.config.get('PHE')
-#		if PHEstored:
-#			self.last_update=PHEstored.get('latest_cases')
-#			if self.last_update:
-#				if self.edition == self.last_update:
-#					return False
-#		return True
-
-#	def fetch(self,url=URL):
-#		""" get the latest cases data"""
-#		print('downloading latest PHE case data')
-#		self.data=lookup_json(url)
-#		
-#		self.edition=self.data['metadata']['lastUpdatedAt']
-#		print(f'Last updated on {self.edition}')
 
 	def sequence_ingest(self,sequence):
 		"""ingest from a particular sequence"""

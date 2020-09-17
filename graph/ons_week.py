@@ -17,6 +17,8 @@ nation={'E06000001': 'England', 'E06000002': 'England', 'E06000003': 'England', 
 
 wales_codes={'W06000001': 'Isle of Anglesey', 'W06000002': 'Gwynedd', 'W06000003': 'Conwy', 'W06000004': 'Denbighshire', 'W06000005': 'Flintshire', 'W06000006': 'Wrexham', 'W06000008': 'Ceredigion', 'W06000009': 'Pembrokeshire', 'W06000010': 'Carmarthenshire', 'W06000011': 'Swansea', 'W06000012': 'Neath Port Talbot', 'W06000013': 'Bridgend', 'W06000014': 'Vale of Glamorgan', 'W06000015': 'Cardiff', 'W06000016': 'Rhondda Cynon Taf', 'W06000018': 'Caerphilly', 'W06000019': 'Blaenau Gwent', 'W06000020': 'Torfaen', 'W06000021': 'Monmouthshire', 'W06000022': 'Newport', 'W06000023': 'Powys', 'W06000024': 'Merthyr Tydfil'}
 
+extra_places=['Aylesbury Vale', 'Chiltern', 'South Bucks', 'Wycombe', 'East Midlands', 'East of England', 'London', 'North East', 'North West', 'South East', 'South West', 'West Midlands', 'Yorkshire and The Humber', 'Cambridgeshire', 'Cumbria', 'Derbyshire', 'Devon', 'East Sussex', 'Essex', 'Gloucestershire', 'Hampshire', 'Hertfordshire', 'Kent', 'Lancashire', 'Leicestershire', 'Lincolnshire', 'Norfolk', 'North Yorkshire', 'Northamptonshire', 'Nottinghamshire', 'Oxfordshire', 'Somerset', 'Staffordshire', 'Suffolk', 'Surrey', 'Warwickshire', 'West Sussex', 'Worcestershire','England','Wales','Scotland','Northern Ireland']
+
 
 areacodes=stored_names.keys()
 welsh=[x for x in areacodes if nation[x]=='Wales']
