@@ -251,6 +251,7 @@ class Fetch_API(Check_PHE):
 		return output
 
 	def district_check(self):
+		self.edition=None
 		for place in ons_week.stored_names.values():
 			self.api.filters=self.district_filter(place)
 			tries=0
@@ -259,6 +260,8 @@ class Fetch_API(Check_PHE):
 					log.info(f'Fetching {place}')
 					self.data=self.api.get_json()  # Returns a dictionary
 					new_data=self.data.get('data')
+					if not self.edition:
+						self.edition=self.latest_update
 					break
 				except Exception as e:
 					log.error(e)
@@ -335,7 +338,7 @@ class Fetch_API(Check_PHE):
 							drow.save()
 					
 			counter+=1
-			if counter%100==0:
+			if counter%1000==0:
 				log.info(f'Processing row {counter}')
 		log.info(f'Processed: {counter} rows')
 
