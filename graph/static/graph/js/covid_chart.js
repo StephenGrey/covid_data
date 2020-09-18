@@ -458,7 +458,7 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
                         scaleLabel: 
                         	{
                             display: true,
-                            labelString: 'Weekly New Cases',
+                            labelString: 'New Cases (+test by specimen date)',
                             fontColor: "black",
                         	},
                         id: "y-axis-1",

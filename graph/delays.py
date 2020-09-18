@@ -65,12 +65,14 @@ class LagCalc():
 			
 			
 class ImportLags(Fetch_PHE):
-	"""take a day's cases and store the published cases against publication date"""
+	"""take a day's cases from a CSV file and store the published cases against publication date"""
 	def __init__(self,filepath):
 		self.filepath=filepath
 		self.open_file(self.filepath)
 		self.pubdate=fetchdate(os.path.basename(filepath)[:10]).date()
 		print(f'Processing case data published {self.pubdate}')
+		self.edition=None
+		
 	
 	def open_file(self,path):
 		self.data = pandas.read_csv(path, encoding= "utf-8") 
@@ -181,8 +183,9 @@ def total_publishedcases(path):
 
 
 
-def calc():
-	_date='2020-08-25'
+def calc(_date='2020-09-16'):
+	""" calculate delay on particular specimen date"""
+	
 	nat_totaldelay=0
 	nat_totalcases=0
 	lagtotals={} #count cases for each daily delay
@@ -211,6 +214,17 @@ def calc():
 		#,publag=10).aggregate(Sum('dailycases')){'dailycases__sum': None}
 
 
+def last7_all():
+	"""check daily delays by pub date"""
+	_date=date.today()
+	_end=_date-timedelta(7)	
+	sum_delays={}
+	
+	#add up all the cases in each area
+	while _date > _end:
+		day_delays=new_cases(_date)
+		_date-=timedelta(1)
+		
 def last7():
 	"""check delays last 7 days of updates"""
 	_date=date.today()
@@ -377,6 +391,7 @@ def delays_recent(start=date(2020,8,31)):
 	
 
 def list_delays(areacode):
+	"""snapshot of cases published with lag"""
 	q=DailyReport.objects.filter(areacode=areacode).order_by('specimenDate','publag')
 	for i in q:
 		print(f'{i.specimenDate:%d/%m},{i.dailycases},{i.publag}')

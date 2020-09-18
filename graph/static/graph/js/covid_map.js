@@ -33,7 +33,7 @@ Adjust shape_url variable in line elow for new file name.
    var zoomplace;
    var topoLayer;
    var colourmatrix = {
-                    R2G:["#c7e9c0","#74c476","#238b45","#ffcccc","#ff6666","#CC0000",]
+                    R2G:["#238b45","#74c476","#c7e9c0","#ffcccc","#ff6666","#CC0000",]
                     ,Green:["#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32"]
                     ,Purple: ['#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#4a1486']
                     ,Red: ["#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#99000d"]
