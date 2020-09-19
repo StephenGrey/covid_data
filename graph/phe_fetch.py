@@ -221,16 +221,16 @@ class Fetch_API(Check_PHE):
 		"""override to any structure"""
 		return self.newcases
 	
-	def process_all(self):
-		"""pull all the data and process"""
-		if self.update_check() or self.force_update:
-			self.fetch() #pull all local data and regions
-			self.fix() #fix data anomalies - e.g add in Bucks.
-			self.save_all() #store a copy of the data
-			self.ingest() #add data to models
-			self.update_totals() #calculate weekly data
-		else:
-			log.info('PHE cases up to date')
+#	def process_all(self):
+#		"""pull all the data and process"""
+#		if self.update_check() or self.force_update:
+#			self.fetch() #pull all local data and regions
+#			self.fix() #fix data anomalies - e.g add in Bucks.
+#			self.save_all() #store a copy of the data
+#			self.ingest() #add data to models
+#			self.update_totals() #calculate weekly data
+#		else:
+#			log.info('PHE cases up to date')
 	
 	
 	def process(self):
@@ -536,6 +536,7 @@ def check_and_download():
     latest=ck.latest_update
     if ck._update:
         f=Fetch_API()
+        f.district_check() #pull all local data and regions
         f.fetch()
         f.fix()
         f.last_update=latest

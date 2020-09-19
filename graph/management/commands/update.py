@@ -5,8 +5,11 @@ class Command(BaseCommand):
     help = 'Updates the database from multiple sources'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("Checking for new case data from PHE to download")
-        u.update()
-        
+        try:
+            self.stdout.write("Updating all data from APIs")
+            u.update()
+        except Exception as e:
+            self.stdout("Error")
+            self.stdout.write(e)
 
 

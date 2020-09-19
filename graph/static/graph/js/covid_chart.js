@@ -1,7 +1,7 @@
 
 function parse_data(dataset)
 {
-    		var chart_title=dataset.placename;
+    		var chart_title="COVID-19 weekly deaths and cases in "+dataset.placename;
     		var excess=dataset.excess;
     		var infectlabel=dataset.infectlabel;
     		var caseslabel=dataset.caseslabel;
@@ -301,7 +301,7 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
     			{
     			display:true,
     			text:excess,
-    			fontSize: 12,
+    			fontSize: 20,
                 
     		 	},
         	scales: 
@@ -378,7 +378,7 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
     			{
     			display:true,
     			text:infectlabel,
-    			fontSize: 12,
+    			fontSize: 20,
                 
     		 	},
         	scales: 
@@ -438,7 +438,7 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
     			{
     			display:true,
     			text:caseslabel,
-    			fontSize: 12,
+    			fontSize: 20,
                 
     		 	},
         	scales: 
@@ -569,7 +569,7 @@ var dots
 document.addEventListener('DOMContentLoaded', (event) => {
   //the event occurred
 
-if (screen.width<600){dots=0} else {dots=1};
+if (screen.width<600){dots=0} else {dots=2};
 
 ctx = document.getElementById('myChart');
 ctx.height = 90;
