@@ -60,13 +60,13 @@ class Updater():
             try:
                 q=AverageWeek.objects.filter(areacode=areacode)
                 if not q:
-                    print(f'Average 5 years data for {stored_names[areacode]} missing')  
+                    log.info(f'Average 5 years data for {stored_names[areacode]} missing')  
             except Exception as e:
-                print(e)        
+                log.info(e)        
         av_h=AverageWeek.objects.filter(weeklyhospitaldeaths__isnull=True).count()
         av_all=AverageWeek.objects.all().count()
         av_deaths=AverageWeek.objects.filter(weeklyalldeaths__isnull=True).count()
-        print(f"Average data : av. hospital data MISSING in {av_h} places, all deaths data MISSING in {av_deaths} places out of {av_all} all places")
+        log.info(f"Average data : av. hospital data MISSING in {av_h} places, all deaths data MISSING in {av_deaths} places out of {av_all} all places")
         
     
 #    def check_cases(self):
@@ -169,19 +169,19 @@ def update():
 
 def sums():
     weeks=[w['date'] for w in CovidWeek.objects.values('date').distinct().order_by('date')]
-    print(f'Total weeks: {len(weeks)}')
-    print([f"{w:%d/%m}" for w in weeks])
+    log.info(f'Total weeks: {len(weeks)}')
+    log.info([f"{w:%d/%m}" for w in weeks])
     nations=nations_list()
     nations_set=nations_filter()
     for nation in nations:
-        print(nation)
+        log.info(nation)
         for week in weeks:
             _set=nations_set[nation]
             _thisweek=_set.filter(date=week)
             deathtoll=_thisweek.aggregate(Sum('weeklyalldeaths'))['weeklyalldeaths__sum']
             c19deaths=_thisweek.aggregate(Sum('weeklydeaths'))['weeklydeaths__sum']
             #deathtoll=sum([i.weeklyalldeaths for i in _thisweek])
-            print(f'{nation} week ending {week:%d/%m} deaths: {deathtoll}  COVIDdeaths: {c19deaths}')
+            log.info(f'{nation} week ending {week:%d/%m} deaths: {deathtoll}  COVIDdeaths: {c19deaths}')
 
 def nations_list():
     return ['England','Wales','Scotland','Northern Ireland']

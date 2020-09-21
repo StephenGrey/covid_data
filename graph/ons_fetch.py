@@ -110,7 +110,7 @@ class ONS_Importer(PandaImporter):
             
             configs.userconfig.update('ONS','latest_edition',self.edition)
             
-            print(f'Latest edition {_id}: {url}')
+            log.info(f'Latest edition {_id}: {url}')
             resp=lookup_json(url)
             try:
                 downloads=resp['downloads']['csv']['href']
@@ -118,7 +118,7 @@ class ONS_Importer(PandaImporter):
                 configs.userconfig.update('ONS','latest_download',url)
                 return _id,downloads
             except Exception as e:
-                print(e)
+                log.info(e)
                 return None,None        
         else:
             return None,None
@@ -126,9 +126,9 @@ class ONS_Importer(PandaImporter):
     
     def update_filter(self):
         resp=post_api(url=POST_URL+'?submitted=true',params=EG)
-        print(resp)
+        log.info(resp)
         FILTER_ID=resp['links']['filter_output']['id']
-        print(f'Filter_id: {FILTER_ID}')        
+        log.info(f'Filter_id: {FILTER_ID}')        
         configs.userconfig.update('ONS','weekly_deaths_filter',FILTER_ID)
 
 def update_row(row,_all,_allc19,careh,careh19,hosp19):
@@ -177,7 +177,7 @@ def weekly_deaths():
     latest=get_latest()
     latest_url=latest["href"]
     edition=latest["id"]
-    print(f'latest_url:{latest_url} edition: {edition}')    
+    log.info(f'latest_url:{latest_url} edition: {edition}')    
     options=get_all_options(latest_url=latest_url)
     #weeks_available=get_weeks_availalb
     #get_options(series=ID,dimension="geography",url="")
@@ -190,7 +190,7 @@ def weekly_deaths():
 def get_all_options(latest_url="",series=ID):
     
     fields=[i[0] for i in get_dimensions(url=latest_url)]
-    print(f"Fields available {fields}")
+    log.info(f"Fields available {fields}")
     
     if not latest_url:
         latest_url=get_latest_url(_id=series)
@@ -202,7 +202,7 @@ def get_all_options(latest_url="",series=ID):
     
 
 def district_week(geography="E06000016",options="",latest_url="",series=ID):
-    print(f"Fetching data for {geography}")
+    log.info(f"Fetching data for {geography}")
     if not latest_url:
         latest_url=get_latest_url(_id=series)
     if not options:
@@ -254,7 +254,7 @@ def correct_smallpops():
     CwIoS,created=CovidScores.objects.get_or_create(areaname="Cornwall and Isles of Scilly")
     CwIoS.population=cornwall+IoS
     CwIoS.save()
-    print('Corrected Cornwall and Isles of Scilly pop')
+    log.info('Corrected Cornwall and Isles of Scilly pop')
 
     hack=CovidScores.objects.get(areaname="Hackney").population
     city=CovidScores.objects.get(areaname="City of London").population
@@ -289,7 +289,7 @@ def lookup_json(url):
     try:
         json_res=get_api_result(session,url)
     except requests.ConnectionError as e:
-        print('Connection Error')
+        log.info('Connection Error')
         raise ConnectionError
     try:
         content=json.loads(json_res)
@@ -305,7 +305,7 @@ def get_api_result(session,url):
         if res.status_code == 404:
             raise NotFound("URL {} not found".format(url))
     except Exception as e:
-        print(e)
+        log.info(e)
         return None
     return res.content
 
@@ -354,11 +354,11 @@ def post_api_result(session,url,params):
     """return content of a put request"""
     try:
         res=session.post(url, data=params)
-        print(res)
+        log.info(res)
         if res.status_code == 404:
             raise NotFound("URL {} not found".format(url))
     except Exception as e:
-        print(e)
+        log.info(e)
         return None
     return res.content
 	
@@ -410,14 +410,14 @@ def correct_dates():
     rv=rev_week()
     for x in CovidWeek.objects.filter(nation='Wales'):
         _date=x.date-timedelta(2)
-        print(_date)
+        log.info(_date)
         this=(_date.day,_date.month,_date.year)
         lookup=rv.get(this)
         if lookup:
             x.date=_date
             x.save()
             count+=1
-    print(f'{count} updated')
+    log.info(f'{count} updated')
         
 def rev_week():
     x={}
