@@ -127,7 +127,7 @@ zoomplace=place
  
   
   // initialize Leaflet
-map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 7   });
+map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 6   });
 //L.map('mapid').setView([51.505, -0.09], 13);
 
 var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -202,7 +202,14 @@ function addTopoData(topoData) {
            topoLayer.addData(topoData);
            topoLayer.addTo(map);
            topoLayer.eachLayer(handleLayer);
+           if (first_load) {
+           console.log('first load');
+           first_load=false;
+           }
+           else 
+           {
            zoom2place(zoomplace);
+           };
    }
  
  

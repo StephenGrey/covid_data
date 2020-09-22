@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from graph import update as u
+import logging
 
 class Command(BaseCommand):
     help = 'Updates the database from multiple sources'
