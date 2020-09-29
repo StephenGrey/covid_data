@@ -80,10 +80,12 @@ class Updater():
         update_deaths=False
         
         log.info('Checking ONS for weekly deaths update - normally released Tuesday')
-        wz=ons_fetch.ONS_Importer()
-        if wz.process(): #import and parse if new data available
-            update_deaths=True
-        
+        try:
+            wz=ons_fetch.ONS_Importer()
+            if wz.process(): #import and parse if new data available
+                update_deaths=True
+        except Exception as e:
+            log.error(e)
                 
         log.info('Updating Scottish deaths - normally released Wednesday')
         self.scot=scotland.Scot_Importer()

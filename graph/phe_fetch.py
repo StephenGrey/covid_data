@@ -6,7 +6,7 @@ from .models import DailyCases,CovidWeek, DailyReport
 from datetime import datetime,timedelta,date
 import pytz
 from contextlib import closing
-from . import ons_week, model_calcs
+from . import ons_week, model_calcs,phe_codes
 from .import_csv import DATA_STORE,PandaImporter
 from django.db.models import Max
 from collections import defaultdict
@@ -29,6 +29,15 @@ DATALOAD={}
 AREACODE="E08000025"
 AREA="Birmingham"
 
+"""
+Main routine to fetch data:
+
+z=Fetch_API()
+z.process()
+
+
+
+"""
 class NoContent(Exception):
     pass
 
@@ -124,10 +133,16 @@ class Check_PHE():
     def England_filter(self):
         return ['areaType=nation','areaName=England']
         
-    
     def district_filter(self, district):
-        return ['areaType=ltla',f'areaName={district}']
+        area_type=phe_codes.area_types.get(district)
+        if area_type:
+            return [f'areaType={area_type}',f'areaName={district}']
+        else:
+            return None
     
+    def nation_filter(self,nation):
+        return ['areaType=nation',f'areaName={nation}']
+        
     @property
     def local_filter(self):
         return ['areaType=ltla']
@@ -190,6 +205,16 @@ class Fetch_API(Check_PHE):
 		self.data_all=[]
 		self.force_update=force_update
 		
+	def process(self):
+		"""pull the data district by district"""
+		if self.update_check() or self.force_update:
+			self.district_check() #pull all local data and regions
+			self.fix() #fix data anomalies - e.g add in Bucks.
+			self.save_all() #store a copy of the data
+			self.ingest() #add data to models
+			self.update_totals() #calculate weekly data
+		else:
+			log.info('PHE cases up to date')
 		
 	def fetch(self):
 		for sequence in self.sequences:
@@ -233,16 +258,6 @@ class Fetch_API(Check_PHE):
 #			log.info('PHE cases up to date')
 	
 	
-	def process(self):
-		"""pull the data district by district"""
-		if self.update_check() or self.force_update:
-			self.district_check() #pull all local data and regions
-			self.fix() #fix data anomalies - e.g add in Bucks.
-			self.save_all() #store a copy of the data
-			self.ingest() #add data to models
-			self.update_totals() #calculate weekly data
-		else:
-			log.info('PHE cases up to date')
 	
 	def areacodes():
 		output=set()
@@ -250,13 +265,20 @@ class Fetch_API(Check_PHE):
 			output.add(x['areaCode'])
 		return output
 
+
+
 	def district_check(self):
 		"""fetch data from API district by district"""
 		
 		places_2_fetch=list(ons_week.stored_names.values())+ons_week.extra_places
 		self.edition=None
 		for place in places_2_fetch:
-			self.api.filters=self.district_filter(place)
+			_filters=self.district_filter(place)
+			if _filters:
+				self.api.filters=_filters
+			else:
+				log.info(f'Not fetching {place} - not in PHE API')
+				continue
 			tries=0
 			while tries < 5:
 				try:

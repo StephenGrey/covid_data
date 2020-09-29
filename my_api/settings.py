@@ -121,8 +121,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-console_loglevel='INFO'
-logfile_loglevel='WARN'
+#get loglevels from user configs - or take defaults
+try:
+    console_loglevel=config['Django']['console_loglevel']
+    logfile_loglevel=config['Django']['logfile_loglevel']
+except:
+    console_loglevel='INFO'
+    logfile_loglevel='WARN'
+
 
 LOGGING = {
     'version': 1,

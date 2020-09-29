@@ -182,7 +182,6 @@ def total_publishedcases(path):
 #
 
 
-
 def calc(_date='2020-09-16'):
 	""" calculate delay on particular specimen date"""
 	
@@ -217,7 +216,7 @@ def calc(_date='2020-09-16'):
 def last7_all():
 	"""check daily delays by pub date"""
 	_date=date.today()
-	_end=_date-timedelta(7)	
+	_end=_date-timedelta(14)	
 	sum_delays={}
 	
 	#add up all the cases in each area
