@@ -66,9 +66,11 @@ class LagCalc():
 			
 class ImportLags(Fetch_PHE):
 	"""take a day's cases from a CSV file and store the published cases against publication date"""
+	
 	def __init__(self,filepath):
 		self.filepath=filepath
 		self.open_file(self.filepath)
+		self.fix()
 		self.pubdate=fetchdate(os.path.basename(filepath)[:10]).date()
 		print(f'Processing case data published {self.pubdate}')
 		self.edition=None
@@ -81,6 +83,9 @@ class ImportLags(Fetch_PHE):
 		"""pull all daily cases from all PHE areas"""
 		for place in self.district_codes():
 			self.sequence_ingest(place)
+			
+	def last_before(self,areacode,_date,lag):
+		return DailyReport.objects.filter(areacode=areacode,specimenDate=_date,publag__lt=lag).order_by('publag').last()
 
 			
 	def sequence_ingest(self,areacode):
@@ -91,35 +96,24 @@ class ImportLags(Fetch_PHE):
 		
 		counter=0
 		for day in data['Specimen date'].unique():
-			date=fetchdate(day)
-#			try:
-#				row=DailyCases.objects.get(specimenDate=date,areacode=areacode)
-#			except DailyCases.DoesNotExist:
-#				print(f'No record for {areaname} {date}')
-#				continue
+			_date=fetchdate(day)
 			this_day=data[data['Specimen date']==day]
 			cases=this_day['Daily lab-confirmed cases'].head(1).item()
-			if cases:
+			if cases and not pandas.isnull(cases):
 				
-				lag=(self.pubdate-date.date()).days
-				print(f'lag:{lag}, {date}, cases {cases}')
-				rows=DailyReport.objects.filter(areacode=areacode,specimenDate=date).order_by('-publag')
-				if True:
-					if rows:
-						lastentry=rows[0]
-						if lastentry.dailycases !=cases:
-							print(f'mismatch for {lag}, {date}, cases {cases}')
-							row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=date,publag=lag,dailycases=cases)
-							row.save()
-						else:
-							pass
+				lag=(self.pubdate-_date.date()).days
+				log.debug(f'lag:{lag}, {_date}, cases {cases}')
+				last_entry=self.last_before(areacode,_date,lag)
+				if last_entry:
+					lastcount=last_entry.dailycases 
+					if lastcount ==cases:
+						continue
 					else:
-						row=DailyReport(areacode=areacode,specimenDate=date,publag=lag)
-						row.dailycases=cases
-						row.save()
-#				except Exception as e:
-#					print(e)
-#					print (rows, cases,areacode,date,lag)
+						log.info(f'mismatch for {_date:%d-%m} - lag{lag}, cases {cases} (last count was {lastcount})')
+				row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=_date,publag=lag)
+				row.dailycases=cases
+				row.save()
+					
 			
 class ImportJsonLags(ImportLags):
 	"""ingest published cases from one day """
@@ -136,20 +130,20 @@ class ImportJsonLags(ImportLags):
 		log.info(f'Ingesting cases from {areacode}: {areaname}')
 		counter=0
 		for day in data['specimenDate'].unique():
-			date=fetchdate(day)
+			_date=fetchdate(day)
 			this_day=data[data['specimenDate']==day]
 			cases=this_day['newCasesBySpecimenDate'].head(1).item()
 			if cases and not pandas.isnull(cases):
-				lag=(self.pubdate-date.date()).days
-				log.info(f'lag:{lag}, {date}, cases {cases}')
-				last_entry=DailyReport.objects.filter(areacode=areacode,specimenDate=date,publag__lt=lag).order_by('publag').last()				
+				lag=(self.pubdate-_date.date()).days
+				log.debug(f'lag:{lag}, {_date}, cases {cases}')
+				last_entry=self.last_before(areacode,_date,lag)
 				if last_entry:
 					lastcount=last_entry.dailycases 
 					if lastcount ==cases:
 						continue
 					else:
-						log.info(f'mismatch for {date} - lag{lag}, cases {cases} (last count was {lastcount})')
-				row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=date,publag=lag)
+						log.info(f'mismatch for {_date:%d-%m} - lag{lag}, cases {cases} (last count was {lastcount})')
+				row, created=DailyReport.objects.get_or_create(areacode=areacode,specimenDate=_date,publag=lag)
 				row.dailycases=cases
 				row.save()
 	
@@ -216,7 +210,7 @@ def calc(_date='2020-09-16'):
 def last7_all():
 	"""check daily delays by pub date"""
 	_date=date.today()
-	_end=_date-timedelta(14)	
+	_end=_date-timedelta(20)	
 	sum_delays={}
 	
 	#add up all the cases in each area
@@ -224,10 +218,10 @@ def last7_all():
 		day_delays=new_cases(_date)
 		_date-=timedelta(1)
 		
-def last7():
-	"""check delays last 7 days of updates"""
+def last14():
+	"""check delays last 14 days of updates"""
 	_date=date.today()
-	_end=_date-timedelta(7)
+	_end=_date-timedelta(14)
 	
 	sum_delays={}
 	

@@ -410,41 +410,41 @@ class Fetch_API(Check_PHE):
 		log.info(f'Processed: {counter} rows')
 
 
-class OLDCheck_PHE():
-	def __init__(self):
-		PHEstored=configs.config.get('PHE')
-		if PHEstored:
-			self.England_cases=PHEstored.get('england_total_cases')
-		else:
-			self.England_cases=None
-		self.top()
-		
-	def top(self,url=URL_CSV):
-		"""get lastest England total"""
-		
-		with closing(requests.get(url, stream=True)) as r:
-			f = (line.decode('utf-8') for line in r.iter_lines())
-			reader = csv.reader(f, delimiter=',', quotechar='"')
-			fields=next(reader,None)
-			england=next(reader,None)
-			self.latest_total=england[7]
-			log.info(f'England latest total: {self.latest_total}')
-			
-		if True:
-			if self.latest_total:
-				if self.England_cases:
-					if str(self.England_cases) ==self.latest_total:
-						log.info('nothing new here')
-						self._update=False
-						return False
-				userconfig.update('PHE','england_total_cases',str(self.latest_total))
-				self._update=True
-				return True
-				
-#			for count, row in enumerate(reader, start=1):
-#				print(row[7])
-#				if count == 1:
-#					break
+#class OLDCheck_PHE():
+#	def __init__(self):
+#		PHEstored=configs.config.get('PHE')
+#		if PHEstored:
+#			self.England_cases=PHEstored.get('england_total_cases')
+#		else:
+#			self.England_cases=None
+#		self.top()
+#		
+#	def top(self,url=URL_CSV):
+#		"""get lastest England total"""
+#		
+#		with closing(requests.get(url, stream=True)) as r:
+#			f = (line.decode('utf-8') for line in r.iter_lines())
+#			reader = csv.reader(f, delimiter=',', quotechar='"')
+#			fields=next(reader,None)
+#			england=next(reader,None)
+#			self.latest_total=england[7]
+#			log.info(f'England latest total: {self.latest_total}')
+#			
+#		if True:
+#			if self.latest_total:
+#				if self.England_cases:
+#					if str(self.England_cases) ==self.latest_total:
+#						log.info('nothing new here')
+#						self._update=False
+#						return False
+#				userconfig.update('PHE','england_total_cases',str(self.latest_total))
+#				self._update=True
+#				return True
+#				
+##			for count, row in enumerate(reader, start=1):
+##				print(row[7])
+##				if count == 1:
+##					break
 
 class Fetch_PHE(PandaImporter):
 	"""fetch PHE cases for England and Wales from CSV"""
