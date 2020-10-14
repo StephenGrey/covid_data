@@ -122,7 +122,12 @@ class ImportJsonLags(ImportLags):
 		
 	def district_codes(self):
 		return sorted([z for z in self.data['areaCode'].unique()])
-		
+	
+	def fix(self):
+		self.data.loc[self.data['areaName']=='Buckinghamshire','areaCode']='E06000060'
+		log.info('Fixed wrong areacode for Bucks in PHE data')
+
+	
 	def sequence_ingest(self,areacode):
 		"""ingest from a particular areacode"""
 		data=self.data[self.data['areaCode']==areacode]

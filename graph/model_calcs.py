@@ -146,6 +146,28 @@ def calc_new_cases():
 		
 	return 
 
+
+def local_cases_range(start_date='2020-06-01',end_date='2020-07-01',areaname='Hartlepool'):
+	"""calculate new cases in a time range"""
+	try:
+		q=DailyCases.objects.filter(areaname=areaname,specimenDate=start_date)[0]
+		start_total=q.totalLabConfirmedCases
+	
+		q=DailyCases.objects.filter(areaname=areaname,specimenDate=end_date)[0]
+		end_total=q.totalLabConfirmedCases
+		return end_total-start_total
+		
+	except Exception as e:
+		log.info(e)
+		return None
+	
+
+def cases_range(start_date='2020-06-01',end_date='2020-07-01'):
+	"""calculate new cases in a time range across all areas"""
+	for place in ons_week.stored_names.values():
+		diff=local_cases_range(start_date=start_date,end_date=end_date,areaname=place)
+		print(f"{place},{diff}")
+		
 def fix_names():
     _i=ons_week.stored_names
     for missing in CovidWeek.objects.filter(areaname='Hartlepool'):

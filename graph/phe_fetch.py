@@ -123,6 +123,8 @@ class Check_PHE():
         "cumCasesByPublishDate": "cumCasesByPublishDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+#        "newPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
+#        "cumPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
 #        "newAdmissions":"newAdmissions",
 #        "cumAdmissions":"cumAdmissions",
 #        "cumTestsByPublishDate":"cumTestsByPublishDate",
@@ -282,7 +284,7 @@ class Fetch_API(Check_PHE):
 			tries=0
 			while tries < 5:
 				try:
-					log.info(f'Fetching {place}')
+					log.debug(f'Fetching {place}')
 					self.data=self.api.get_json()  # Returns a dictionary
 					new_data=self.data.get('data')
 					if not self.edition:
@@ -346,12 +348,11 @@ class Fetch_API(Check_PHE):
 				existing_total=row.totalLabConfirmedCases
 				if daily is not None:
 					if existing_daily !=daily or existing_total!=total:
-						log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
 						row.dailyLabConfirmedCases=daily
 						row.totalLabConfirmedCases=total
 						row.save()
-						
 						if existing_daily !=daily:
+							log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
 							if existing_daily:
 								_increase=daily-existing_daily
 							else:
