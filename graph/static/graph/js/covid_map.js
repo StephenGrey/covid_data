@@ -22,7 +22,7 @@ Adjust shape_url variable in line elow for new file name.
 //document.getElementById("shape_location").value;
    var map_data_url="/graph/api_rates"
    var legend_values={
-	'cases_rate':   [0,5,10,20,40,50],
+	'cases_rate':   [0,10,40,60,100,200],
 	'excess_death':[0,40,70,90,110, 130],
 };
 
