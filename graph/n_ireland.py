@@ -49,9 +49,9 @@ class NI_Importer():
         self.edition=self.data['Week Ending (Friday)'].max()
         
     def open_excel(self,path):
-        self.data=pandas.read_excel(path,sheet_name="Table 5",skiprows=4).dropna() # covid deaths
+        self.data=pandas.read_excel(path,sheet_name="Table 6",skiprows=4).dropna() # covid deaths
         self.data2=pandas.read_excel(path,sheet_name="Table 3",skiprows=4).dropna() #all deaths
-        self.data3=pandas.read_excel(path,sheet_name="Table 7",skiprows=4).dropna() #care home deaths
+        self.data3=pandas.read_excel(path,sheet_name="Table 8",skiprows=4).dropna() #care home deaths
         
     def weeks(self):
         return sorted([int(z) for z in self.data2['Registration Week'].unique()])
