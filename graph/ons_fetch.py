@@ -43,13 +43,13 @@ class ConnectionError(Exception):
     pass
 
 class ONS_Importer(PandaImporter):
-        #['v4_0', 'calendar-years', 'time', 'admin-geography', 'geography', 'week-number', 'week', 'cause-of-death', 'causeofdeath', 'place-of-death', 'placeofdeath', 'registration-or-occurrence', 'registrationoroccurrence']
+        #['v4_0', 'calendar-years', 'time', 'admin-geography', 'geography', 'week-number', 'week', 'cause-of-death', 'causeofdeath', 'place-of-death', 'PlaceOfDeath', 'registration-or-occurrence', 'registrationoroccurrence']
     
     def weeks(self):
         return sorted([int(z[5:]) for z in self.data['week-number'].unique()])
         
     def districts(self):
-        return sorted([z for z in self.data['admin-geography'].unique()])
+        return sorted([z for z in self.data['administrative-geography'].unique()])
     
     def download(self):
         log.debug(f'downloading {self.download_url}')
@@ -79,12 +79,12 @@ class ONS_Importer(PandaImporter):
     def parse_week(self,week,district,_update=True):
         week_str=f"week-{week}"
         year="2020"
-        sub=self.data[(self.data['admin-geography']==district)&(self.data['registrationoroccurrence']=='Occurrences')&(self.data['week-number']==week_str)]
-        _allc19=sub[(sub['causeofdeath']=='COVID 19')]['v4_0'].sum()
-        _all=sub[(sub['causeofdeath']=='All causes')]['v4_0'].sum()
-        careh=sub[(sub['causeofdeath']=='All causes')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
-        careh19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Care home')]['v4_0'].sum()
-        hosp19=sub[(sub['causeofdeath']=='COVID 19')&(sub['placeofdeath']=='Hospital')]['v4_0'].sum()
+        sub=self.data[(self.data['administrative-geography']==district)&(self.data['RegistrationOrOccurrence']=='Occurrences')&(self.data['week-number']==week_str)]
+        _allc19=sub[(sub['CauseOfDeath']=='COVID 19')]['v4_0'].sum()
+        _all=sub[(sub['CauseOfDeath']=='All causes')]['v4_0'].sum()
+        careh=sub[(sub['CauseOfDeath']=='All causes')&(sub['PlaceOfDeath']=='Care home')]['v4_0'].sum()
+        careh19=sub[(sub['CauseOfDeath']=='COVID 19')&(sub['PlaceOfDeath']=='Care home')]['v4_0'].sum()
+        hosp19=sub[(sub['CauseOfDeath']=='COVID 19')&(sub['PlaceOfDeath']=='Hospital')]['v4_0'].sum()
         log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
         qrow=CovidWeek.objects.filter(week=week,areacode=district)
         if qrow:
@@ -218,7 +218,7 @@ def district_week(geography="E06000016",options="",latest_url="",series=ID):
         week_str=f"week-{week}"
         year="2020"
         try:
-            for placeofdeath in options['placeofdeath']:
+            for placeofdeath in options['PlaceOfDeath']:
                 url=f"{latest_url}/observations?geography={geography}&week={week_str}&time={year}&placeofdeath={placeofdeath}&causeofdeath=*&registrationoroccurrence={reg_or_occ}"
                 content=lookup_json(url)
                 for i in content['observations']:

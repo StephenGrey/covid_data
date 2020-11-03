@@ -127,9 +127,9 @@ zoomplace=place
  
   
   // initialize Leaflet
-map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 6   });
+map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 6, minZoom: 5 });
 //L.map('mapid').setView([51.505, -0.09], 13);
-
+//map.setMinZoom(5);
 var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 });
