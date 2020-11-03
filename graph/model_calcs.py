@@ -6,8 +6,8 @@ from . import ons_week
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
-RANGE=["2020-02-07", "2020-10-25"]
-RANGE_WEEK=[6, 43]
+RANGE=["2020-02-07", "2020-11-01"]
+RANGE_WEEK=[6, 44]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
