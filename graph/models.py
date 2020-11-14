@@ -23,6 +23,10 @@ class DailyCases(models.Model):
     changeInTotalCases=models.IntegerField('changeInTotalCases',blank=True,null=True)
     dailyTotalLabConfirmedCasesRate=models.DecimalField('dailyTotalLabConfirmedCasesRate',max_digits=7, decimal_places=1,blank=True,null=True)
     cases_lag=models.CharField('cases_lag',max_length=200,default='',null=True)
+    
+    deaths=models.IntegerField('deaths',blank=True,null=True)
+    published_deaths=models.IntegerField('published_deaths',blank=True,null=True)
+    total_published_deaths=models.IntegerField('total_published_deaths',blank=True,null=True)
 
 class CovidScores(models.Model):
     areaname=models.CharField('areaname',max_length=200,default='')

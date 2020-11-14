@@ -123,6 +123,8 @@ class Check_PHE():
         "cumCasesByPublishDate": "cumCasesByPublishDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
+        "newDeaths28DaysByPublishDate":"newDeaths28DaysByPublishDate",
+        "newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate",
 #        "newPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
 #        "cumPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
 #        "newAdmissions":"newAdmissions",
@@ -130,6 +132,8 @@ class Check_PHE():
 #        "cumTestsByPublishDate":"cumTestsByPublishDate",
 #        "newTestsByPublishDate":"newTestsByPublishDate",
         }
+    
+    
     
     @property
     def England_filter(self):
@@ -163,13 +167,14 @@ class Check_PHE():
         "specimenDate": "date",
         "areaName": "areaName",
         "areaCode": "areaCode",
-        "newCasesByPublishDate": "newCasesByPublishDate",
-        "cumCasesByPublishDate": "cumCasesByPublishDate",
+#        "newCasesByPublishDate": "newCasesByPublishDate",
+#        "cumCasesByPublishDate": "cumCasesByPublishDate",
 #        "newDeathsByDeathDate": "newDeathsByDeathDate",
 #        "cumDeathsByDeathDate": "cumDeathsByDeathDate",
         "newCasesBySpecimenDate":"newCasesBySpecimenDate",
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
-#        "newAdmissions":"newAdmissions",
+
+        	#        "newAdmissions":"newAdmissions",
 #        "cumAdmissions":"cumAdmissions",
 #        "cumTestsByPublishDate":"cumTestsByPublishDate",
 #        "newTestsByPublishDate":"newTestsByPublishDate",
@@ -328,8 +333,8 @@ class Fetch_API(Check_PHE):
 			row.areaname=item['areaName']
 			daily=item['newCasesBySpecimenDate']
 			total=item['cumCasesBySpecimenDate']
+			
 			#log.debug(f'{row.areaname}: {datestring}')			
-												
 			if created:
 				row.dailyLabConfirmedCases=daily
 				row.totalLabConfirmedCases=total
@@ -409,6 +414,9 @@ class Fetch_API(Check_PHE):
 			row.save()
 			counter+=1
 		log.info(f'Processed: {counter} rows')
+
+
+
 
 
 #class OLDCheck_PHE():

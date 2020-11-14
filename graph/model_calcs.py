@@ -264,7 +264,6 @@ def output_district(place,q=None):
 	#print(dataset)
 	return dataset
 	
-
 	
 def output_all():
 	all_data={}
