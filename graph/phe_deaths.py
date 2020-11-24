@@ -28,15 +28,27 @@ class PHE_Deaths(phe_fetch.Fetch_API):
         
     def process(self):
         """pull the data district by district"""
-        if True: #self.update_check() or self.force_update:
+        if self.update_check() or self.force_update:
             self.district_check() #pull all local data and regions
             self.fix() #fix data anomalies - e.g add in Bucks.
+            
             self.save_all() #store a copy of the data
+            
+            
             self.ingest() #add data to models
+            self.merge_scotland()
+            self.count_deaths()
+            self.calc_wave2_rates()
 #			self.update_totals() #calculate weekly data
         else:
             log.info('PHE Deaths up to date')
 
+    @property
+    def update_check(self):
+    	ck=check_Deaths()
+    	ck.top()
+    	self.latest_deaths=ck.latest_deaths
+    	return ck._update
 
     def save_all(self):
         _date=self.latest_date_str #fetches date of latest published update
@@ -87,9 +99,8 @@ class PHE_Deaths(phe_fetch.Fetch_API):
     			log.info(f'Processing row {counter}')
     	log.info(f'Processed: {counter} rows')
     
-    	if self.edition:
-    		configs.userconfig.update('PHE','latest_deaths_update',self.edition)
-    		
+    	if self.latest_deaths:
+    		configs.userconfig.update('PHE','england_total_deaths',str(self.latest_deaths))
     		
     		
     def output_place(self,place='Liverpool'):
@@ -157,4 +168,24 @@ class PHE_Deaths(phe_fetch.Fetch_API):
     		board_score.wave2_PHEdeaths=wave2
     		board_score.last_month_PHEdeaths=last_month
     		board_score.save()
-    		
+
+
+class check_Deaths(PHE_Deaths):
+    
+    def top(self):
+    	PHEstored=configs.config.get('PHE')
+    	if PHEstored:
+    		self.England_deaths=PHEstored.get('england_total_deaths')
+    	try:
+    		self.api.filters=self.England_filter
+    		self.api.latest_by="cumDeaths28DaysByPublishDate"
+    		self.get()
+    		self.latest_deaths=self.data.get('data')[0].get('cumDeaths28DaysByPublishDate')
+    		if self.England_deaths == str(self.latest_deaths):
+    			self._update=False
+    		else:
+    			self._update=True
+    	except Exception as e:
+    		log.debug(e)
+    		log.info('Check PHE deaths failed - default to needs update')
+    		self._update=True        
