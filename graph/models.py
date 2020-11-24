@@ -35,6 +35,9 @@ class CovidScores(models.Model):
     population=models.IntegerField('population',blank=True,null=True)
     excess_death_rate=models.DecimalField('excess_death_rate',max_digits=7, decimal_places=1,blank=True,null=True)
     latest_case_rate=models.DecimalField('excess_death_rate',max_digits=7, decimal_places=1,blank=True,null=True)
+    last_month_PHEdeaths=models.IntegerField('last month deaths',blank=True,null=True)
+    wave2_PHEdeaths=models.IntegerField('wave2 deaths',blank=True,null=True)    
+    wave2_deathrate=models.DecimalField('wave2_death_rate',max_digits=7, decimal_places=1,blank=True,null=True)
 
 
 class CovidWeek(models.Model):

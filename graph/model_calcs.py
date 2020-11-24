@@ -6,8 +6,8 @@ from . import ons_week
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
-RANGE=["2020-02-07", "2020-11-01"]
-RANGE_WEEK=[6, 44]
+RANGE=["2020-02-07", "2020-11-14"]
+RANGE_WEEK=[6, 46]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
@@ -243,6 +243,9 @@ def output_district(place,q=None):
 		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate')[:50][::-1]
 		last_cases=[i.dailyLabConfirmedCases for i in last]
 		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
+		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13']
+		last_deaths=[i.deaths for i in last]
+		last_pubdeaths=[i.published_deaths for i in last]
 		dataset={ 
 			1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
 			2:{'label':'Total Deaths','data':totalcumdeaths},
@@ -255,7 +258,11 @@ def output_district(place,q=None):
 			7:{'label':"5Y average total deaths",'data':totavdeaths},
 			8:{'label':"5Y average carehome deaths",'data':avcaredeaths},
 			9:{'label':" Covid19 new cases",'data':last_cases,'labelset':last_dates},
+			10:{'label':" Covid19 deaths",'data':last_deaths,'labelset':last_dates},
+			11:{'label':" Covid19 deaths published",'data':last_pubdeaths,'labelset':last_dates},
+			'week_date_labels':week_date_labels,
 			'caseslabel':f'Cases in {place} in last 50 days',
+			'deathslabel':f'Covid deaths in {place} in last 50 days',
 			'excess':f"Excess deaths in {place}: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
 			'placename':place, 'infectlabel':f"Real estimated infections in {place} vs Covid+ tests"
 			}
@@ -286,6 +293,9 @@ def output_rates():
 		cases_rate=float(score.latest_case_rate) if score.latest_case_rate is not None else None
 		data.append({
     "areaname": score.areaname,
+    "wave2":score.wave2_PHEdeaths,
+    "wave2_rate":score.wave2_deathrate,
+    "last30":score.last_month_PHEdeaths,
     "excess": excess,
     "cases_rate":cases_rate,
     "delays":DELAYS.get(score.areaname),

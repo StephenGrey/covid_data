@@ -2,9 +2,11 @@
 function parse_data(dataset)
 {
     		var chart_title="COVID-19 weekly deaths and cases in "+dataset.placename;
+    		var date_labels=dataset.week_date_labels;
     		var excess=dataset.excess;
     		var infectlabel=dataset.infectlabel;
     		var caseslabel=dataset.caseslabel;
+    		var deathslabel=dataset.deathslabel;
     		var series1=dataset[1].data;
     		var label1=dataset[1].label;
 
@@ -31,11 +33,20 @@ function parse_data(dataset)
 
     		var series9=dataset[9].data;
     		var label9=dataset[9].label;
+
+    		var series10=dataset[10].data;
+    		var label10=dataset[10].label;
+
+    		var series11=dataset[11].data;
+    		var label11=dataset[11].label;
+
+
     		var labelseries=dataset[9].labelset;
+
     		
             ;
             ;
-            draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,label1,label2,label3,label4,label5,label6,label7,label8,label9,labelseries);
+            draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,labelseries);
 
 };
 
@@ -100,14 +111,15 @@ function get_data(placename)
     console.log('getting data for '+placename);
      };
 
-function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,label1,label2,label3,label4,label5,label6,label7,label8,label9,labelseries)
+function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,labelseries)
 	{
 	params=
 	{
     	type: 'line',
     	data: {
-        	labels: [
-			'Feb 7','Feb 14','Feb 21','Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30'],
+        	labels: date_labels,
+//        	[
+//			'Feb 7','Feb 14','Feb 21','Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10','Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13'],
         	datasets: [
     			
     			{
@@ -200,8 +212,7 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 	{
     	type: 'line',
     	data: {
-        	labels: [
-			'Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30'],
+        	labels: date_labels,
         	datasets: [
 
     			{
@@ -297,10 +308,8 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 	{
     	type: 'line',
     	data: {
-        	labels: [
-			'Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30'],
+        	labels: date_labels,
         	datasets: [
-
     			{
     			label:label1,
     			data:series1,
@@ -423,21 +432,96 @@ function draw_chart(chart_title,excess,infectlabel,caseslabel,series1,series2,se
 //                    {
  	
 //                   }
-                   ]
+                  ] 
                 }
                        
                         
     		} //end of options
     	};	
 	
-	
-	
-	
+
 	Chart4.destroy();
 	Chart4 = new Chart(ctx4, params4);
+
+	params5=
+	{
+    	type: 'bar',
+    	data: {
+        	labels: labelseries,
+        	datasets: [
+    			{
+    			label:label10,
+    			data:series10,
+            	backgroundColor: 'pink',
+            	borderWidth: 1 ,
+     			yAxisID: "y-axis-1",
+    			}, 
+    			{
+    			label:label11,
+    			data:series11,
+            	backgroundColor: 'red',
+            	borderWidth: 1 ,
+     			yAxisID: "y-axis-1",
+     			hidden: true,
+    			}, 
+    			
+    			
+    			
+    			]},
+        options: {
+        //	backgroundColor: ['red'],
+        	
+        	responsive: true,
+    		maintainAspectRatio: false,
+    		title: 
+    			{
+    			display:true,
+    			text:deathslabel,
+    			fontSize: 20,
+                
+    		 	},
+        	scales: 
+        		{
+        		xAxes: [{
+   				    ticks: {
+     				   autoSkip: true,
+				        maxTicksLimit: 10
+  						  }
+					}],
+     
+            	yAxes: 
+            		[{            
+                        type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                        display: true,
+                        position: "left",
+                        ticks:{
+                        	precision:0
+                        	},
+                        scaleLabel: 
+                        	{
+                            display: true,
+                            labelString: 'New Deaths (within 28 days of +ve test)',
+                            fontColor: "black",
+                        	},
+                        id: "y-axis-1",
+                    }, 
+//                    {
+ 	
+//                   }
+                  ] 
+                }
+                       
+                        
+    		} //end of options
+    	};	
+	
+
+
+	Chart5.destroy();
+	Chart5 = new Chart(ctx5, params5);
+
 		};
 
-	
 
 
 function updateChart() {
@@ -536,13 +620,14 @@ ctx3 = document.getElementById('estimates');
 ctx3.height = 80;
 ctx4 = document.getElementById('casechart');
 ctx4.height = 80;
-
+ctx5 = document.getElementById('latest_deaths_chart');
+ctx5.height = 40;
 
 myChart=new Chart(ctx, {});
 myNewChart=new Chart(new_ctx, {});
 Chart3=new Chart(ctx3, {});
 Chart4=new Chart(ctx4, {});
-
+Chart5=new Chart(ctx5, {});
 console.log('charts created')
 
 //FIRST LOAD

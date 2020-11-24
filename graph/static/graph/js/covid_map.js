@@ -24,9 +24,11 @@ Adjust shape_url variable in line elow for new file name.
    var legend_values={
 	'cases_rate':   [0,10,40,60,100,200],
 	'excess_death':[0,40,70,90,110, 130],
-};
+	'deaths':[0,5,10,20,30,50],
 
-   var display_value, stat_name, legend0,legend1,legend2, legend3,legend4,legend5,colour_scheme,highlighted_feature
+	};
+
+   var display_value, stat_name, legend0,legend1,legend2, legend3,legend4,legend5,colour_scheme,highlighted_feature,this_legend
    loadcolour_scheme()
 
    var map;
@@ -62,6 +64,9 @@ var unhighlight=
 var legend_map={}
 legend_map['cases_rate'] = L.control({position: 'bottomright'});
 legend_map['excess_death'] = L.control({position: 'bottomright'});
+legend_map['deaths'] = L.control({position: 'bottomright'});
+
+this_legend=legend_map['cases_rate']
 
 legend_map['cases_rate'].onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend'),
@@ -96,6 +101,25 @@ legend_map['excess_death'].onAdd = function (map) {
     return div;
 };
 
+
+legend_map['deaths'].onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [legend0, legend1, legend2, legend3, legend4,legend5],
+        labels = ['Deaths 2nd Wave (per 100k)'];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    div.innerHTML += labels.join('<br>');
+    div.innerHTML += '<br>';
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+    
+    return div;
+};
+
+
 function loadcolour_scheme(){
    var legends=legend_values[display_value];
    console.log(legends);
@@ -105,6 +129,10 @@ function loadcolour_scheme(){
    console.log(legends);
    stat_name = 'Covid-19 cases last 7 days';           // This will be displayed on the map 
    colour_scheme = 'R2G';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
+	}
+	else if (display_value=='deaths'){
+    stat_name = 'Deaths since September';     // This will be displayed on the map 
+    colour_scheme = 'R2G';                             // Either: 'Purple', 'Red', Blue, 'Green', 'Orange', 'R2G'
 	}
 	else{
     stat_name = 'Excess deaths per 100,000 people';     // This will be displayed on the map 
@@ -172,7 +200,11 @@ d3.json(map_data_url, function (data) {
     data.dataset.forEach( function(d) {
     	if (display_value=='cases_rate'){
     	mapLookup.set(d.areaname,d.cases_rate);   //+d.excess
-    	}else{
+    	}
+    	else if (display_value=='deaths'){
+     	mapLookup.set(d.areaname,d.wave2_rate);
+		}
+    	else{
     	mapLookup.set(d.areaname,d.excess);
     	};
     	
@@ -240,11 +272,19 @@ map.removeLayer(topoLayer);
 add_shades();
 
 if (display_value === 'cases_rate') {
-        map.removeControl(legend_map['excess_death']);
-        legend_map['cases_rate'].addTo(map);
-    } else { // Or switch to the Population Change legend...
-        map.removeControl(legend_map['cases_rate']);
-        legend_map['excess_death'].addTo(map);
+    map.removeControl(this_legend);
+    this_legend=legend_map['cases_rate']
+    this_legend.addTo(map);
+    } 
+    else if (display_value === 'deaths'){
+    map.removeControl(this_legend);
+    this_legend=legend_map['deaths']
+    this_legend.addTo(map);
+	}
+    else { // Or switch to the Population Change legend...
+    map.removeControl(this_legend);
+    this_legend=legend_map['excess_death']
+    this_legend.addTo(map);
     };
 };
 

@@ -446,6 +446,8 @@
 			<select id="FilterData">Displaying 
 			<option value="cases_rate" data-tag="1">New Cases</option>
 			<option value="excess_death" data-tag="1">Excess Deaths</option>
+			<option value="deaths" data-tag="1">Deaths in Wave2</option>
+
 			</select>
 		</div>
 	</div>
@@ -474,7 +476,8 @@
     	<div class="col-md-1"></div>
     	<div class="col-md-10">
 			<p>			
-			* The figures for <b>tests with a positive COVID-19 result</b> come from labs run by Public Health England, NHS hospitals, and private "Lighthouse" labs. The figures are updated daily and <b>shown below</b> for recent dates when tests took place. The total for recent days are under-under-estimates because it takes some time for all the results to be published.
+			*<b>Deaths caused by COVID-19</b> shown above are most accurately tracked in figure that count when COVID-19 appears on a death certificate. (<i>Source: Office for National Statistics weekly series.</i>)
+			<p>*<b>Tests with a positive COVID-19 result</b> shown above are from labs run by Public Health England (PHE), NHS hospitals, and private "Lighthouse" labs. The figures are updated daily> Below shows the latest daily figures. The total for recent days are under-estimates because it takes some time for all the results to be published. Tests for everyone with symptoms were not available late May -- so treat early figures with caution. (<i>Source: PHE daily update</i>)
 					<p>
 		</div>
 	    <div class="col-md-1"></div>
@@ -483,19 +486,41 @@
  	<div class="row">
     	<div class="col-md-1"></div>
     	<div class="col-md-10">
-			<div style="height: 400px">
+			<div style="height: 300px">
 			<canvas id="casechart"> </canvas>
 		</div>
 		</div>
 	    <div class="col-md-1"></div>
   	</div>
+  	<p>
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+			<p>			
+			* <b>Daily totals of local deaths</b> are also available. Shown below, they count how many die with a month of having COVID-19. (<i>Source: PHE daily update</i>)
+			<p>
+		</div>
+	    <div class="col-md-1"></div>
+  	</div>
 
-<p><p>
+
+ 	<div class="row">
+    	<div class="col-md-1"></div>
+    	<div class="col-md-10">
+			<div style="height: 250px">
+			<canvas id="latest_deaths_chart"> </canvas>
+			</div>
+		</div>
+		
+	    <div class="col-md-1"></div>
+	</div>
+	<p>
+		<br><p>
 
   	 <div class="row">
     	<div class="col-md-1"></div>
     	<div class="col-md-10">
-			 Deaths are derived from <b>death certificates where COVID-19 is listed as a cause of death</b>. Location is by place of death. These figures are likely an under-estimate in most areas as the figure is significantly below recorded excess deaths for the time of year, as illustrated in this next chart which compares deaths from all causes against an average deaths in that week in the previous five years.
+			 *<b> Excess deaths</b> provide the best way of showing the real impact of the pandemic. They take account of COVID-19 deaths not officially recorded, or other deaths caused indirectly, for example by isolation or reduced access to hospitals. The figures comparing the average weekly death for the time of year in the last 5 years with deaths in 2020. (<i>Source: Reuters calculation based on ONS average death and ONS weekly death series.</i>)2020. They comareDeaths are derived from <death certificates where COVID-19 is listed as a cause of death</b>. Location is by place of death. These figures are likely an under-estimate in most areas as the figure is significantly below recorded excess deaths for the time of year, as illustrated in this next chart which compares deaths from all causes against an average deaths in that week in the previous five years.
 			<p><p>
 			<div style="height: 400px">
 			<canvas id="myDeathChart"></canvas>

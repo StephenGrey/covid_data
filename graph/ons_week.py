@@ -27,6 +27,22 @@ english=[x for x in areacodes if nation[x]=='England']
 nirish=[x for x in areacodes if nation[x]=='Northern Ireland']
 
 
+health_boards={
+    'Shetland':['Shetland Islands',],
+    'Tayside':['Angus','Dundee City','Perth and Kinross',],
+    'Western Isles': ['Na h-Eileanan Siar',],
+    'Orkney':['Orkney Islands',],
+    'Lothian':['East Lothian','Midlothian','West Lothian','City of Edinburgh',],
+    'Lanarkshire':['South Lanarkshire','North Lanarkshire'],
+    'Highland':['Argyll and Bute','Highland',],
+    'Greater Glasgow and Clyde':['Glasgow City','East Dunbartonshire','East Renfrewshire','Renfrewshire','Inverclyde','West Dunbartonshire'],
+    'Grampian':['Aberdeenshire', 'Aberdeen City','Moray',],
+    'Forth Valley':['Clackmannanshire','Falkirk','Stirling'],
+    'Fife':['Fife'],
+    'Dumfries and Galloway':['Dumfries and Galloway'],
+    'Borders':['Scottish Borders'],
+    'Ayrshire and Arran':['South Ayrshire','East Ayrshire','North Ayrshire']
+    }
 
 def week(number):
     day,month,year=weeks[number]
