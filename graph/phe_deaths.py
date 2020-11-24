@@ -28,7 +28,7 @@ class PHE_Deaths(phe_fetch.Fetch_API):
         
     def process(self):
         """pull the data district by district"""
-        if self.update_check() or self.force_update:
+        if self.update_check or self.force_update:
             self.district_check() #pull all local data and regions
             self.fix() #fix data anomalies - e.g add in Bucks.
             
