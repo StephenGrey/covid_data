@@ -8,6 +8,8 @@ from contextlib import closing
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 
+
+
 #import ast, iso8601
 #import json, collections
 #pop estimates 2020: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/localauthoritiesinenglandtable2
@@ -47,7 +49,8 @@ class PandaImporter():
     def open_csv(self,path):
         self.data = pandas.read_csv(path, encoding= "utf-8") 
         
-    
+    def open_excel(self,path,sheet_name="Table 1",skiprows=0):
+        self.data=pandas.read_excel(path,sheet_name=sheet_name,skiprows=skiprows).dropna() # covid deaths
         
     def parse(self):
         pass
@@ -303,7 +306,43 @@ class AddPop(Importer):
 		except Exception as e:
 			print(e)
 			
+class AddRegions(PandaImporter):
+	def __init__(self, filepath=None):
+		self.filepath=filepath
 	
+	@property
+	def regions(self):
+		return [x for x in self.data['AreaCode'].values]
+	
+	def process(self):
+		self.open_excel(self.filepath,sheet_name="ALLDEATHS")
+		
+		for region in self.regions:
+			row=self.data[(self.data['AreaCode']==region)]
+			self.parserow(row)
+		print('Added England and Wales regions total deaths to average figures')
+
+	def parserow(self,row):
+		print(row)
+		if True:
+			areacode=row['AreaCode'].item()
+			for week in range(1,53):
+				deaths=int(row[week])
+				wk, created = AverageWeek.objects.get_or_create(
+				week=week,
+				areacode=areacode
+				)
+				wk.weeklyalldeaths=deaths
+				wk.weeklyhospitaldeaths=None
+				wk.weeklyelsewheredeaths=None
+				wk.weeklyhospicedeaths=None
+				wk.weeklyothercommunaldeaths=None
+				wk.weeklycarehomedeaths=None
+				wk.weeklyhomedeaths=None
+				wk.save()
+				print(f'Added: {areacode}: week{week} av deaths{deaths} created?:{created}')
+#		except Exception as e:
+#			print(e)
 
 def total_averages():
 	if True:	

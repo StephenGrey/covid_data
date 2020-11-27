@@ -10,6 +10,8 @@ log = logging.getLogger('api.graph.ons_fetch')
 #print(WEEKLY_DEATHS_FILTER)
 
 ID="weekly-deaths-local-authority"
+ID_REGIONS="weekly-deaths-region"
+
 MASTER_URL="https://api.beta.ons.gov.uk/v1/datasets"
 
 POST_URL= "https://api.beta.ons.gov.uk/v1/filters"
@@ -56,6 +58,9 @@ class ONS_Importer(PandaImporter):
         if self.download_url:
             self.fetch(self.download_url)
             
+    @property
+    def this_id(self):
+        return ID
     
     def process(self):
         _id,url=self.get_download_link()
@@ -64,6 +69,8 @@ class ONS_Importer(PandaImporter):
         if last_update != _id:
             self.download()
             self.parse()
+            if self.edition:
+                configs.userconfig.update('ONS','latest_update',self.edition)            
             return True
         else:
             return False
@@ -73,8 +80,7 @@ class ONS_Importer(PandaImporter):
             for week in self.weeks():
                 week_data={}
                 self.parse_week(week,district)
-        if self.edition:
-            configs.userconfig.update('ONS','latest_update',self.edition)
+
 
     def parse_week(self,week,district,_update=True):
         week_str=f"week-{week}"
@@ -102,7 +108,7 @@ class ONS_Importer(PandaImporter):
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
 
     def get_download_link(self):
-        latest=get_latest()
+        latest=get_latest(_id=self.this_id)
         url=latest.get('href')
         _id=latest.get('id')
         if url and _id:
@@ -167,6 +173,66 @@ def update_row(row,_all,_allc19,careh,careh19,hosp19):
     
     if _update:
         row.save()
+
+class ONS_Regions(ONS_Importer):
+    
+    @property
+    def this_id(self):
+        return ID_REGIONS
+
+    def process(self):
+        _id,url=self.get_download_link()
+        last_update=configs.config['ONS'].get('latest_regional_deaths')
+        log.info(f"Latest edition: {_id}   Most recent update {last_update}")
+        if last_update != _id:
+            self.download()
+            self.parse()
+            self.add_England()
+            if self.edition:
+            	configs.userconfig.update('ONS','latest_regional_deaths',self.edition)            
+            return True
+        else:
+            return False
+
+    
+    def add_England(self):
+        for week in self.weeks():
+        	wales=CovidWeek.objects.get(areaname='Wales',week=week)
+        	england_wales=CovidWeek.objects.get(areaname='England and Wales',week=week)
+        	england_c19= england_wales.weeklydeaths-wales.weeklydeaths
+        	england_all=england_wales.weeklyalldeaths-wales.weeklyalldeaths
+        	log.debug(f'England deaths week {week} c19:{england_c19} all:{england_all}')
+        	
+        	
+        	row, created=CovidWeek.objects.get_or_create(areacode='E92000001',nation='England',areaname='England',week=week)
+        	update_row(row,england_all,england_c19,None,None,None)
+        
+    
+    def parse_week(self,week,district,_update=True):
+        week_str=f"week-{week}"
+        year="2020"
+        sub=self.data[(self.data['administrative-geography']==district)&(self.data['week-number']==week_str)]
+        
+        _all=sub[(sub['recorded-deaths']=='total-registered-deaths')]['V4_0'].values[0]
+        _allc19=sub[(sub['recorded-deaths']=='deaths-involving-covid-19-registrations')]['V4_0'].sum()
+        careh=None
+        careh19=None
+        hosp19=None
+        log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
+        qrow=CovidWeek.objects.filter(week=week,areacode=district)
+        if qrow:
+            row=qrow[0]
+            #print(row)
+            if _update:
+                update_row(row,_all,_allc19,careh,careh19,hosp19)
+        else:
+            if _update:
+                areaname=stored_names[district]
+                _nation=nation[district]
+                row=CovidWeek(areacode=district,nation=_nation,areaname=areaname,week=week)
+                log.debug(f'Created week {sunday(week)} for {district}')
+                row.save()
+                update_row(row,_all,_allc19,careh,careh19,hosp19)
 
 
 class NoContent(Exception):

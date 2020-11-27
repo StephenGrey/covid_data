@@ -6,8 +6,8 @@ from . import ons_week
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
-RANGE=["2020-02-07", "2020-11-14"]
-RANGE_WEEK=[6, 46]
+RANGE=["2020-02-07", "2020-11-28"]
+RANGE_WEEK=[6, 48]
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
@@ -46,10 +46,17 @@ def excess_deaths_district(place='Birmingham',save=False):
 	if averages:
 		_data=True
 		average_deaths=sum([i.weeklyalldeaths for i in averages])
-		average_carehome_deaths=sum([i.weeklycarehomedeaths for i in averages])
-	
+		
+		try:
+			average_carehome_deaths=sum([i.weeklycarehomedeaths for i in averages])
+		except:
+			average_carehome_deaths=None
 		excess=int(all_deaths_2020-average_deaths)
-		excess_carehomes=int(all_carehome_deaths_2020-average_carehome_deaths)
+		
+		try:
+			excess_carehomes=int(all_carehome_deaths_2020-average_carehome_deaths)
+		except:
+			excess_carehomes=None
 		log.debug(f'Excess deaths in {place}: {excess} (care homes: {excess_carehomes})')
 	else:
 		_data=False
@@ -210,6 +217,9 @@ def output_district(place,q=None):
 	else:
 		district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
 	
+	
+	log.debug(district)
+	
 	if district:
 		#print([f"{i.date:%d/%m}" for i in district])
 		totalcumdeaths=[i.totcumdeaths for i in district]
@@ -243,7 +253,7 @@ def output_district(place,q=None):
 		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate')[:50][::-1]
 		last_cases=[i.dailyLabConfirmedCases for i in last]
 		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
-		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13']
+		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20']
 		last_deaths=[i.deaths for i in last]
 		last_pubdeaths=[i.published_deaths for i in last]
 		dataset={ 

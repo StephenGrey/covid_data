@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 import os, logging
 from .models import CovidWeek, CovidScores,AverageWeek
-from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections, wales
+from . import ons_fetch,model_calcs,phe_fetch,scotland,import_csv,n_ireland,infections,wales,phe_deaths
 from django.db.models import Sum
 from .ons_week import stored_names
 log = logging.getLogger('api.graph.update')
@@ -11,7 +11,8 @@ log = logging.getLogger('api.graph.update')
 POP_FILE="ONS_UK_pop.csv"
 EW_AV_FILE="ONSaverages_20152019.csv"
 SCOT_AV_FILE="Scotland_averages_15-19_data.csv"
-
+EW_REGIONS_AV_FILE="5Ydeaths_ONS_EnglishRegions_registrations.xlsx"
+#https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/11969fiveyearaveragenumberofweeklydeathregistrationsbyagegroupenglishregionsandwales2015to2019
 DATA_STORE=model_calcs.DATA_STORE
 
 """
@@ -77,13 +78,18 @@ class Updater():
 
         """check for updates of deaths and cases data & download updates"""
         
-        update_deaths=False
+        update_deaths,update_regions=False,False
         
         log.info('Checking ONS for weekly deaths update - normally released Tuesday')
         try:
             wz=ons_fetch.ONS_Importer()
             if wz.process(): #import and parse if new data available
                 update_deaths=True
+                
+            wr=ons_fetch.ONS_Regions()
+            if wr.process():
+                update_regions=True
+                
         except Exception as e:
             log.error(e)
                 
@@ -103,7 +109,7 @@ class Updater():
         
         #READJUST HERE FOR ANY GLITCHES
 
-        if update_deaths:
+        if update_deaths or update_regions:
             log.info('Updating cumulative deaths')
             model_calcs.update_cum_deaths()
 
@@ -112,6 +118,11 @@ class Updater():
             model_calcs.calc_excess_rates()
             log.info('Updating Reuters infection curve')
             infections.calc()
+
+        #UPDATE PHE DEATHS
+        pd=phe_deaths.PHE_Deaths()
+        pd.process()
+        
 
         log.info('Checking PHE case - England and Wales - released daily')
         
@@ -154,6 +165,10 @@ class Updater():
         aa.total_averages()
 
         ons_fetch.correct_smallpops() #merge small places and deal with corrected geographies
+        
+        #add E+W regions
+        ar=import_csv.AddRegions(os.path.join(DATA_STORE,EW_REGIONS_AV_FILE))
+        ar.process()
         
         #Scotland
         sa=scotland.Scot_Average()

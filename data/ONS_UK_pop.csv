@@ -1,9 +1,9 @@
 ﻿areacode,areaname,type,population2019
-K02000001,UNITED KINGDOM,Country,66796807
-K03000001,GREAT BRITAIN,Country,64903140
-K04000001,ENGLAND AND WALES,Country,59439840
-E92000001,ENGLAND,Country,56286961
-E12000001,NORTH EAST,Region,2669941
+K02000001,Unitd Kingdom,Country,66796807
+K03000001,Great Britain,Country,64903140
+K04000001,England and Wales,Country,59439840
+E92000001,England,Country,56286961
+E12000001,North East,Region,2669941
 E06000047,County Durham,Unitary Authority,530094
 E06000005,Darlington,Unitary Authority,106803
 E06000001,Hartlepool,Unitary Authority,93663
@@ -17,7 +17,7 @@ E08000021,Newcastle upon Tyne,Metropolitan District,302820
 E08000022,North Tyneside,Metropolitan District,207913
 E08000023,South Tyneside,Metropolitan District,150976
 E08000024,Sunderland,Metropolitan District,277705
-E12000002,NORTH WEST,Region,7341196
+E12000002,North West,Region,7341196
 E06000008,Blackburn with Darwen,Unitary Authority,149696
 E06000009,Blackpool,Unitary Authority,139446
 E06000049,Cheshire East,Unitary Authority,384152
@@ -425,7 +425,7 @@ N09000007,Lisburn and Castlereagh,Local Government District,146002
 N09000008,Mid and East Antrim,Local Government District,139274
 N09000009,Mid Ulster,Local Government District,148528
 N09000010,"Newry, Mourne and Down",Local Government District,181368
-S08000015,Ayrshire and Arran,Health Board, 369360
+S08000015,Ayrshire and Arran,Health Board,369360
 S08000016,Borders,Health Board,115510
 S08000017,Dumfries and Galloway,Health Board,148860
 S08000029,Fife,Health Board,373550

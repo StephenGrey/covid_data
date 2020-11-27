@@ -15,13 +15,13 @@ from configs import userconfig
 log = logging.getLogger('api.graph.views')
 places=ons_week.make_index()
 
-def index(request,place='Birmingham'):
+def index(request,place='England'):
     log.info('loading page')
     try:
         areacode=places[place]
         nation=ons_week.nation[areacode]
-        nation_index=['England','Wales','Scotland','Northern Ireland'].index(nation)+1
-        print(f'loading: {areacode} in {nation} ({nation_index})')
+        nation_index=['England','Wales','Scotland','Northern Ireland','England and Wales'].index(nation)+1
+        log.info(f'loading: {areacode} in {nation} ({nation_index})')
         PHEstored=configs.config.get('PHE')
         try:
             edition=PHEstored.get('latest_update')
@@ -29,9 +29,10 @@ def index(request,place='Birmingham'):
             lastupdate_str=f'{lastupdate: %a %d %b}'
             
         except Exception as e:
-            print(e)
+            log.error(e)
             lastupdate=None
-    except:
+    except Exception as e:
+    	log.error(e)
     	nation=None
     	areacode=None
     	nation_index=1
