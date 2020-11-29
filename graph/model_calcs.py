@@ -1,13 +1,15 @@
 from .models import CovidWeek,AverageWeek,CovidScores,DailyCases
 from django.db.models import Sum
-import datetime,json,os,logging
+import datetime,json,os,logging,pandas as pd
 one_week=datetime.timedelta(7)
 from . import ons_week
+from utils import time_utils
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
 RANGE=["2020-02-07", "2020-11-28"]
 RANGE_WEEK=[6, 48]
+DELAY=datetime.timedelta(4)  #delay before most cases are published i.e. case rate becomes accurate
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
 
 MAP_PATH='graph/json/UK_corrected_topo.json'
@@ -116,16 +118,26 @@ def calc_excess_rates():
 def calc_newcases_rates():
 	"""update all the new cases rates for all districts"""
 	log.info('Beginning calc of new cases rates')
+	_delay=DELAY
+	_latest_update=latest_update()
 	_today=datetime.date.today()
-	_range=[_today-one_week,_today]
+	_range=[_latest_update-one_week-_delay,_latest_update-_delay]
+	_cases_end=f"{_latest_update-_delay:%a %d %b}"
+	_14range=[_latest_update-one_week-_delay-datetime.timedelta(14),_latest_update-_delay-datetime.timedelta(14)]
 	rates={}	
 	for place in district_names():
 		i=CovidScores.objects.get(areaname=place)
 		total_cases=DailyCases.objects.filter(specimenDate__range=_range,areaname=place).aggregate(Sum('dailyLabConfirmedCases'))['dailyLabConfirmedCases__sum']
+		total_cases14=DailyCases.objects.filter(specimenDate__range=_14range,areaname=place).aggregate(Sum('dailyLabConfirmedCases'))['dailyLabConfirmedCases__sum']
+		try:
+			change=round(((total_cases-total_cases14)/total_cases14)*100,1)
+		except:
+			change=None
 		newcases_rate=round(total_cases/i.population*100000,1) if total_cases is not None and i.population else None
 		rates[place]=newcases_rate
 		i.latest_case_rate=newcases_rate
-		log.debug(f'Place: {place} Cases: {total_cases} Rate:{newcases_rate}')
+		i.change_case_rate=change
+		log.debug(f'Place: {place} Cases: {total_cases} 14DayAgo: {total_cases14} Rate:{newcases_rate} change:{change}%')
 		i.save()
 	log.info('Completed newcase rate calculations')
 		#print([(k, v) for k, v in sorted(rates.items(), key=lambda item: item[1]) if v])
@@ -252,9 +264,11 @@ def output_district(place,q=None):
 		
 		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate')[:50][::-1]
 		last_cases=[i.dailyLabConfirmedCases for i in last]
+		last_cases_rolling=rolling_averages(last_cases)
 		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
-		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20']
+		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27']
 		last_deaths=[i.deaths for i in last]
+		last_deaths_rolling=rolling_averages(last_deaths)
 		last_pubdeaths=[i.published_deaths for i in last]
 		dataset={ 
 			1:{'label':"Weekly new infections -Reuters estimate",'data':estcasesweekly},
@@ -267,9 +281,12 @@ def output_district(place,q=None):
 			6:{'label':"All carehome deaths",'data':weeklycarehomedeaths},
 			7:{'label':"5Y average total deaths",'data':totavdeaths},
 			8:{'label':"5Y average carehome deaths",'data':avcaredeaths},
-			9:{'label':" Covid19 new cases",'data':last_cases,'labelset':last_dates},
-			10:{'label':" Covid19 deaths",'data':last_deaths,'labelset':last_dates},
-			11:{'label':" Covid19 deaths published",'data':last_pubdeaths,'labelset':last_dates},
+			9:{'label':"Covid19 new cases",'data':last_cases,'labelset':last_dates},
+			10:{'label':"Covid19 deaths",'data':last_deaths,'labelset':last_dates},
+			11:{'label':"Covid19 deaths published",'data':last_pubdeaths,'labelset':last_dates},
+			12:{'label':"Covid19 new cases (rolling 7-day average)",'data':last_cases_rolling,'labelset':last_dates},
+			13:{'label':"Covid19 new deaths(rolling 7-day average)",'data':last_deaths_rolling,'labelset':last_dates},
+
 			'week_date_labels':week_date_labels,
 			'caseslabel':f'Cases in {place} in last 50 days',
 			'deathslabel':f'Covid deaths in {place} in last 50 days',
@@ -294,13 +311,24 @@ def output_all():
 	return all_data
 
 
-def output_rates():
+def output_rates(subset=None,exclude=None):
 	"""output rates into an array """
 	data=[]
-	q=CovidScores.objects.all()
+	
+	if exclude and subset:
+		q=CovidScores.objects.exclude(areaname__in=exclude)
+		q=q.filter(areaname__in=subset)
+	elif exclude:
+		q=CovidScores.objects.exclude(areaname__in=exclude)
+	elif subset:
+		q=CovidScores.objects.filter(areaname__in=subset)
+	else:
+		q=CovidScores.objects.all()
+		
 	for score in q:
-		excess=float(score.excess_death_rate) if score.excess_death_rate is not None else None
-		cases_rate=float(score.latest_case_rate) if score.latest_case_rate is not None else None
+		excess=round(float(score.excess_death_rate)) if score.excess_death_rate is not None else None
+		cases_rate=round(float(score.latest_case_rate)) if score.latest_case_rate is not None else None
+		change_case_rate=round(float(score.change_case_rate)) if score.change_case_rate is not None else None
 		data.append({
     "areaname": score.areaname,
     "wave2":score.wave2_PHEdeaths,
@@ -308,6 +336,7 @@ def output_rates():
     "last30":score.last_month_PHEdeaths,
     "excess": excess,
     "cases_rate":cases_rate,
+    "cases_change":change_case_rate,
     "delays":DELAYS.get(score.areaname),
     	})
 	return data
@@ -371,3 +400,33 @@ def output_tags():
 			placename=item['areaname']
 			print(f"""<option value="{placename}" data-tag="{tag} ">{placename}</option>""")
 			
+
+def rolling_averages(series,period=7, cutoff=4):
+	df = pd.DataFrame({'cases':series[:-cutoff]})
+	df['rolling'] = df['cases'].rolling(period).mean()
+	new_series=df.round(decimals=1).where(pd.notnull(df), None)['rolling'].tolist()
+	return new_series+[None for x in range(cutoff)]
+
+def get_rate(item,key='cases_rate'):
+	if not item[key]:
+		return 0
+	return item[key]
+	
+def top_rate(ratelist, key='cases_rate',n=10,_reverse=True):
+	return sorted(ratelist,key=lambda x: get_rate(x,key=key),reverse=_reverse)[:n]
+			
+def sort_rate(ratelist,key='cases_rate',_reverse=True):
+	return sorted(ratelist,key=lambda x: get_rate(x,key=key),reverse=_reverse)
+		
+		
+def latest_update():
+	PHEstored=configs.config.get('PHE')
+	edition=PHEstored.get('latest_update')
+	lastupdate=time_utils.parseISO(edition).date()
+	return lastupdate
+#	lastupdate_str=f'{lastupdate: %a %d %b}'
+
+
+
+		
+	

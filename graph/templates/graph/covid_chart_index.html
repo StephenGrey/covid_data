@@ -1,63 +1,232 @@
 {% extends "graph/base.html" %}
 
 {% block header_content %}
-{% load static %}
+
 <title>Covid19: the UK Covid tracker</title>
-<!--
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
--->
 
-<link rel="stylesheet" href="https://www.reuters.com/investigates/static/4-3-1/en/styles/main.css?v=090816300620">
+<style>
+table {
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
 
-<!--<link rel="shortcut icon" href="https://www.reuters.com/investigates/static/4-3-1/en/favicon.ico?v=353616290620">
---> 
+th, td {
+  text-align: left;
+  padding: 8px;
+}
 
-<!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.css" /> 
--->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-   crossorigin=""/>
-<link rel="stylesheet" type="text/css" href="{% static 'graph/css/map.css' %}" />
+tr:nth-child(even) {
+  background-color: #f2f2f2
+}
+</style>
 
 
-<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
--->
-<!--<script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.js"></script>
-<script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js"></script>
-<script src="https://d3js.org/topojson.v1.min.js"></script>  
--->
-
-<script src="{% static 'graph/js/d3.v3.min.js' %}"></script>
-
-<!--<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-   crossorigin=""></script>
--->
-<script src="{% static 'graph/js/leaflet.js' %}"></script>
-<script src="{% static 'graph/js/topojson.v1.min.js' %}"></script>
-<script src="{% static 'graph/js/Chart.min.js' %}"></script>
-<script src="{% static 'graph/js/jquery.min.js' %}"></script>
-<script src="{% static 'graph/js/covid_data.js' %}"></script>
-<script src="{% static 'graph/js/covid_chart.js' %}"></script>
-<script src="{% static 'graph/js/covid_map.js' %}"></script>
-
-<body onload="firstload();">
-
+{% load static %}
 
 {% endblock %}
 
+
 {% block body_content %}
 
+<body onload="firstload();">
 <div class="container">
 	<div class="row">
 		<div class="col-md-1"></div>
 		<h1>COVID Kingdom: the UK <b>COVID-19 Tracker</b></h1>
 		<p>
-		<h4>Explore the latest Covid-19 data in Britain - select an area on the map or drop-down menu to see the latest cases and track how the virus spread locally and across Britain. See the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived.</h4><h5> <b>Last updated: {{last_update}}</b> </h5>
+		<h4>.</h4><h5> <b>Last updated: {{last_update}}</b> </h5>
 		<div class="col-md-1"></div>
 	</div>
+
+
+<br><br>
+  	<div class="row">
+  		
+  		<div class="col-md-1"></div>
+  		<div class="col-md-8">
+				<div>
+				NATIONS <br>
+
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small>	(weekly cases rate /100,000)</small></th>
+				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September</th>
+				    <th>Deaths in last 30 days</th>
+<!--				    <th>Test result av. days delay</th>
+-->				    <th>Excess deaths 2020</th>    
+				  </tr>
+				{% for rates in nations %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				<br><br>
+				REGIONS
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small>	(weekly cases rate /100,000)</small></th>
+				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September</th>
+				    <th>Deaths in last 30 days</th>
+<!--				    <th>Test result av. days delay</th>
+-->				    <th>Excess deaths 2020</th>    
+				  </tr>
+				{% for rates in regions %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				<br><br>
+				HIGH COVID-19 DISTRICTS
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small>	(weekly cases rate /100,000)</small></th>
+				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September</th>
+				    <th>Deaths in last 30 days</th>
+<!--				    <th>Test result av. days delay</th>
+-->				    <th>Excess deaths 2020</th>    
+				  </tr>
+				{% for rates in top_districts %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				
+				<br><br>
+				ALL DISTRICTS
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small>	(weekly cases rate /100,000)</small></th>
+				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September</th>
+				    <th>Deaths in last 30 days</th>
+<!--				    <th>Test result av. days delay</th>
+-->				    <th>Excess deaths 2020</th>    
+				  </tr>
+				{% for rates in districts %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				
+				
+
+		</div>
+		<div class="col-md-1"></div>
+
+<div>
+<p id="rates_list">
+</div>
+
+<script>
+
+var list_text
+var map_data_url="/graph/api_rates"
+var list=$("div.rates_list" );
+
+//
+//d3.json(map_data_url, function (data) {
+// //   console.log(data);
+//    data.dataset.forEach(function(d) {
+//    	//list_text=list_text+d.areaname+","+d.cases_rate;
+//    	console.log(d.areaname,d.cases_rate);
+////    	
+//	document.getElementById("rates_list").innerHTML += d.areaname + ":" + d.cases_rate + "<br>";
+////    	}
+////    	else if (display_value=='deaths'){
+////     	mapLookup.set(d.areaname,d.wave2_rate);
+////		}
+////    	else{
+////    	mapLookup.set(d.areaname,d.excess);
+////    	};
+//    	
+//    	});
+//});
+//
+
+</script>
 
   	<div class="row">
   		
@@ -73,372 +242,28 @@
 		<div class="col-md-1"></div>
 		<div class="col-md-3">
 			<select id="FilterEngland">
-			<option value="Adur" data-tag="1">Adur</option>
-			<option value="Allerdale" data-tag="1">Allerdale</option>
-			<option value="Amber Valley" data-tag="1">Amber Valley</option>
-			<option value="Arun" data-tag="1">Arun</option>
-			<option value="Ashfield" data-tag="1">Ashfield</option>
-			<option value="Ashford" data-tag="1">Ashford</option>
-			<option value="Babergh" data-tag="1">Babergh</option>
-			<option value="Barking and Dagenham" data-tag="1">Barking and Dagenham</option>
-			<option value="Barnet" data-tag="1">Barnet</option>
-			<option value="Barnsley" data-tag="1">Barnsley</option>
-			<option value="Barrow-in-Furness" data-tag="1">Barrow-in-Furness</option>
-			<option value="Basildon" data-tag="1">Basildon</option>
-			<option value="Basingstoke and Deane" data-tag="1">Basingstoke and Deane</option>
-			<option value="Bassetlaw" data-tag="1">Bassetlaw</option>
-			<option value="Bath and North East Somerset" data-tag="1">Bath and North East Somerset</option>
-			<option value="Bedford" data-tag="1">Bedford</option>
-			<option value="Bexley" data-tag="1">Bexley</option>
-			<option value="Birmingham" data-tag="1">Birmingham</option>
-			<option value="Blaby" data-tag="1">Blaby</option>
-			<option value="Blackburn with Darwen" data-tag="1">Blackburn with Darwen</option>
-			<option value="Blackpool" data-tag="1">Blackpool</option>
-			<option value="Bolsover" data-tag="1">Bolsover</option>
-			<option value="Bolton" data-tag="1">Bolton</option>
-			<option value="Boston" data-tag="1">Boston</option>
-			<option value="Bournemouth, Christchurch and Poole" data-tag="1">Bournemouth, Christchurch and Poole</option>
-			<option value="Bracknell Forest" data-tag="1">Bracknell Forest</option>
-			<option value="Bradford" data-tag="1">Bradford</option>
-			<option value="Braintree" data-tag="1">Braintree</option>
-			<option value="Breckland" data-tag="1">Breckland</option>
-			<option value="Brent" data-tag="1">Brent</option>
-			<option value="Brentwood" data-tag="1">Brentwood</option>
-			<option value="Brighton and Hove" data-tag="1">Brighton and Hove</option>
-			<option value="Bristol, City of" data-tag="1">Bristol, City of</option>
-			<option value="Broadland" data-tag="1">Broadland</option>
-			<option value="Bromley" data-tag="1">Bromley</option>
-			<option value="Bromsgrove" data-tag="1">Bromsgrove</option>
-			<option value="Broxbourne" data-tag="1">Broxbourne</option>
-			<option value="Broxtowe" data-tag="1">Broxtowe</option>
-			<option value="Buckinghamshire" data-tag="1">Buckinghamshire</option>
-			<option value="Burnley" data-tag="1">Burnley</option>
-			<option value="Bury" data-tag="1">Bury</option>
-			<option value="Calderdale" data-tag="1">Calderdale</option>
-			<option value="Cambridge" data-tag="1">Cambridge</option>
-			<option value="Camden" data-tag="1">Camden</option>
-			<option value="Cannock Chase" data-tag="1">Cannock Chase</option>
-			<option value="Canterbury" data-tag="1">Canterbury</option>
-			<option value="Carlisle" data-tag="1">Carlisle</option>
-			<option value="Castle Point" data-tag="1">Castle Point</option>
-			<option value="Central Bedfordshire" data-tag="1">Central Bedfordshire</option>
-			<option value="Charnwood" data-tag="1">Charnwood</option>
-			<option value="Chelmsford" data-tag="1">Chelmsford</option>
-			<option value="Cheltenham" data-tag="1">Cheltenham</option>
-			<option value="Cherwell" data-tag="1">Cherwell</option>
-			<option value="Cheshire East" data-tag="1">Cheshire East</option>
-			<option value="Cheshire West and Chester" data-tag="1">Cheshire West and Chester</option>
-			<option value="Chesterfield" data-tag="1">Chesterfield</option>
-			<option value="Chichester" data-tag="1">Chichester</option>
-			<option value="Chorley" data-tag="1">Chorley</option>
-			<option value="Hackney and City of London" data-tag="1">City of London</option>
-			<option value="Colchester" data-tag="1">Colchester</option>
-			<option value="Copeland" data-tag="1">Copeland</option>
-			<option value="Corby" data-tag="1">Corby</option>
-			<option value="Cornwall and Isles of Scilly" data-tag="1">Cornwall and Isles of Scilly</option>
-			<option value="Cotswold" data-tag="1">Cotswold</option>
-			<option value="County Durham" data-tag="1">County Durham</option>
-			<option value="Coventry" data-tag="1">Coventry</option>
-			<option value="Craven" data-tag="1">Craven</option>
-			<option value="Crawley" data-tag="1">Crawley</option>
-			<option value="Croydon" data-tag="1">Croydon</option>
-			<option value="Dacorum" data-tag="1">Dacorum</option>
-			<option value="Darlington" data-tag="1">Darlington</option>
-			<option value="Dartford" data-tag="1">Dartford</option>
-			<option value="Daventry" data-tag="1">Daventry</option>
-			<option value="Derby" data-tag="1">Derby</option>
-			<option value="Derbyshire Dales" data-tag="1">Derbyshire Dales</option>
-			<option value="Doncaster" data-tag="1">Doncaster</option>
-			<option value="Dorset" data-tag="1">Dorset</option>
-			<option value="Dover" data-tag="1">Dover</option>
-			<option value="Dudley" data-tag="1">Dudley</option>
-			<option value="Ealing" data-tag="1">Ealing</option>
-			<option value="East Cambridgeshire" data-tag="1">East Cambridgeshire</option>
-			<option value="East Devon" data-tag="1">East Devon</option>
-			<option value="East Hampshire" data-tag="1">East Hampshire</option>
-			<option value="East Hertfordshire" data-tag="1">East Hertfordshire</option>
-			<option value="East Lindsey" data-tag="1">East Lindsey</option>
-			<option value="East Northamptonshire" data-tag="1">East Northamptonshire</option>
-			<option value="East Riding of Yorkshire" data-tag="1">East Riding of Yorkshire</option>
-			<option value="East Staffordshire" data-tag="1">East Staffordshire</option>
-			<option value="East Suffolk" data-tag="1">East Suffolk</option>
-			<option value="Eastbourne" data-tag="1">Eastbourne</option>
-			<option value="Eastleigh" data-tag="1">Eastleigh</option>
-			<option value="Eden" data-tag="1">Eden</option>
-			<option value="Elmbridge" data-tag="1">Elmbridge</option>
-			<option value="Enfield" data-tag="1">Enfield</option>
-			<option value="Epping Forest" data-tag="1">Epping Forest</option>
-			<option value="Epsom and Ewell" data-tag="1">Epsom and Ewell</option>
-			<option value="Erewash" data-tag="1">Erewash</option>
-			<option value="Exeter" data-tag="1">Exeter</option>
-			<option value="Fareham" data-tag="1">Fareham</option>
-			<option value="Fenland" data-tag="1">Fenland</option>
-			<option value="Folkestone and Hythe" data-tag="1">Folkestone and Hythe</option>
-			<option value="Forest of Dean" data-tag="1">Forest of Dean</option>
-			<option value="Fylde" data-tag="1">Fylde</option>
-			<option value="Gateshead" data-tag="1">Gateshead</option>
-			<option value="Gedling" data-tag="1">Gedling</option>
-			<option value="Gloucester" data-tag="1">Gloucester</option>
-			<option value="Gosport" data-tag="1">Gosport</option>
-			<option value="Gravesham" data-tag="1">Gravesham</option>
-			<option value="Great Yarmouth" data-tag="1">Great Yarmouth</option>
-			<option value="Greenwich" data-tag="1">Greenwich</option>
-			<option value="Guildford" data-tag="1">Guildford</option>
-			<option value="Hackney and City of London" data-tag="1">Hackney</option>
-			<option value="Halton" data-tag="1">Halton</option>
-			<option value="Hambleton" data-tag="1">Hambleton</option>
-			<option value="Hammersmith and Fulham" data-tag="1">Hammersmith and Fulham</option>
-			<option value="Harborough" data-tag="1">Harborough</option>
-			<option value="Haringey" data-tag="1">Haringey</option>
-			<option value="Harlow" data-tag="1">Harlow</option>
-			<option value="Harrogate" data-tag="1">Harrogate</option>
-			<option value="Harrow" data-tag="1">Harrow</option>
-			<option value="Hart" data-tag="1">Hart</option>
-			<option value="Hartlepool" data-tag="1">Hartlepool</option>
-			<option value="Hastings" data-tag="1">Hastings</option>
-			<option value="Havant" data-tag="1">Havant</option>
-			<option value="Havering" data-tag="1">Havering</option>
-			<option value="Herefordshire, County of" data-tag="1">Herefordshire, County of</option>
-			<option value="Hertsmere" data-tag="1">Hertsmere</option>
-			<option value="High Peak" data-tag="1">High Peak</option>
-			<option value="Hillingdon" data-tag="1">Hillingdon</option>
-			<option value="Hinckley and Bosworth" data-tag="1">Hinckley and Bosworth</option>
-			<option value="Horsham" data-tag="1">Horsham</option>
-			<option value="Hounslow" data-tag="1">Hounslow</option>
-			<option value="Huntingdonshire" data-tag="1">Huntingdonshire</option>
-			<option value="Hyndburn" data-tag="1">Hyndburn</option>
-			<option value="Ipswich" data-tag="1">Ipswich</option>
-			<option value="Isle of Wight" data-tag="1">Isle of Wight</option>
-			<option value="Islington" data-tag="1">Islington</option>
-			<option value="Kensington and Chelsea" data-tag="1">Kensington and Chelsea</option>
-			<option value="Kettering" data-tag="1">Kettering</option>
-			<option value="King's Lynn and West Norfolk" data-tag="1">King's Lynn and West Norfolk</option>
-			<option value="Kingston upon Hull, City of" data-tag="1">Kingston upon Hull, City of</option>
-			<option value="Kingston upon Thames" data-tag="1">Kingston upon Thames</option>
-			<option value="Kirklees" data-tag="1">Kirklees</option>
-			<option value="Knowsley" data-tag="1">Knowsley</option>
-			<option value="Lambeth" data-tag="1">Lambeth</option>
-			<option value="Lancaster" data-tag="1">Lancaster</option>
-			<option value="Leeds" data-tag="1">Leeds</option>
-			<option value="Leicester" data-tag="1">Leicester</option>
-			<option value="Lewes" data-tag="1">Lewes</option>
-			<option value="Lewisham" data-tag="1">Lewisham</option>
-			<option value="Lichfield" data-tag="1">Lichfield</option>
-			<option value="Lincoln" data-tag="1">Lincoln</option>
-			<option value="Liverpool" data-tag="1">Liverpool</option>
-			<option value="Luton" data-tag="1">Luton</option>
-			<option value="Maidstone" data-tag="1">Maidstone</option>
-			<option value="Maldon" data-tag="1">Maldon</option>
-			<option value="Malvern Hills" data-tag="1">Malvern Hills</option>
-			<option value="Manchester" data-tag="1">Manchester</option>
-			<option value="Mansfield" data-tag="1">Mansfield</option>
-			<option value="Medway" data-tag="1">Medway</option>
-			<option value="Melton" data-tag="1">Melton</option>
-			<option value="Mendip" data-tag="1">Mendip</option>
-			<option value="Merton" data-tag="1">Merton</option>
-			<option value="Mid Devon" data-tag="1">Mid Devon</option>
-			<option value="Mid Suffolk" data-tag="1">Mid Suffolk</option>
-			<option value="Mid Sussex" data-tag="1">Mid Sussex</option>
-			<option value="Middlesbrough" data-tag="1">Middlesbrough</option>
-			<option value="Milton Keynes" data-tag="1">Milton Keynes</option>
-			<option value="Mole Valley" data-tag="1">Mole Valley</option>
-			<option value="New Forest" data-tag="1">New Forest</option>
-			<option value="Newark and Sherwood" data-tag="1">Newark and Sherwood</option>
-			<option value="Newcastle upon Tyne" data-tag="1">Newcastle upon Tyne</option>
-			<option value="Newcastle-under-Lyme" data-tag="1">Newcastle-under-Lyme</option>
-			<option value="Newham" data-tag="1">Newham</option>
-			<option value="North Devon" data-tag="1">North Devon</option>
-			<option value="North East Derbyshire" data-tag="1">North East Derbyshire</option>
-			<option value="North East Lincolnshire" data-tag="1">North East Lincolnshire</option>
-			<option value="North Hertfordshire" data-tag="1">North Hertfordshire</option>
-			<option value="North Kesteven" data-tag="1">North Kesteven</option>
-			<option value="North Lincolnshire" data-tag="1">North Lincolnshire</option>
-			<option value="North Norfolk" data-tag="1">North Norfolk</option>
-			<option value="North Somerset" data-tag="1">North Somerset</option>
-			<option value="North Tyneside" data-tag="1">North Tyneside</option>
-			<option value="North Warwickshire" data-tag="1">North Warwickshire</option>
-			<option value="North West Leicestershire" data-tag="1">North West Leicestershire</option>
-			<option value="Northampton" data-tag="1">Northampton</option>
-			<option value="Northumberland" data-tag="1">Northumberland</option>
-			<option value="Norwich" data-tag="1">Norwich</option>
-			<option value="Nottingham" data-tag="1">Nottingham</option>
-			<option value="Nuneaton and Bedworth" data-tag="1">Nuneaton and Bedworth</option>
-			<option value="Oadby and Wigston" data-tag="1">Oadby and Wigston</option>
-			<option value="Oldham" data-tag="1">Oldham</option>
-			<option value="Oxford" data-tag="1">Oxford</option>
-			<option value="Pendle" data-tag="1">Pendle</option>
-			<option value="Peterborough" data-tag="1">Peterborough</option>
-			<option value="Plymouth" data-tag="1">Plymouth</option>
-			<option value="Portsmouth" data-tag="1">Portsmouth</option>
-			<option value="Preston" data-tag="1">Preston</option>
-			<option value="Reading" data-tag="1">Reading</option>
-			<option value="Redbridge" data-tag="1">Redbridge</option>
-			<option value="Redcar and Cleveland" data-tag="1">Redcar and Cleveland</option>
-			<option value="Redditch" data-tag="1">Redditch</option>
-			<option value="Reigate and Banstead" data-tag="1">Reigate and Banstead</option>
-			<option value="Ribble Valley" data-tag="1">Ribble Valley</option>
-			<option value="Richmond upon Thames" data-tag="1">Richmond upon Thames</option>
-			<option value="Richmondshire" data-tag="1">Richmondshire</option>
-			<option value="Rochdale" data-tag="1">Rochdale</option>
-			<option value="Rochford" data-tag="1">Rochford</option>
-			<option value="Rossendale" data-tag="1">Rossendale</option>
-			<option value="Rother" data-tag="1">Rother</option>
-			<option value="Rotherham" data-tag="1">Rotherham</option>
-			<option value="Rugby" data-tag="1">Rugby</option>
-			<option value="Runnymede" data-tag="1">Runnymede</option>
-			<option value="Rushcliffe" data-tag="1">Rushcliffe</option>
-			<option value="Rushmoor" data-tag="1">Rushmoor</option>
-			<option value="Rutland" data-tag="1">Rutland</option>
-			<option value="Ryedale" data-tag="1">Ryedale</option>
-			<option value="Salford" data-tag="1">Salford</option>
-			<option value="Sandwell" data-tag="1">Sandwell</option>
-			<option value="Scarborough" data-tag="1">Scarborough</option>
-			<option value="Sedgemoor" data-tag="1">Sedgemoor</option>
-			<option value="Sefton" data-tag="1">Sefton</option>
-			<option value="Selby" data-tag="1">Selby</option>
-			<option value="Sevenoaks" data-tag="1">Sevenoaks</option>
-			<option value="Sheffield" data-tag="1">Sheffield</option>
-			<option value="Shropshire" data-tag="1">Shropshire</option>
-			<option value="Slough" data-tag="1">Slough</option>
-			<option value="Solihull" data-tag="1">Solihull</option>
-			<option value="Somerset West and Taunton" data-tag="1">Somerset West and Taunton</option>
-			<option value="South Cambridgeshire" data-tag="1">South Cambridgeshire</option>
-			<option value="South Derbyshire" data-tag="1">South Derbyshire</option>
-			<option value="South Gloucestershire" data-tag="1">South Gloucestershire</option>
-			<option value="South Hams" data-tag="1">South Hams</option>
-			<option value="South Holland" data-tag="1">South Holland</option>
-			<option value="South Kesteven" data-tag="1">South Kesteven</option>
-			<option value="South Lakeland" data-tag="1">South Lakeland</option>
-			<option value="South Norfolk" data-tag="1">South Norfolk</option>
-			<option value="South Northamptonshire" data-tag="1">South Northamptonshire</option>
-			<option value="South Oxfordshire" data-tag="1">South Oxfordshire</option>
-			<option value="South Ribble" data-tag="1">South Ribble</option>
-			<option value="South Somerset" data-tag="1">South Somerset</option>
-			<option value="South Staffordshire" data-tag="1">South Staffordshire</option>
-			<option value="South Tyneside" data-tag="1">South Tyneside</option>
-			<option value="Southampton" data-tag="1">Southampton</option>
-			<option value="Southend-on-Sea" data-tag="1">Southend-on-Sea</option>
-			<option value="Southwark" data-tag="1">Southwark</option>
-			<option value="Spelthorne" data-tag="1">Spelthorne</option>
-			<option value="St Albans" data-tag="1">St Albans</option>
-			<option value="St. Helens" data-tag="1">St. Helens</option>
-			<option value="Stafford" data-tag="1">Stafford</option>
-			<option value="Staffordshire Moorlands" data-tag="1">Staffordshire Moorlands</option>
-			<option value="Stevenage" data-tag="1">Stevenage</option>
-			<option value="Stockport" data-tag="1">Stockport</option>
-			<option value="Stockton-on-Tees" data-tag="1">Stockton-on-Tees</option>
-			<option value="Stoke-on-Trent" data-tag="1">Stoke-on-Trent</option>
-			<option value="Stratford-on-Avon" data-tag="1">Stratford-on-Avon</option>
-			<option value="Stroud" data-tag="1">Stroud</option>
-			<option value="Sunderland" data-tag="1">Sunderland</option>
-			<option value="Surrey Heath" data-tag="1">Surrey Heath</option>
-			<option value="Sutton" data-tag="1">Sutton</option>
-			<option value="Swale" data-tag="1">Swale</option>
-			<option value="Swindon" data-tag="1">Swindon</option>
-			<option value="Tameside" data-tag="1">Tameside</option>
-			<option value="Tamworth" data-tag="1">Tamworth</option>
-			<option value="Tandridge" data-tag="1">Tandridge</option>
-			<option value="Teignbridge" data-tag="1">Teignbridge</option>
-			<option value="Telford and Wrekin" data-tag="1">Telford and Wrekin</option>
-			<option value="Tendring" data-tag="1">Tendring</option>
-			<option value="Test Valley" data-tag="1">Test Valley</option>
-			<option value="Tewkesbury" data-tag="1">Tewkesbury</option>
-			<option value="Thanet" data-tag="1">Thanet</option>
-			<option value="Three Rivers" data-tag="1">Three Rivers</option>
-			<option value="Thurrock" data-tag="1">Thurrock</option>
-			<option value="Tonbridge and Malling" data-tag="1">Tonbridge and Malling</option>
-			<option value="Torbay" data-tag="1">Torbay</option>
-			<option value="Torridge" data-tag="1">Torridge</option>
-			<option value="Tower Hamlets" data-tag="1">Tower Hamlets</option>
-			<option value="Trafford" data-tag="1">Trafford</option>
-			<option value="Tunbridge Wells" data-tag="1">Tunbridge Wells</option>
-			<option value="Uttlesford" data-tag="1">Uttlesford</option>
-			<option value="Vale of White Horse" data-tag="1">Vale of White Horse</option>
-			<option value="Wakefield" data-tag="1">Wakefield</option>
-			<option value="Walsall" data-tag="1">Walsall</option>
-			<option value="Waltham Forest" data-tag="1">Waltham Forest</option>
-			<option value="Wandsworth" data-tag="1">Wandsworth</option>
-			<option value="Warrington" data-tag="1">Warrington</option>
-			<option value="Warwick" data-tag="1">Warwick</option>
-			<option value="Watford" data-tag="1">Watford</option>
-			<option value="Waverley" data-tag="1">Waverley</option>
-			<option value="Wealden" data-tag="1">Wealden</option>
-			<option value="Wellingborough" data-tag="1">Wellingborough</option>
-			<option value="Welwyn Hatfield" data-tag="1">Welwyn Hatfield</option>
-			<option value="West Berkshire" data-tag="1">West Berkshire</option>
-			<option value="West Devon" data-tag="1">West Devon</option>
-			<option value="West Lancashire" data-tag="1">West Lancashire</option>
-			<option value="West Lindsey" data-tag="1">West Lindsey</option>
-			<option value="West Oxfordshire" data-tag="1">West Oxfordshire</option>
-			<option value="West Suffolk" data-tag="1">West Suffolk</option>
-			<option value="Westminster" data-tag="1">Westminster</option>
-			<option value="Wigan" data-tag="1">Wigan</option>
-			<option value="Wiltshire" data-tag="1">Wiltshire</option>
-			<option value="Winchester" data-tag="1">Winchester</option>
-			<option value="Windsor and Maidenhead" data-tag="1">Windsor and Maidenhead</option>
-			<option value="Wirral" data-tag="1">Wirral</option>
-			<option value="Woking" data-tag="1">Woking</option>
-			<option value="Wokingham" data-tag="1">Wokingham</option>
-			<option value="Wolverhampton" data-tag="1">Wolverhampton</option>
-			<option value="Worcester" data-tag="1">Worcester</option>
-			<option value="Worthing" data-tag="1">Worthing</option>
-			<option value="Wychavon" data-tag="1">Wychavon</option>
-			<option value="Wyre" data-tag="1">Wyre</option>
-			<option value="Wyre Forest" data-tag="1">Wyre Forest</option>
-			<option value="York" data-tag="1">York</option>
+			{% for value,text in england_select %}
+			<option value="{{value}}" data-tag="4">{{text}}</option>
+			{% endfor %}
 			</select>
+			
+			
 			<select id="FilterNI">
-			<option value="Antrim and Newtownabbey" data-tag="4">Antrim and Newtownabbey</option>
-			<option value="Ards and North Down" data-tag="4">Ards and North Down</option>
-			<option value="Armagh City, Banbridge and Craigavon" data-tag="4">Armagh City, Banbridge and Craigavon</option>
-			<option value="Belfast" data-tag="4">Belfast</option>
-			<option value="Causeway Coast and Glens" data-tag="4 ">Causeway Coast and Glens</option>
-			<option value="Derry City and Strabane" data-tag="4">Derry City and Strabane</option>
-			<option value="Fermanagh and Omagh" data-tag="4">Fermanagh and Omagh</option>
-			<option value="Lisburn and Castlereagh" data-tag="4">Lisburn and Castlereagh</option>
-			<option value="Mid Ulster" data-tag="4">Mid Ulster</option>
-			<option value="Mid and East Antrim" data-tag="4">Mid and East Antrim</option>
-			<option value="Newry, Mourne and Down" data-tag="4">Newry, Mourne and Down</option>
+			{% for value,text in ni_select %}
+			<option value="{{value}}" data-tag="4">{{text}}</option>
+			{% endfor %}
+
 			</select>
 			<select id="FilterScotland">
-			<option value="Ayrshire and Arran" data-tag="3">Ayrshire and Arran</option>
-			<option value="Borders" data-tag="3">Borders</option>
-			<option value="Dumfries and Galloway" data-tag="3">Dumfries and Galloway</option>
-			<option value="Fife" data-tag="3">Fife</option>
-			<option value="Forth Valley" data-tag="3">Forth Valley</option>
-			<option value="Grampian" data-tag="3">Grampian</option>
-			<option value="Greater Glasgow and Clyde" data-tag="3">Greater Glasgow and Clyde</option>
-			<option value="Highland" data-tag="3">Highland</option>
-			<option value="Lanarkshire" data-tag="3">Lanarkshire</option>
-			<option value="Lothian" data-tag="3">Lothian</option>
-			<option value="Orkney" data-tag="3">Orkney</option>
-			<option value="Shetland" data-tag="3">Shetland</option>
-			<option value="Tayside" data-tag="3">Tayside</option>
-			<option value="Western Isles" data-tag="3">Western Isles</option>
+			{% for value,text in scotland_select %}
+			<option value="{{value}}" data-tag="4">{{text}}</option>
+			{% endfor %}
 			</select>
 			<select id="FilterWales">
-			<option value="Blaenau Gwent" data-tag="2">Blaenau Gwent</option>
-			<option value="Bridgend" data-tag="2">Bridgend</option>
-			<option value="Caerphilly" data-tag="2">Caerphilly</option>
-			<option value="Cardiff" data-tag="2">Cardiff</option>
-			<option value="Carmarthenshire" data-tag="2">Carmarthenshire</option>
-			<option value="Ceredigion" data-tag="2">Ceredigion</option>
-			<option value="Conwy" data-tag="2">Conwy</option>
-			<option value="Denbighshire" data-tag="2">Denbighshire</option>
-			<option value="Flintshire" data-tag="2">Flintshire</option>
-			<option value="Gwynedd" data-tag="2">Gwynedd</option>
-			<option value="Isle of Anglesey" data-tag="2">Isle of Anglesey</option>
-			<option value="Merthyr Tydfil" data-tag="2">Merthyr Tydfil</option>
-			<option value="Monmouthshire" data-tag="2">Monmouthshire</option>
-			<option value="Neath Port Talbot" data-tag="2">Neath Port Talbot</option>
-			<option value="Newport" data-tag="2">Newport</option>
-			<option value="Pembrokeshire" data-tag="2">Pembrokeshire</option>
-			<option value="Powys" data-tag="2">Powys</option>
-			<option value="Rhondda Cynon Taf" data-tag="2">Rhondda Cynon Taf</option>
-			<option value="Swansea" data-tag="2">Swansea</option>
-			<option value="Torfaen" data-tag="2">Torfaen</option>
-			<option value="Vale of Glamorgan" data-tag="2">Vale of Glamorgan</option>
-			<option value="Wrexham" data-tag="2">Wrexham</option>
+			{% for value,text in wales_select %}
+			<option value="{{value}}" data-tag="4">{{text}}</option>
+			{% endfor %}
+
 			</select>
 		</div> 
 		<div class="col-md-1"></div>
@@ -452,122 +277,6 @@
 		</div>
 	</div>
 </div>
-<br><br>
-<p>
-<div class="container">
-	<div class="mainmap">
-		<div id="mapid"></div>
-	</div>
-
-<p>
-
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-    		<div style="height: 400px">
-    		
-			<canvas id="myChart" </canvas>
-			</div>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			<p>			
-			*<b>Deaths caused by COVID-19</b> shown above are most accurately tracked in figure that count when COVID-19 appears on a death certificate. (<i>Source: Office for National Statistics weekly series.</i>)
-			<p>*<b>Tests with a positive COVID-19 result</b> shown above are from labs run by Public Health England (PHE), NHS hospitals, and private "Lighthouse" labs. The figures are updated daily> Below shows the latest daily figures. The total for recent days are under-estimates because it takes some time for all the results to be published. Tests for everyone with symptoms were not available late May -- so treat early figures with caution. (<i>Source: PHE daily update</i>)
-					<p>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-	<p>
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			<div style="height: 300px">
-			<canvas id="casechart"> </canvas>
-		</div>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-  	<p>
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			<p>			
-			* <b>Daily totals of local deaths</b> are also available. Shown below, they count how many die with a month of having COVID-19. (<i>Source: PHE daily update</i>)
-			<p>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-
-
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			<div style="height: 250px">
-			<canvas id="latest_deaths_chart"> </canvas>
-			</div>
-		</div>
-		
-	    <div class="col-md-1"></div>
-	</div>
-	<p>
-		<br><p>
-
-  	 <div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			 *<b> Excess deaths</b> provide the best way of showing the real impact of the pandemic. They take account of COVID-19 deaths not officially recorded, or other deaths caused indirectly, for example by isolation or reduced access to hospitals. The figures comparing the average weekly death for the time of year in the last 5 years with deaths in 2020. (<i>Source: Reuters calculation based on ONS average death and ONS weekly death series.</i>)2020. They comareDeaths are derived from <death certificates where COVID-19 is listed as a cause of death</b>. Location is by place of death. These figures are likely an under-estimate in most areas as the figure is significantly below recorded excess deaths for the time of year, as illustrated in this next chart which compares deaths from all causes against an average deaths in that week in the previous five years.
-			<p><p>
-			<div style="height: 400px">
-			<canvas id="myDeathChart"></canvas>
-			</div>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
- 
- 
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-    		<p>
-			<br />
-			Using the official figure for coronavirus cases, based on test results, is a misleading way to view the spread of the pandemic. It is clear from the many deaths that followed, that the new coronavirus was spreading widely in the UK long before significant testing began. With inconsistent and low volumes of testing for COVID-19, one way of estimating real infections is working back from deaths that follow approximately 3 weeks later. 
-			<p>
-			<div style="height: 400px">
-				<canvas id="estimates"></canvas>
-			</div>
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-
-
- 	<div class="row">
-    	<div class="col-md-1"></div>
-    	<div class="col-md-10">
-			Read our full investigation here:  <a href="https://www.reuters.com/investigates/special-report/health-coronavirus-britain-tracing/">Into the fog: How Britain lost track of the coronavirus</a>
-			  	
-			<p>
-			Notes:<p> 
-			
-			* Estimated new infections is a Reuters rough estimate based on a 1% infection fatality rate (IFR) [Most studies currently show IFR at 0.5%-1%] and average time from infection to death of approximately 3 weeks . The IFR will vary based on age distribution, so the number of infections is likely an over-estimate in the later stages of the outbreak when, in most areas, infection spread into care homes.
-			<p>
-				
-			
-			* All estimates are unreliable in areas with only a few cases or deaths, e.g. the City of London.<p> 
-			 
-			Source: Office of National Statistics; National Records of Scotland; Northern Ireland Statistics and Research Agency; Public Health England; Public Health Wales; Scottish government.<p>
-			Data analysis: <a href="https://twitter.com/McNeill_Tweets">Ryan McNeill</a>. Chart/programming: <a href="https://twitter.com/StephenGrey">Stephen Grey</a>
-
-		</div>
-	    <div class="col-md-1"></div>
-  	</div>
-</div>
-
-<input type="url" id="shape_location" name="location" value={% static 'graph/json/Local_Auths_Dec16_Gen_Clip_UK.json'%}" hidden/>
 
 <script>
 var api_fetch={{api_status}}
@@ -575,13 +284,13 @@ var last_update="{{last_update}}"
 var focus_place="{{place}}"
 var first_load=true
 function firstload(){
-loadmap("{{place}}");
-get_data("{{place}}");
-var sel2 = document.getElementById("Filter2");
-selectOption(sel2,"{{nation_index}}");
+//loadmap("{{place}}");
+//get_data("{{place}}");
+//var sel2 = document.getElementById("Filter2");
+//selectOption(sel2,"{{nation_index}}");
 //updateNation();
-var sel = document.getElementById("Filter{{nation}}");
-selectOption(sel, "{{place}}");
+//var sel = document.getElementById("Filter{{nation}}");
+//selectOption(sel, "{{place}}");
 };
 
 </script>

@@ -174,6 +174,7 @@ class Updater():
         sa=scotland.Scot_Average()
         sa.process(os.path.join(DATA_STORE,SCOT_AV_FILE))
         sa.parse()
+        sa.sum_Scotland()
         
         #Ireland
 

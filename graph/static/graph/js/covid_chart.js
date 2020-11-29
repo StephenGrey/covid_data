@@ -39,14 +39,17 @@ function parse_data(dataset)
 
     		var series11=dataset[11].data;
     		var label11=dataset[11].label;
+    		var series12=dataset[12].data;
+    		var label12=dataset[12].label;
 
-
+    		var series13=dataset[13].data;
+    		var label13=dataset[13].label;
     		var labelseries=dataset[9].labelset;
 
     		
             ;
             ;
-            draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,labelseries);
+            draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,series12,series13,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,label12,label13,labelseries);
 
 };
 
@@ -54,7 +57,7 @@ var api_url="/graph/api/"
 
 function selectOption(sel, val) {
     var opt; 
-
+//console.log(sel,val);
     // loop through options in select list
     for ( var i = 0, len = sel.options.length; i < len; i++ ) {
         opt = sel.options[i]; //
@@ -111,7 +114,7 @@ function get_data(placename)
     console.log('getting data for '+placename);
      };
 
-function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,labelseries)
+function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deathslabel,series1,series2,series3,series4,series5,series6,series7,series8,series9,series10,series11,series12,series13,label1,label2,label3,label4,label5,label6,label7,label8,label9,label10,label11,label12,label13,labelseries)
 	{
 	params=
 	{
@@ -395,7 +398,19 @@ function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deaths
             	borderWidth: 1 ,
      			yAxisID: "y-axis-1"
     			}, 
-    			
+    			{
+    			label:label12,
+    			data:series12,
+    			type: 'line',
+    			backgroundColor: ['orange'],
+    			borderColor: ['orange'],
+    			pointRadius: 0,
+            	borderWidth: 3 ,
+            	fill: false,
+     			yAxisID: "y-axis-1",
+     			hidden: false,
+    			}, 
+    			    			
         		]},
         options: {
         	        	  responsive: true,
@@ -452,7 +467,7 @@ function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deaths
     			{
     			label:label10,
     			data:series10,
-            	backgroundColor: 'pink',
+            	fillColor: 'pink',
             	borderWidth: 1 ,
      			yAxisID: "y-axis-1",
     			}, 
@@ -464,7 +479,18 @@ function draw_chart(chart_title,date_labels,excess,infectlabel,caseslabel,deaths
      			yAxisID: "y-axis-1",
      			hidden: true,
     			}, 
-    			
+    			{
+    			label:label13,
+    			data:series13,
+    			type: 'line',
+            	borderColor: 'orange',
+            	pointRadius: 0,
+            	borderWidth: 3 ,
+            	fill: false,
+     			yAxisID: "y-axis-1",
+     			hidden: false,
+    			}, 
+
     			
     			
     			]},

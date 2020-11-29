@@ -81,6 +81,7 @@ class Scot_Importer(PandaImporter):
         self.fetch_excel(url=f,skiprows=2,sheet_name="Data")
         self.fix()
         self.parse()
+        self.sum_Scotland()
         log.info('Scot deaths processing complete')
         
     def fetch_excel(self,url=DEATHS_URL,skiprows=2,sheet_name="Data"):
@@ -142,6 +143,40 @@ class Scot_Importer(PandaImporter):
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
                 
+    def sum_Scotland(self):
+        for week in self.weeks():
+            district='Scotland'
+            sub=self.data[(self.data['Week of occurrence']==week)]
+            week_str=str(week)
+            _allc19=sub[(sub['Cause of Death']=='COVID-19')]['Deaths'].sum()
+            _all=sub['Deaths'].sum()
+            careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
+            careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
+            hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
+            log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
+            qrow=CovidWeek.objects.filter(week=week,areaname=district)
+            if qrow:
+                row=qrow[0]
+                #print(row)
+                update_row(row,_all,_allc19,careh,careh19,hosp19)
+            else:
+
+                areacode=scotcode[district]
+                _nation='Scotland'
+                row=CovidWeek(date=sunday(week),areacode=areacode,nation=_nation,areaname=district,week=week)
+                print(f'Created week {sunday(week)} for {district}')
+                row.save()
+                update_row(row,_all,_allc19,careh,careh19,hosp19)
+
+        
+        
+        
+        
+        
+        
+        
+        
+         
     def update_cum_deaths(self):
         for d in scotcode.values():
             update_cum_district_death(d)
@@ -179,12 +214,19 @@ class Scot_Average(Scot_Importer):
         areacode=scotcode[place]
         try:
             sub=self.data[(self.data['week of occurrence']==week)&(self.data['health board']==place)]
+            #print(wk.__dict__)
+            self.parse_sub(sub,place,areacode,week)
+        except Exception as e:
+            log.error(e)
+    
+    def parse_sub(self,sub,place,areacode,week):
+        try:
             wk, created = AverageWeek.objects.get_or_create(
             week=week,
             areacode=areacode
             )
             location=place
-            print(f'Parsing: Area: {place} week {week}')
+            log.debug(f'Parsing: Area: {place} week {week}')
             wk.weeklyalldeaths=sub['number of deaths'].sum()/5
             wk.weeklyhospitaldeaths=sub[(sub['location']=='Hospital')]['number of deaths'].sum()/5
             wk.weeklyelsewheredeaths=None
@@ -193,10 +235,14 @@ class Scot_Average(Scot_Importer):
             wk.weeklycarehomedeaths=sub[(sub['location']=='Care Home')]['number of deaths'].sum()/5
             wk.weeklyhomedeaths=sub[(sub['location']=='Home / Non-institution')]['number of deaths'].sum()/5
             wk.save()
-            #print(wk.__dict__)
         except Exception as e:
-            print(e)
-    
+            log.error(e)           
+        
+    def sum_Scotland(self):
+        areacode=scotcode["Scotland"]
+        for week in self.weeks():
+            sub=self.data[(self.data['week of occurrence']==week)]
+            self.parse_sub(sub,"Scotland",areacode,week)
     
 class Scot_Cases(Scot_Importer):
     def process(self,f=CASES_URL,live=True):

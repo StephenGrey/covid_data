@@ -1,5 +1,5 @@
 ﻿areacode,areaname,type,population2019
-K02000001,Unitd Kingdom,Country,66796807
+K02000001,United Kingdom,Country,66796807
 K03000001,Great Britain,Country,64903140
 K04000001,England and Wales,Country,59439840
 E92000001,England,Country,56286961
@@ -61,7 +61,7 @@ E08000012,Liverpool,Metropolitan District,498042
 E08000014,Sefton,Metropolitan District,276410
 E08000013,St. Helens,Metropolitan District,180585
 E08000015,Wirral,Metropolitan District,324011
-E12000003,YORKSHIRE AND THE HUMBER,Region,5502967
+E12000003,Yorkshire and The Humber,Region,5502967
 E06000011,East Riding of Yorkshire,Unitary Authority,341173
 E06000010,"Kingston upon Hull, City of",Unitary Authority,259778
 E06000012,North East Lincolnshire,Unitary Authority,159563
@@ -86,7 +86,7 @@ E08000033,Calderdale,Metropolitan District,211455
 E08000034,Kirklees,Metropolitan District,439787
 E08000035,Leeds,Metropolitan District,793139
 E08000036,Wakefield,Metropolitan District,348312
-E12000004,EAST MIDLANDS,Region,4835928
+E12000004,East Midlands,Region,4835928
 E06000015,Derby,Unitary Authority,257302
 E06000016,Leicester,Unitary Authority,354224
 E06000018,Nottingham,Unitary Authority,332900
@@ -132,7 +132,7 @@ E07000173,Gedling,Non-metropolitan District,117896
 E07000174,Mansfield,Non-metropolitan District,109313
 E07000175,Newark and Sherwood,Non-metropolitan District,122421
 E07000176,Rushcliffe,Non-metropolitan District,119184
-E12000005,WEST MIDLANDS,Region,5934037
+E12000005,West Midlands,Region,5934037
 E06000019,"Herefordshire, County of",Unitary Authority,192801
 E06000051,Shropshire,Unitary Authority,323136
 E06000021,Stoke-on-Trent,Unitary Authority,256375
@@ -167,7 +167,7 @@ E07000236,Redditch,Non-metropolitan District,85261
 E07000237,Worcester,Non-metropolitan District,101222
 E07000238,Wychavon,Non-metropolitan District,129433
 E07000239,Wyre Forest,Non-metropolitan District,101291
-E12000006,EAST,Region,6236072
+E12000006,East of England,Region,6236072
 E06000055,Bedford,Unitary Authority,173292
 E06000056,Central Bedfordshire,Unitary Authority,288648
 E06000032,Luton,Unitary Authority,213052
@@ -218,7 +218,7 @@ E07000244,East Suffolk,Non-metropolitan District,249461
 E07000202,Ipswich,Non-metropolitan District,136913
 E07000203,Mid Suffolk,Non-metropolitan District,103895
 E07000245,West Suffolk,Non-metropolitan District,179045
-E12000007,LONDON,Region,8961989
+E12000007,London,Region,8961989
 E09000007,Camden,London Borough,270029
 E09000001,City of London,London Borough,9721
 E09000012,Hackney,London Borough,281120
@@ -252,7 +252,7 @@ E09000026,Redbridge,London Borough,305222
 E09000027,Richmond upon Thames,London Borough,198019
 E09000029,Sutton,London Borough,206349
 E09000031,Waltham Forest,London Borough,276983
-E12000008,SOUTH EAST,Region,9180135
+E12000008,South East,Region,9180135
 E06000036,Bracknell Forest,Unitary Authority,122549
 E06000043,Brighton and Hove,Unitary Authority,290885
 E06000046,Isle of Wight,Unitary Authority,141771
@@ -323,7 +323,7 @@ E07000226,Crawley,Non-metropolitan District,112409
 E07000227,Horsham,Non-metropolitan District,143791
 E07000228,Mid Sussex,Non-metropolitan District,151022
 E07000229,Worthing,Non-metropolitan District,110570
-E12000009,SOUTH WEST,Region,5624696
+E12000009,South West,Region,5624696
 E06000022,Bath and North East Somerset,Unitary Authority,193282
 E06000058,"Bournemouth, Christchurch and Poole",Unitary Authority,395331
 E06000023,"Bristol, City of",Unitary Authority,463377
@@ -357,7 +357,7 @@ E07000187,Mendip,Non-metropolitan District,115587
 E07000188,Sedgemoor,Non-metropolitan District,123178
 E07000246,Somerset West and Taunton,Non-metropolitan District,155115
 E07000189,South Somerset,Non-metropolitan District,168345
-W92000004,WALES,Country,3152879
+W92000004,Wales,Country,3152879
 W06000001,Isle of Anglesey,Unitary Authority,70043
 W06000002,Gwynedd,Unitary Authority,124560
 W06000003,Conwy,Unitary Authority,117203
@@ -380,7 +380,7 @@ W06000019,Blaenau Gwent,Unitary Authority,69862
 W06000020,Torfaen,Unitary Authority,93961
 W06000021,Monmouthshire,Unitary Authority,94590
 W06000022,Newport,Unitary Authority,154676
-S92000003,SCOTLAND,Country,5463300
+S92000003,Scotland,Country,5463300
 S12000033,Aberdeen City,Council Area,228670
 S12000034,Aberdeenshire,Council Area,261210
 S12000041,Angus,Council Area,116200
@@ -413,7 +413,7 @@ S12000029,South Lanarkshire,Council Area,320530
 S12000030,Stirling,Council Area,94210
 S12000039,West Dunbartonshire,Council Area,88930
 S12000040,West Lothian,Council Area,183100
-N92000002,NORTHERN IRELAND,Country,1893667
+N92000002,Northern Ireland,Country,1893667
 N09000001,Antrim and Newtownabbey,Local Government District,143504
 N09000011,Ards and North Down,Local Government District,161725
 N09000002,"Armagh City, Banbridge and Craigavon",Local Government District,216205
