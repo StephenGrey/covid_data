@@ -1,0 +1,64 @@
+<html>
+<!DOCTYPE html>
+<html lang="en">
+	
+	
+<head>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-171520526-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-171520526-1');
+</script>
+{% load static %}
+<!--
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+-->
+
+<link rel="stylesheet" href="https://www.reuters.com/investigates/static/4-3-1/en/styles/main.css?v=090816300620">
+
+<!--<link rel="shortcut icon" href="https://www.reuters.com/investigates/static/4-3-1/en/favicon.ico?v=353616290620">
+--> 
+
+<!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.css" /> 
+-->
+
+
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+-->
+<!--<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.js"></script>
+<script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>  
+-->
+
+<script src="{% static 'graph/js/d3.v3.min.js' %}"></script>
+
+<!--<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+   crossorigin=""></script>
+-->
+<script src="{% static 'graph/js/leaflet.js' %}"></script>
+<script src="{% static 'graph/js/topojson.v1.min.js' %}"></script>
+<script src="{% static 'graph/js/Chart.min.js' %}"></script>
+<script src="{% static 'graph/js/sorttable.js' %}"></script>
+<script src="{% static 'graph/js/jquery.min.js' %}"></script>
+<script src="{% static 'graph/js/covid_data.js' %}"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+   crossorigin=""/>
+<link rel="stylesheet" type="text/css" href="{% static 'graph/css/map.css' %}" />
+
+
+{% block header_content %}{% endblock %}
+
+</head>
+<body>
+{% block body_content %}{% endblock %}
+</body>
+
