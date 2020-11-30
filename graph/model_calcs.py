@@ -291,7 +291,8 @@ def output_district(place,q=None):
 			'caseslabel':f'Cases in {place} in last 50 days',
 			'deathslabel':f'Covid deaths in {place} in last 50 days',
 			'excess':f"Excess deaths in {place}: {excess} ({excess_rate} per 100k) including {excess_ch} in care homes)",
-			'placename':place, 'infectlabel':f"Real estimated infections in {place} vs Covid+ tests"
+			'placename':place, 'infectlabel':f"Real estimated infections in {place} vs Covid+ tests",
+			'areacode':areacode,
 			}
 	else:
 		dataset={}
@@ -331,6 +332,7 @@ def output_rates(subset=None,exclude=None):
 		change_case_rate=round(float(score.change_case_rate)) if score.change_case_rate is not None else None
 		data.append({
     "areaname": score.areaname,
+    "areacode": ons_week.names_index.get(score.areaname),
     "wave2":score.wave2_PHEdeaths,
     "wave2_rate":score.wave2_deathrate,
     "last30":score.last_month_PHEdeaths,

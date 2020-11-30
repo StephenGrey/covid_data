@@ -1,0 +1,173 @@
+{% extends "graph/base.html" %}
+
+{% block header_content %}
+
+<title>Covid19: the UK Covid tracker</title>
+
+{% load static %}
+
+<script src="{% static 'graph/js/jquery.sparkline.js' %}"></script>
+
+
+ <script type="text/javascript">
+    var api_url="/graph/api/"
+    var places=[{%for rates in nations%}"{{rates.areaname}}",{%endfor%}{%for rates in regions%}"{{rates.areaname}}",{%endfor%}{%for rates in districts%}"{{rates.areaname}}",{%endfor%}]
+    console.log(places)
+    $(function() {
+       places.forEach( function(d) {
+       console.log(d);
+       var myvalues=draw_spark(d);
+       
+       });
+    });
+
+function draw_spark(placename)
+    {
+    	var series
+    	$.get( api_url+placename, function( data ) 
+      {
+    	var areacode=data.areacode
+	    var dataset=data.dataset
+	    console.log(areacode);
+	    if (dataset){
+     	    series=dataset[12].data;
+     	    console.log(series);
+     	    var spark_class='sparky'+areacode
+     	    console.log(spark_class);
+            $("#"+areacode).sparkline(series.slice(1).slice(-21), {type: 'line', lineColor: 'orange'} );
+     	};
+       });
+
+     };
+
+    </script>
+
+{% endblock %}
+
+
+{% block body_content %}
+
+
+SPARKS TEST
+  		<div class="col-md-12">
+				<div>
+				NATIONS <br>
+
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small><p>(weekly cases to {{last_cases}}<br> per 100,000 people)</small></th>				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September*</th>
+				    <th>Deaths in last 30 days*</th>
+<!--				    <th>Test result av. days delay</th>
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
+				  </tr>
+				{% for rates in nations %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  <span class="sparky" id="{{rates.areacode}}"></span>
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+			<small>* Deaths within 28 days of positive test (<i>Source: Public Health England API</i>).</small>
+				<p><small>** Deaths from all causes above 5-year average (<i>Source: Reuters analysis from ONS, NRS and NISRA data</i></small>)
+				</div>
+				<br><br>
+				REGIONS   <small><a href="{% url 'index_base_o' place='England' %}">See Maps and Charts</a></small>
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small><p>(weekly cases to {{last_cases}}<br> per 100,000 people)</small></th>				    <th><small>change in 14 days</small></th>
+				    <th>Deaths since September</th>
+				    <th>Deaths in last 30 days</th>
+<!--				    <th>Test result av. days delay</th>
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
+				  </tr>
+				{% for rates in regions %}
+				  <tr>
+				  <th><a href="graph/place={{rates.areaname}}">{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  <span class="sparky" id="{{rates.areacode}}"></span>
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				<br><br>
+
+				<br><br>
+				ALL LOCAL AUTHORITIES
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small><p>(weekly cases to {{last_cases}}<br> per 100,000 people)</small></th>				    <th><small>change in 14 days</small></th>
+				    
+				    <th>Deaths since September*</th>
+				    <th>Deaths in last 30 days*</th>
+<!--				    <th>Test result av. days delay</th>
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
+				  </tr>
+				{% for rates in districts %}
+				  <tr>
+				  <th><a href={% url 'index_base_o' place=rates.areaname %}>{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  <span class="sparky" id="{{rates.areacode}}">Loading..</span>
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+				
+
+
+
+{% endblock %}

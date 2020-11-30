@@ -56,6 +56,17 @@ def index(request,place='index'):
 def index_m(request,place='Birmingham'):
     return render(request,'graph/delays.html',{'place':place, 'api_status':'false','covid-rates':model_calcs.output_rates()})
 
+
+def sparks(request,place='Birmingham'):
+    if True:
+        regions=model_calcs.sort_rate(model_calcs.output_rates(subset=ons_week.REGIONS))
+        nations=model_calcs.output_rates(subset=ons_week.NATIONS)
+        districts=model_calcs.sort_rate(model_calcs.output_rates(exclude=ons_week.NATIONS+ons_week.REGIONS,subset=ons_week.stored_names.values()))
+        top_districts=model_calcs.top_rate(districts)
+
+    return render(request,'graph/sparks.html',{'api_status':'true','regions':regions, 'nations':nations,'districts':districts,'top_districts':top_districts, "england_select":ons_week.england_select,"wales_select":ons_week.wales_select,"scotland_select":ons_week.scotland_select,"ni_select":ons_week.ni_select})
+
+
 def api(request,place=""):
     print(place)
     dataset=model_calcs.output_district(place)
