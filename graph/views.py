@@ -24,7 +24,7 @@ def index(request,place='index'):
         edition=PHEstored.get('latest_update')
         lastupdate=time_utils.parseISO(edition).date()
         lastupdate_str=f'{lastupdate: %a %d %b}'
-        last_cases=f'{lastupdate-model_calcs.DELAY: %a %d %b}'
+        last_cases=f'{lastupdate-model_calcs.DELAY:%d %b}'
         
     except Exception as e:
         log.error(e)

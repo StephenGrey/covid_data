@@ -34,8 +34,8 @@ tr:nth-child(even) {
 	<div class="row">
 		<div class="col-md-1"></div>
 		<h1>COVID Kingdom: the UK <b>COVID-19 Tracker</b></h1>
-		<p>
-		<h4>.</h4><h5> <b>Last updated: {{last_update}}</b> </h5>
+		<p>>
+		<h4>Explore the latest Covid-19 data in Britain - click on a region or area to see detailed maps and data to  track how the virus spread locally and across Britain. See the patterns of tests, excess deaths, and the Reuters estimate of when infections arrived.</h4><h5> <b>Last updated: {{last_update}}</b> </h5>
 		<div class="col-md-1"></div>
 	</div>
 
@@ -43,8 +43,8 @@ tr:nth-child(even) {
 <br><br>
   	<div class="row">
   		
-  		<div class="col-md-1"></div>
-  		<div class="col-md-8">
+
+  		<div class="col-md-12">
 				<div>
 				NATIONS <br>
 
@@ -52,12 +52,13 @@ tr:nth-child(even) {
 				  <tr>
 				    <th>Area</th>
 				    <th>Infection rate
-				    <small>	(weekly cases rate /100,000)</small></th>
+				    <small><p>(weekly cases to {{last_cases}} per 100,000 people)</small></th>
 				    <th><small>change in 14 days</small></th>
-				    <th>Deaths since September</th>
-				    <th>Deaths in last 30 days</th>
+				    <th>Deaths since September*</th>
+				    <th>Deaths in last 30 days*</th>
 <!--				    <th>Test result av. days delay</th>
--->				    <th>Excess deaths 2020</th>    
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
 				  </tr>
 				{% for rates in nations %}
 				  <tr>
@@ -80,20 +81,23 @@ tr:nth-child(even) {
 				 </tr>
 				{% endfor %}
 				</table>
+			<small>* Deaths within 28 days of positive test (<i>Source: Public Health England API</i>).</small>
+				<p><small>** Deaths from all causes above 5-year average (<i>Source: Reuters analysis from ONS, NRS and NISRA data</i></small>)
 				</div>
 				<br><br>
-				REGIONS
+				REGIONS   <small><a href="{% url 'index_base_o' place='England' %}">See Maps and Charts</a></small>
 				<div>
 				<table class="sortable">
 				  <tr>
 				    <th>Area</th>
 				    <th>Infection rate
-				    <small>	(weekly cases rate /100,000)</small></th>
+				    <small><p>(weekly cases to {{last_cases}} per 100,000 people)</small></th>
 				    <th><small>change in 14 days</small></th>
 				    <th>Deaths since September</th>
 				    <th>Deaths in last 30 days</th>
 <!--				    <th>Test result av. days delay</th>
--->				    <th>Excess deaths 2020</th>    
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
 				  </tr>
 				{% for rates in regions %}
 				  <tr>
@@ -118,18 +122,19 @@ tr:nth-child(even) {
 				</table>
 				</div>
 				<br><br>
-				HIGH COVID-19 DISTRICTS
+				TOP RISING INFECTION DISTRICTS
 				<div>
 				<table class="sortable">
 				  <tr>
 				    <th>Area</th>
 				    <th>Infection rate
-				    <small>	(weekly cases rate /100,000)</small></th>
+				    <small><p>(weekly cases to {{last_cases}} per 100,000 people)</small></th>
 				    <th><small>change in 14 days</small></th>
 				    <th>Deaths since September</th>
 				    <th>Deaths in last 30 days</th>
 <!--				    <th>Test result av. days delay</th>
--->				    <th>Excess deaths 2020</th>    
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
 				  </tr>
 				{% for rates in top_districts %}
 				  <tr>
@@ -155,18 +160,19 @@ tr:nth-child(even) {
 				</div>
 				
 				<br><br>
-				ALL DISTRICTS
+				ALL LOCAL AUTHORITIES
 				<div>
 				<table class="sortable">
 				  <tr>
 				    <th>Area</th>
 				    <th>Infection rate
-				    <small>	(weekly cases rate /100,000)</small></th>
+				    <small><p>(weekly cases to {{last_cases}} per 100,000 people)</small></th>
 				    <th><small>change in 14 days</small></th>
-				    <th>Deaths since September</th>
-				    <th>Deaths in last 30 days</th>
+				    <th>Deaths since September*</th>
+				    <th>Deaths in last 30 days*</th>
 <!--				    <th>Test result av. days delay</th>
--->				    <th>Excess deaths 2020</th>    
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
 				  </tr>
 				{% for rates in districts %}
 				  <tr>
@@ -194,7 +200,7 @@ tr:nth-child(even) {
 				
 
 		</div>
-		<div class="col-md-1"></div>
+
 
 <div>
 <p id="rates_list">
@@ -228,7 +234,7 @@ var list=$("div.rates_list" );
 
 </script>
 
-  	<div class="row">
+<!--  	<div class="row">
   		
   		<div class="col-md-1"></div>
   		<div class="col-md-1">
@@ -276,7 +282,7 @@ var list=$("div.rates_list" );
 			</select>
 		</div>
 	</div>
-</div>
+</div>-->
 
 <script>
 var api_fetch={{api_status}}
