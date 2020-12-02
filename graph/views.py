@@ -68,13 +68,13 @@ def sparks(request,place='Birmingham'):
 
 
 def api(request,place=""):
-    print(place)
+    log.debug(place)
     dataset=model_calcs.output_district(place)
     try:
         areacode=places[place]
         nation=ons_week.nation[areacode]
         nation_index=['England','Wales','Scotland','Northern Ireland'].index(nation)+1
-        print(f'loading: {areacode} in {nation} ({nation_index})')
+        log.debug(f'loading: {areacode} in {nation} ({nation_index})')
     except:
         nation=None
         areacode=None
@@ -87,7 +87,30 @@ def api_rates(request):
 	jsonresponse={'error':False, 'dataset':dataset}    
 	return JsonResponse(jsonresponse)
 
-
+def api_slim_data(request,place=""):
+	"""return data on limited series"""
+	_error=False
+	try:
+		PHEstored=configs.config.get('PHE')
+		edition=PHEstored.get('latest_update')
+	except:
+		edition=None
+		_error=True
+	log.debug(place)
+	dataset=model_calcs.output_slim_district(place)
+	if not dataset:
+		_error=True
+	return JsonResponse({'error':_error, 'name':'select_data_for_area','place':place,'dataset':dataset, 'latest_update':edition})
+	
+def api_places(request):
+	_error=False
+	try:
+		places=model_calcs.output_places()
+	except:
+		places=None
+		_error=True
+	return JsonResponse({'error':_error,'name':'index_of_areas','places':places})
+	
 def api_shapes(request):
 	return HttpResponse(shapes)
 

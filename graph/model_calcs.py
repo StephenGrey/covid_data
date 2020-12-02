@@ -9,9 +9,11 @@ from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
 RANGE=["2020-02-07", "2020-11-28"]
 RANGE_WEEK=[6, 48]
+WEEK_DATE_LABELS=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27']
+
 DELAY=datetime.timedelta(4)  #delay before most cases are published i.e. case rate becomes accurate
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
-
+PLACES=ons_week.make_index()
 MAP_PATH='graph/json/UK_corrected_topo.json'
 
 DELAY_FILE=os.path.join(DATA_STORE,'Last7Delays.json')
@@ -218,7 +220,77 @@ def nations_index():
 	
 def query_by_nation(nation):
 	return CovidWeek.objects.filter(nation=nation)
+
+
+
+def output_slim_district(place,q=None):
+	try:
+		areacode=PLACES[place]
+	except Exception as e:
+		log.debug(e)
+		log.info(f'{place} not found in known places list')
+		return None
+	if q:
+		district=q.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
+	else:
+		district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
 	
+	"""weekly excess series"""
+	excess=[]
+	if district:		
+		for i in district:
+			week=i.week
+			try:
+				all_deaths=i.weeklyalldeaths
+				
+				averages=AverageWeek.objects.get(areacode=areacode,week=week)
+				if averages:
+					average_deaths=averages.weeklyalldeaths
+					this_excess=all_deaths-average_deaths
+					log.debug(f"Week:{week}  Av_deaths:{average_deaths} Alldeaths:{all_deaths}  Excess:{this_excess}")
+				else:
+					this_excess=None
+			except:
+				this_excess=None
+			excess.append(this_excess)
+				
+			
+		totalcumdeaths=[i.totcumdeaths for i in district]
+		#print(totalcumdeaths)
+		weeklydeaths=[i.weeklydeaths for i in district]
+		weeklycases=[i.weeklycases for i in district]
+		estcasesweekly=[i.estcasesweekly for i in district]
+		
+		
+		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate') #return all cases
+		last_cases=[i.dailyLabConfirmedCases for i in last]
+		last_deaths=[i.deaths for i in last]
+		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
+
+		sc=CovidScores.objects.get(areaname=place)
+		
+		return {
+			'areacode':areacode,
+			"place":place,
+			"c19_cases":last_cases, "c19_deaths": last_deaths,
+			"date_labels":last_dates,
+			"population":sc.population,
+			"excess_deaths_RTRS":sc.excess_deaths,
+			"excess_deaths_carehomes_RTRS":sc.excess_deaths_carehomes,
+			'wave2_PHEdeaths_RTRS': sc.wave2_PHEdeaths,
+			'wave2_deathrate_RTRS':sc.wave2_deathrate,
+			'lastest_cases_rate_RTRS': sc.latest_case_rate, 
+			'cases_change_RTRS': sc.change_case_rate,			
+			"week_range":RANGE_WEEK,
+			"week_date_labels":WEEK_DATE_LABELS,
+				}
+
+	
+	else:
+		log.error('No data found')
+		return None
+	
+
 def output_district(place,q=None):
 	"""
 	Output series of data for a place >>> to be served to chart
@@ -266,7 +338,8 @@ def output_district(place,q=None):
 		last_cases=[i.dailyLabConfirmedCases for i in last]
 		last_cases_rolling=rolling_averages(last_cases)
 		last_dates=[f"{i.specimenDate:%d-%b}" for i in last]
-		week_date_labels=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27']
+		week_date_labels=WEEK_DATE_LABELS
+
 		last_deaths=[i.deaths for i in last]
 		last_deaths_rolling=rolling_averages(last_deaths)
 		last_pubdeaths=[i.published_deaths for i in last]
@@ -298,7 +371,27 @@ def output_district(place,q=None):
 		dataset={}
 	#print(dataset)
 	return dataset
-	
+
+def output_places():
+	place_index=[]
+	for place,areacode in PLACES.items():
+		if place in ons_week.NATIONS:
+			areatype='nation'
+		elif place in ons_week.REGIONS:
+			areatype='region'
+		elif place =='England and Wales':
+			areatype='big nation'
+		else:
+			areatype='utla'		
+		
+		place_index.append({
+		'areaname':place,
+		'areacode':areacode,
+		'nation':ons_week.nation.get(areacode),
+		'areatype':areatype,
+		})
+		
+	return place_index	
 	
 def output_all():
 	all_data={}
