@@ -234,7 +234,7 @@ def output_slim_district(place,q=None):
 		district=q.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
 	else:
 		district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK).order_by('week')
-	
+
 	"""weekly excess series"""
 	excess=[]
 	if district:		
@@ -275,6 +275,7 @@ def output_slim_district(place,q=None):
 			"c19_cases":last_cases, "c19_deaths": last_deaths,
 			"date_labels":last_dates,
 			"population":sc.population,
+			"excess_deaths_weekly_RTRS": excess,
 			"excess_deaths_RTRS":sc.excess_deaths,
 			"excess_deaths_carehomes_RTRS":sc.excess_deaths_carehomes,
 			'wave2_PHEdeaths_RTRS': sc.wave2_PHEdeaths,
