@@ -139,7 +139,7 @@ class Scot_Importer(PandaImporter):
                 areacode=scotcode[district]
                 _nation='Scotland'
                 row=CovidWeek(date=sunday(week),areacode=areacode,nation=_nation,areaname=district,week=week)
-                print(f'Created week {sunday(week)} for {district}')
+                log.info(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
                 
@@ -164,7 +164,7 @@ class Scot_Importer(PandaImporter):
                 areacode=scotcode[district]
                 _nation='Scotland'
                 row=CovidWeek(date=sunday(week),areacode=areacode,nation=_nation,areaname=district,week=week)
-                print(f'Created week {sunday(week)} for {district}')
+                log.info(f'Created week {sunday(week)} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
 
@@ -257,7 +257,7 @@ class Scot_Cases(Scot_Importer):
         
     def update_check(self):
         self.edition=self.data.index.max()
-        print(f'Latest Scot cases data: {self.edition}')
+        log.info(f'Latest Scot cases data: {self.edition}')
         scotupdate=configs.config.get('Scotland')
         if scotupdate:
             self.last_update=scotupdate.get('latest_cases')

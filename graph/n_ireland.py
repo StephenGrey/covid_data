@@ -72,6 +72,9 @@ class NI_Importer():
     def parse_week(self,week,areacode,_update=True):
         district=ni_codes_inv[areacode] #different syntax on import
         
+        if district=='Northern Ireland':
+        	district='Total'
+        
         #print(week,district)
         
         _allc19=zero_null(self.data[(self.data['Registration Week']==week)][district])

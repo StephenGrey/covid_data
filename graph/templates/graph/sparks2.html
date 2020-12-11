@@ -1,0 +1,321 @@
+{% extends "graph/base.html" %}
+
+{% block header_content %}
+
+<title>Covid19: the UK Covid tracker</title>
+
+{% load static %}
+
+<script src="{% static 'graph/js/jquery.sparkline.js' %}"></script>
+<script src="{% static 'graph/js/d3.v6.min.js' %}"></script>
+
+
+
+
+ <script type="text/javascript">
+ 	
+ 	console.log(d3.version);
+ 	
+ 	
+ 	
+ 	var data = [
+  {name: "A", value: "0.08167"},
+  {name: "B", value: "0.01492"},
+  {name: "C", value: "0.02782"},
+  {name: "D", value: "0.04253"},
+  {name: "E", value: "0.12702"},
+  {name: "F", value: "0.02288"},
+  {name: "G", value: "0.02015"},
+  {name: "H", value: "0.06094"},
+  {name: "I", value: "0.06966"},
+  {name: "J", value: "0.00153"},
+  {name: "K", value: "0.00772"},
+  {name: "L", value: "0.04025"},
+  {name: "M", value: "0.02406"},
+  {name: "N", value: "0.06749"},
+  {name: "O", value: "0.07507"},
+  {name: "P", value: "0.01929"},
+  {name: "Q", value: "0.00095"},
+  {name: "R", value: "0.05987"},
+  {name: "S", value: "0.06327"},
+  {name: "T", value: "0.09056"},
+  {name: "U", value: "0.02758"},
+  {name: "V", value: "0.00978"},
+  {name: "W", value: "0.0236"},
+  {name: "X", value: "0.0015"},
+  {name: "Y", value: "0.01974"},
+  {name: "Z", value: "0.00074"}
+];
+
+var height = 400;
+var width = 550;
+var margin = ({top: 20, right: 20, bottom: 20, left: 20});
+var x = d3.scaleBand()
+  .domain(data.map(d => d.name))
+  .range([margin.left, width - margin.right])
+  .padding(0.1);
+
+var y = d3.scaleLinear()
+  .domain([0, d3.max(data, d => d.value)])
+  .range([height - margin.bottom, margin.top]);
+  
+  
+var xAxis = g => g
+  .attr("transform", `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x));
+
+var yAxis = g => g
+  .attr("transform", `translate(${margin.left},0)`)
+  .call(d3.axisLeft(y));
+  
+  
+var svg = d3.select('svg');
+
+var g = svg.append("g").attr("fill", "orange");
+
+g.selectAll("rect")
+  .data(data)
+  .join("rect")
+  .attr("x", d => x(d.name))
+  .attr("y", d => y(d.value))
+  .attr("height", d => y(0) - y(d.value))
+  .attr("width", x.bandwidth());
+
+svg.append("g").call(xAxis);
+
+svg.append("g").call(yAxis);
+
+
+
+
+// 	
+//    var api_url="/graph/api/"
+//    var places=[{%for rates in nations%}"{{rates.areaname}}",{%endfor%}{%for rates in regions%}"{{rates.areaname}}",{%endfor%}{%for rates in districts%}"{{rates.areaname}}",{%endfor%}]
+//    console.log(places)
+//    $(function() {
+//       places.forEach( function(d) {
+//       console.log(d);
+//       var myvalues=draw_spark(d);
+//       
+//       });
+//    });
+//
+//function draw_spark(placename)
+//    {
+//    	var series
+//    	$.get( api_url+placename, function( data ) 
+//      {
+//    	var areacode=data.areacode
+//	    var dataset=data.dataset
+//	    console.log(areacode);
+//	    if (dataset){
+//     	    series=dataset[12].data;
+//     	    console.log(series);
+//     	    var spark_class='sparky'+areacode
+//     	    console.log(spark_class);
+//            $("#"+areacode).sparkline(series.slice(1).slice(-21), {type: 'line', lineColor: 'orange'} );
+//     	};
+//       });
+//
+//     };
+
+    </script>
+
+{% endblock %}
+
+
+{% block body_content %}
+
+				<br><br>
+				ALL LOCAL AUTHORITIES
+				<div>
+				<table class="sortable">
+				  <tr>
+				    <th>Area</th>
+				    <th>Infection rate
+				    <small><p>(weekly cases to {{last_cases}}<br> per 100,000 people)</small></th>				    <th><small>change in 14 days</small></th>
+				    
+				    <th>Deaths since September*</th>
+				    <th>Deaths in last 30 days*</th>
+<!--				    <th>Test result av. days delay</th>
+-->
+				    <th>Excess deaths 2020<small><p>(per 100,000 people)</small></th>    
+				  </tr>
+				{% for rates in districts %}
+				  <tr>
+				  <th><a href={% url 'index_base_o' place=rates.areaname %}>{{rates.areaname}}</a></th>
+				  <th>{{rates.cases_rate|default_if_none:""}}</th>
+				  <th>
+				  {% if rates.cases_change %}
+				 	 {% if rates.cases_change > 0 %}
+				 	<small style="color:red;">{{rates.cases_change|default_if_none:""}}%</small>
+				 	 {% else %}
+				 <small style="color:green;">{{rates.cases_change|default_if_none:""}}%</small>
+				  	{%endif%}
+				  {%endif%}
+				  <span class="sparky" id="sparkline_{{rates.areacode}}" >
+				  	</span>
+				  	</th>
+				  <th>{{rates.wave2|default_if_none:""}}</th>
+				  <th>{{rates.last30|default_if_none:""}}</th>
+<!--				  <th>{{rates.delays|default_if_none:""}}</th> 
+-->				  <th>{{rates.excess|default_if_none:""}}</th>
+				  
+				 </tr>
+				{% endfor %}
+				</table>
+				</div>
+
+
+
+
+
+
+
+<script>
+
+
+
+
+const randBetween = (min, max) => {
+    let range = max - min;
+    return min + range * Math.random();
+}
+
+
+const sparkline = (container, data, options, colour) => {    
+    
+    if (colour=='red'){
+    	var stroke_colour="#FF0000";
+    }
+    else
+    {
+    	var stroke_colour="rgb(60, 120, 26)";
+    };
+
+    const defaults = {
+        scale: {
+            x: d3.scaleLinear(),
+            y: d3.scaleLinear()
+        },
+        size: [100, 40],
+        style: {
+            stroke: stroke_colour,
+            strokeWidth: 2
+        },
+        value: {
+            x: d => d[0],
+            y: d => d[1]
+        }
+    };
+
+    options = $.extend(true, defaults, options);    
+
+    let svg = d3.select(container)
+        .append("svg")
+        .classed("sparkline", true)
+        .classed("sparkline-svg", true)        
+        .attr("width", options.size[0])
+        .attr("height", options.size[1]);
+    
+    let g = svg.append("g")
+        .classed("sparkline", true)
+        .classed("sparkline-group", true);
+
+    let xScale = options.scale.x
+        .range([0, options.size[0]])
+        .domain(d3.extent(data, options.value.x));
+
+    let yScale = options.scale.y
+        .range([options.size[1], 0])
+        .domain(d3.extent(data, options.value.y));
+    
+    let line = d3.line()
+        .x(d => xScale(options.value.x(d)))
+        .y(d => yScale(options.value.y(d)));
+
+    let path = g.append("path")
+        .classed("sparkline", true)
+        .classed("sparkline-path", true)
+        .datum(data)
+        .attr("d", line)
+        .style("fill", "none")
+        .style("stroke", options.style.stroke)
+        .style("stroke-width", options.style.strokeWidth);
+    
+    return path;
+};
+
+// Set constants that will be used
+const duration = 26;
+const myData = [];
+const now = Date.now();
+
+var series=[null, 1, 120, 153, 91, 91, 134, 162, 158, 171, 183, 140, 115, 196, 191, 227, 223, 280,175, 207, 293, 290, 348, 328, 373, 245, 243, 339, 328, 362, 379, 520, 251, 271, 425, 420, 408, 444, 494, 276, 285, 408, 441, 465, 532, 515, 281, 288, 376, 381, 455, 420, 403, 236, 298, 417, 441, 509, 545, 521, 327, 426, 614, 661, 939, 699, 598, 551, 383, 441, 362, 358, 272, 179, 193, 206, 169, 170, 181, 117, 99, 38, 64, 85, 69, 67, 70, 82, 43, 71, 80, 61, 66, 56, 26, 24, 34, 48, 39, 34, 32, 33, 12, 32, 41, 44, 40, 32, 41, 25, 32, 34, 43, 48, 51, 40, 21, 33, 24, 29, 36, 33, 36, 18, 18, 20, 29, 39, 35, 32, 17, 27, 22, 26, 18, 14, 16, 14, 9, 6, 11, 15, 9, 16, 9, 8, 15, 7, 18, 8, 13, 6, 12, 14, 16, 16, 7, 10, 9, 18, 11, 14, 20, 13, 17, 6, 15, 16, 26, 20, 19, 16, 19, 14, 13, 19, 14, 16, 18, 8, 9, 22, 17, 18, 24, 19, 20, 24, 20, 33, 11, 23, 24, 16, 18, 27, 23, 33, 46, 35, 26, 38, 25, 24, 36, 35, 35, 30, 25, 27, 39, 47, 45, 22, 29, 23, 38, 33, 50, 35, 23, 26, 35, 53, 50, 56, 39, 42, 35, 55, 15, 35, 38, 51, 40, 37, 43, 37, 63, 53, 59, 72, 36, 40, 30, 34, 28, 33, 24, 23, 31, 14, 22, 14, 9, 12, 4, 3, 4, 4, 3, 4, 6, 3, 0, 7, 0, 1, 1, 2, 0, 0, 0, 2, 1, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+
+var api_url="/graph/api_all_daily"
+
+		    	
+//       var myvalues=draw_spark(d);
+//       
+// 
+//     	    series=dataset[12].data;
+//     	    console.log(series);
+//     	    var spark_class='sparky'+areacode
+//     	    console.log(spark_class);
+//            $("#"+areacode).sparkline(series.slice(1).slice(-21), {type: 'line', lineColor: 'orange'} );
+
+
+//let myContainer = document.getElementById("sparkline-container");
+
+let myOptions = {
+    size: [100, 20],
+    value: {
+        x: d => d.date,
+        y: d => d.value
+    }
+};
+
+
+
+$.get(api_url, function(data ) 
+	{
+//    	var areacode=data.areacode
+	    var dataset=data.dataset
+//	    console.log(areacode);
+	    if (dataset){
+			 $(function() {
+				dataset.forEach( function(d) 
+					{
+		       		series=d.dailyLabConfirmedCases;
+		       		areacode=d.areacode;
+		       		change=d.change;
+		       		const myData = [];
+					for (let i = 14; i < duration; i++) {
+				    myData.push({
+        			date: i, //new Date(now - (i * 24 * 60 * 60 * 1000)),
+        			value: series[i] //randBetween(10, 20)
+        			
+    				});
+					}
+					console.log(d);		       		
+					let myContainer = document.getElementById("sparkline_"+areacode);
+					if (change<0)
+					{
+		       		sparkline(myContainer, myData, myOptions,"green");
+					}
+					else{
+		       		sparkline(myContainer, myData, myOptions,"red");
+		    		};
+		    		
+		    		});
+		 		});
+		 }
+	});
+
+
+//sparkline(myContainer, myData, myOptions);
+
+</script>
+{% endblock %}
+

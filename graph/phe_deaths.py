@@ -96,7 +96,7 @@ class PHE_Deaths(phe_fetch.Fetch_API):
     					row.save()	
     		counter+=1
     		if counter%1000==0:
-    			log.info(f'Processing row {counter}')
+    			log.debug(f'Processing row {counter}')
     	log.info(f'Processed: {counter} rows')
     
     	if self.latest_deaths:
@@ -130,7 +130,7 @@ class PHE_Deaths(phe_fetch.Fetch_API):
 
     			wave2=self.deaths_range(_range=newwave,place=place)
     			last_month=self.deaths_range(_range=last30,place=place)
-    			log.info(f'Place:{place} Wave2:{wave2} 30days:{last_month}')
+    			log.debug(f'Place:{place} Wave2:{wave2} 30days:{last_month}')
     		
     			i.last_month_PHEdeaths=last_month
     			i.wave2_PHEdeaths=wave2

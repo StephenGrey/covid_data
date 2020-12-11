@@ -7,9 +7,16 @@
 {% load static %}
 
 <script src="{% static 'graph/js/jquery.sparkline.js' %}"></script>
+<script src="{% static 'graph/js/d3.v6.min.js' %}"></script>
+
+
 
 
  <script type="text/javascript">
+ 	
+ 	console.log(d3.version);
+ 	
+ 	
     var api_url="/graph/api/"
     var places=[{%for rates in nations%}"{{rates.areaname}}",{%endfor%}{%for rates in regions%}"{{rates.areaname}}",{%endfor%}{%for rates in districts%}"{{rates.areaname}}",{%endfor%}]
     console.log(places)

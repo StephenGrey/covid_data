@@ -7,9 +7,9 @@ from utils import time_utils
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
-RANGE=["2020-02-07", "2020-11-28"]
-RANGE_WEEK=[6, 48]
-WEEK_DATE_LABELS=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27']
+RANGE=["2020-02-07", "2020-12-13"]
+RANGE_WEEK=[6, 50]
+WEEK_DATE_LABELS=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27','Dec 4','Dec 11']
 
 DELAY=datetime.timedelta(4)  #delay before most cases are published i.e. case rate becomes accurate
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
@@ -187,7 +187,7 @@ def cases_range(start_date='2020-06-01',end_date='2020-07-01'):
 	"""calculate new cases in a time range across all areas"""
 	for place in ons_week.stored_names.values():
 		diff=local_cases_range(start_date=start_date,end_date=end_date,areaname=place)
-		print(f"{place},{diff}")
+		log.debug(f"{place},{diff}")
 		
 def fix_names():
     _i=ons_week.stored_names
@@ -197,7 +197,7 @@ def fix_names():
             missing.areaname=_i[missing.areacode]
             missing.save()
         except Exception as e:
-            print(e)
+            log.error(e)
 	
 def districts():
 	q=CovidWeek.objects.values('areacode').distinct()
@@ -397,7 +397,7 @@ def output_places():
 def output_all():
 	all_data={}
 	for nation in nations():
-		print(nation)
+		log.debug(nation)
 		q=query_by_nation(nation)
 		nationset={}
 		for place in district_names():
@@ -437,6 +437,29 @@ def output_rates(subset=None,exclude=None):
     	})
 	return data
 
+def output_week_series(series='weeklydeaths'):
+	"""output weekly series for all districts"""
+	data=[]
+	for district in districts():
+		dq=CovidWeek.objects.filter(areacode=district).order_by('week').values(series)
+		data.append(
+			{'areacode':district,
+			series: [x[series] for x in dq]
+			})
+	return data
+
+def output_daily_series(series='dailyLabConfirmedCases',n=25):
+	"""output daily (last 'n' days) series for all districts"""
+	data=[]
+	for district in districts():
+		change=CovidScores.objects.get(areaname=ons_week.stored_names.get(district)).change_case_rate
+		dq=DailyCases.objects.filter(areacode=district).order_by('-specimenDate').values(series)[:n][::-1]		
+		data.append(
+			{'areacode':district,
+			'change':change,
+			series: rolling_averages([x[series] for x in dq])
+			})
+	return data
 
 def save_all_rates(filename):
 	"""dump all Covid19 rates to Json"""
@@ -448,7 +471,7 @@ def save_all_rates(filename):
 def district_deaths(place='Birmingham'):
 	district=CovidWeek.objects.filter(areaname=place,week__range=RANGE_WEEK)
 	areacode=district[0].areacode
-	print(areacode)	
+	log.debug(areacode)	
 	totalcumdeaths=[i.totcumdeaths for i in district]
 	weeklydeaths=[i.weeklydeaths for i in district]
 	weeklyalldeaths=[i.weeklyalldeaths for i in district]
@@ -494,7 +517,7 @@ def output_tags():
 		q=query_by_nation(nation)
 		for item in q.values('areaname').distinct().order_by('areaname'):
 			placename=item['areaname']
-			print(f"""<option value="{placename}" data-tag="{tag} ">{placename}</option>""")
+			log.debug(f"""<option value="{placename}" data-tag="{tag} ">{placename}</option>""")
 			
 
 def rolling_averages(series,period=7, cutoff=4):

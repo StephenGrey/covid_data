@@ -99,13 +99,16 @@ class Updater():
             self.scot.process()
             update_deaths=True
 
+        
         log.info('Updating N Irish deaths')
-        ni=n_ireland.NI_Importer()
-        ni.process()
-        if ni.check_update():
-           ni.parse()
-           update_deaths=True
-
+        try:
+            ni=n_ireland.NI_Importer()
+            ni.process()
+            if ni.check_update():
+               ni.parse()
+               update_deaths=True
+        except Exception as e:
+            log.error(e)
         
         #READJUST HERE FOR ANY GLITCHES
 

@@ -58,8 +58,8 @@ class Check_PHE():
         try:
             self.top()
         except Exception as e:
-            print(e)
-            print('Check PHE failed - default to needs update')
+            log.info(e)
+            log.info('Check PHE failed - default to needs update')
             self._update=True
             
     
@@ -94,11 +94,11 @@ class Check_PHE():
         return self.cases_and_deaths
         
     def get(self):
-        print('Fetching PHE cases from API')
+        log.info('Fetching PHE cases from API')
         try:
             self.data=self.api.get_json()  # Returns a dictionary
         except Exception as e:
-            print(e)
+            log.error(e)
             log.error('Failed to download cases')
             
     @property
@@ -226,7 +226,7 @@ class Fetch_API(Check_PHE):
 	def fetch(self):
 		for sequence in self.sequences:
 			self.api.filters=[f'areaType={sequence}']
-			print(f'SEQUENCE: {sequence}')
+			log.debug(f'SEQUENCE: {sequence}')
 			self.get()  #get local data			
 			self.data_all +=self.data.get('data')
 		self.edition=self.latest_update
@@ -241,7 +241,7 @@ class Fetch_API(Check_PHE):
 			row['areaCode']='E06000060'
 			fixed.append(row)
 		self.data_all+=fixed
-		print('Fixed wrong areacode and added Bucks in PHE local data')
+		log.info('Fixed wrong areacode and added Bucks in PHE local data')
 	
 	@property
 	def filters(self):
@@ -357,7 +357,7 @@ class Fetch_API(Check_PHE):
 						row.totalLabConfirmedCases=total
 						row.save()
 						if existing_daily !=daily:
-							log.info(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
+							log.debug(f'Updating {row.areaname} on {datestring}: Daily: {existing_daily} to {daily}  Total: {existing_total} to {total}')
 							if existing_daily:
 								_increase=daily-existing_daily
 							else:
@@ -415,45 +415,6 @@ class Fetch_API(Check_PHE):
 			counter+=1
 		log.info(f'Processed: {counter} rows')
 
-
-
-
-
-#class OLDCheck_PHE():
-#	def __init__(self):
-#		PHEstored=configs.config.get('PHE')
-#		if PHEstored:
-#			self.England_cases=PHEstored.get('england_total_cases')
-#		else:
-#			self.England_cases=None
-#		self.top()
-#		
-#	def top(self,url=URL_CSV):
-#		"""get lastest England total"""
-#		
-#		with closing(requests.get(url, stream=True)) as r:
-#			f = (line.decode('utf-8') for line in r.iter_lines())
-#			reader = csv.reader(f, delimiter=',', quotechar='"')
-#			fields=next(reader,None)
-#			england=next(reader,None)
-#			self.latest_total=england[7]
-#			log.info(f'England latest total: {self.latest_total}')
-#			
-#		if True:
-#			if self.latest_total:
-#				if self.England_cases:
-#					if str(self.England_cases) ==self.latest_total:
-#						log.info('nothing new here')
-#						self._update=False
-#						return False
-#				userconfig.update('PHE','england_total_cases',str(self.latest_total))
-#				self._update=True
-#				return True
-#				
-##			for count, row in enumerate(reader, start=1):
-##				print(row[7])
-##				if count == 1:
-##					break
 
 class Fetch_PHE(PandaImporter):
 	"""fetch PHE cases for England and Wales from CSV"""
@@ -521,7 +482,7 @@ class Fetch_PHE(PandaImporter):
 #		self.data=lookup_json(url)
 		self.fetch_csv() #JSON discontinued; switched back to CSV
 		self.edition=self.latest_samples
-		print(f'Last samples from {self.edition}')
+		log.info(f'Last samples from {self.edition}')
 
 	def fetch_csv(self,url=URL_CSV):
 		path=os.path.join(DATA_STORE,'PHE_latestcases.csv')
@@ -541,7 +502,7 @@ class Fetch_PHE(PandaImporter):
 		"""ingest from a particular areacode"""
 		data=self.data[self.data['Area code']==areacode]
 		areaname=data['Area name'].unique().item()
-		print(f'Ingesting cases from {areacode}: {areaname}')
+		log.debug(f'Ingesting cases from {areacode}: {areaname}')
 		
 		counter=0
 		for day in data['Specimen date']:
@@ -554,7 +515,7 @@ class Fetch_PHE(PandaImporter):
 			row.totalLabConfirmedCases=this_day['Cumulative lab-confirmed cases'].head(1).item()
 			row.save()
 			counter+=1
-		print(f'Processed: {counter} rows')
+		log.debug(f'Processed: {counter} rows')
 
 
 
@@ -572,10 +533,10 @@ def check_and_download():
         f.fix()
         f.last_update=latest
         if f.update_check():
-            print('Saving latest PHE cases')
+            log.info('Saving latest PHE cases')
             f.save_all()
     else:
-        print('No need to download')
+        log.info('No need to download')
 
 
 def update_weekly_cases(nation):
@@ -642,7 +603,7 @@ def sum_cases(nation='England'):
             if _total:
                 _sum +=_total
             else:
-               print(f'No total for {place}')
+               log.info(f'No total for {place}')
     return _sum
 
 def clean_cases(data):
@@ -655,7 +616,7 @@ def clean_cases(data):
             bucks[i['date']].append(i)
         else:
             newdata.append(i)
-    print(bucks)
+    log.debug(bucks)
     for _date,_all in bucks.items():
         item={'areaName': 'Buckinghamshire','areaCode':'E06000060','specimenDate':_date}
         item['newCasesBySpecimenDate']=sum([x['newCasesBySpecimenDate'] for x in _all])
@@ -689,7 +650,7 @@ def check_sum_cases(nation='England'):
                 _total=DailyCases.objects.filter(areaname=place).aggregate(Max('totalLabConfirmedCases')).get('totalLabConfirmedCases__max')
                 _latest=i['cumCasesByPublishDate']
                 if _total !=_latest:
-                    print(f'Mismatch: {place} Latest total{_latest} != stored {_total}')
+                    log.info(f'Mismatch: {place} Latest total{_latest} != stored {_total}')
                     fail=True
                 else:
                     #print(f'{place} up to date')
@@ -697,7 +658,7 @@ def check_sum_cases(nation='England'):
             
             else:
                 place=i['areaName']
-                print(f'{place} not counted / not in TR tally')
+                log.info(f'{place} not counted / not in TR tally')
                 
     sumtotal=0
     for _code in ons_week.stored_names:
@@ -707,13 +668,13 @@ def check_sum_cases(nation='England'):
                 _latest=i['cumCasesByPublishDate']
                 _total=DailyCases.objects.filter(areacode=_code).aggregate(Max('totalLabConfirmedCases')).get('totalLabConfirmedCases__max')
                 if _latest!=_total:
-                    print(f'Mismatch: {_code} Latest total{_latest} != stored {_total}')
+                    log.debug(f'Mismatch: {_code} Latest total{_latest} != stored {_total}')
                 else:
                     if _latest:
                         sumtotal +=_latest
             else:
-                print(f'Missing place {_code} in PHE published cases')
-    print(f'Sum total of stored names for {nation} is {sumtotal}')
+                log.info(f'Missing place {_code} in PHE published cases')
+    log.info(f'Sum total of stored names for {nation} is {sumtotal}')
     
     return fail
 
@@ -758,7 +719,7 @@ def get_api_result(session,url):
         if res.status_code == 404:
             raise NotFound("URL {} not found".format(url))
     except Exception as e:
-        print(e)
+        log.error(e)
         return None
     return res.content
 
@@ -784,21 +745,21 @@ def timeaware(dumbtimeobject):
 
 def ingest_cases(data):
 	count=0
-	print('Checking for new data')
+	log.info('Checking for new data')
 	try:
 		for index,row in data.iterrows():
 			try:
 				count+=1
 				if count%100==0:
-					print(count)
+					log.debug(count)
 				i,created=DailyCases.objects.get_or_create(areacode=row['Area code'], specimenDate=fetchdate(row['Specimen date']))
 				i.dailyLabConfirmedCases = row['Daily lab-confirmed cases']
 				i.totalLabConfirmedCases = row['Cumulative lab-confirmed cases']
 			except DailyCases.DoesNotExist:
-				print('entry does not exist')
+				log.error('entry does not exist')
 			
 	finally:
-		print(count)
+		log.debug(count)
 			
 
 
