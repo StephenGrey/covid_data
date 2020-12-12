@@ -1,4 +1,9 @@
 //https://data.gov.uk/dataset/daaafdcc-f7c7-41ff-80eb-b0b15efd1414/local-authority-districts-december-2017-generalised-clipped-boundaries-in-united-kingdom-wgs84
+
+http://geoportal1-ons.opendata.arcgis.com/datasets/f99b145881724e15a04a8a113544dfc5_0.zip?outSR={%22latestWkid%22:27700,%22wkid%22:27700}
+
+
+
 //Adapted from https://bl.ocks.org/kierandriscoll/93f75337ee73d89e764378cd2d3cc0dd
 //
 /*
@@ -87,6 +92,7 @@ legend_map['cases_rate'].onAdd = function (map) {
     
     return div;
 };
+
 legend_map['excess_death'].onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend'),
         grades = [legend0, legend1, legend2, legend3, legend4,legend5],
@@ -168,8 +174,8 @@ function loadcolour_scheme(){
 
 function loadmap(place){
 	   
-console.log('Load map for '+place)
-zoomplace=place
+	console.log('Load map for '+place)
+	zoomplace=place
    // Local Authority Boundaries data source
  //  var lagb = '{% static 'graph/json/Local_Auths_Dec16_Gen_Clip_GB.json' %}';
  
@@ -179,23 +185,23 @@ zoomplace=place
  
   
   // initialize Leaflet
-map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 6, minZoom: 5 });
+	map =  new L.Map('mapid', { center: new L.LatLng(53.10, -1.26),zoom: 6, minZoom: 5 });
 //L.map('mapid').setView([51.505, -0.09], 13);
 //map.setMinZoom(5);
-var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
+	var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+		});
 
- layer.addTo(map);
+ 	layer.addTo(map);
  
 //add the default legend to the map
-legend_map['cases_rate'].addTo(map);
+	legend_map['cases_rate'].addTo(map);
 
-add_shades();
+	add_shades();
 
-};
+	};
 
-  function add_shades(){
+function add_shades(){
    //Code to convert TopoJson to GeoJson
    L.TopoJSON = L.GeoJSON.extend({ 
                   addData: function(jsonData) {   
@@ -203,10 +209,10 @@ add_shades();
                                for (key in jsonData.objects) {
                                     geojson = topojson.feature(jsonData, jsonData.objects[key]);
                                     L.GeoJSON.prototype.addData.call(this, geojson);
-    }}   
+    							}}   
                            else {
                                     L.GeoJSON.prototype.addData.call(this, jsonData);
-    }}});
+    							}}});
  
   topoLayer = new L.TopoJSON();
   console.log(topoLayer);
@@ -263,6 +269,7 @@ function addTopoData(topoData) {
            topoLayer.eachLayer(handleLayer);
            if (first_load) {
            console.log('first load');
+           zoom2place(zoomplace);
            first_load=false;
            }
            else 
@@ -291,49 +298,70 @@ function handleLayer(layer) {
   } //End of handleLayer function
 
 function updateData(){
-console.log('update data');
-display_value= $("#FilterData").val();
-console.log(display_value);
-loadcolour_scheme()
-map.removeLayer(topoLayer);
-add_shades();
-
-if (display_value === 'cases_rate') {
-    map.removeControl(this_legend);
-    this_legend=legend_map['cases_rate']
-    this_legend.addTo(map);
-    } 
-    else if (display_value === 'deaths'){
-    map.removeControl(this_legend);
-    this_legend=legend_map['deaths']
-    this_legend.addTo(map);
-}
-    else if (display_value === 'cases_change'){
-    map.removeControl(this_legend);
-    this_legend=legend_map['cases_change']
-    this_legend.addTo(map);
-
+	console.log('update data');
+	display_value= $("#FilterData").val();
+	console.log(display_value);
+	loadcolour_scheme()
+	map.removeLayer(topoLayer);
+	add_shades();
+	
+	if (display_value === 'cases_rate') {
+	    map.removeControl(this_legend);
+	    this_legend=legend_map['cases_rate']
+	    this_legend.addTo(map);
+	    } 
+	    else if (display_value === 'deaths'){
+	    map.removeControl(this_legend);
+	    this_legend=legend_map['deaths']
+	    this_legend.addTo(map);
 	}
-    else { // Or switch to the Population Change legend...
-    map.removeControl(this_legend);
-    this_legend=legend_map['excess_death']
-    this_legend.addTo(map);
-    };
-};
+	    else if (display_value === 'cases_change'){
+	    map.removeControl(this_legend);
+	    this_legend=legend_map['cases_change']
+	    this_legend.addTo(map);
+	
+		}
+	    else { // Or switch to the Population Change legend...
+	    map.removeControl(this_legend);
+	    this_legend=legend_map['excess_death']
+	    this_legend.addTo(map);
+	    };
+	};
+
+
 
 function zoom2place(place) {
     console.log('zooming to : '+place);
     
     try {
-    var feat = references[place]
-    map.fitBounds(feat._bounds)
-    highlightLayer(feat);
-    window.history.pushState(place,'COVID Kingdom: the UK COVID-19 Tracker','/graph/place='+place);
+     var region_bounds={
+    	"Northern Ireland":[[54.1, -7.5],[55.3, -5.5]],
+    	"Scotland":[[54.75, -5],[60, 0]],
+    	"England":[[49.9, -5],[55, 1.8]],
+    	"Wales":[[51.7, -4],[53.3, -3]],
+    	"London":[[51.2, -0.1],[51.8, 0.4]],
+   }
+    bounds=region_bounds[place]
+    map.fitBounds(bounds)
     
     }
-     catch(err) {
+    catch(err) {
     console.log(err);
+
+    var feat = references[place]
+    console.log(feat._bounds);
+    map.fitBounds(feat._bounds)
+    highlightLayer(feat);
+						
+//    var southWest = L.latLng(54.1, -7.5),
+//    northEast = L.latLng(55.3, -5.5),
+//    scotland var southWest = L.latLng(55, -10),
+//    northEast = L.latLng(60, 0),
+//    bounds = L.latLngBounds(southWest, northEast);
+
+    
     };
+    window.history.pushState(place,'COVID Kingdom: the UK COVID-19 Tracker','/graph/place='+place);
    };
 
 

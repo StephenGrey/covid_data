@@ -44,7 +44,7 @@
 			</select>
 			
 			
-			<select id="FilterNI">
+			<select id="FilterNorthern">
 			{% for value,text in ni_select %}
 			<option value="{{value}}" data-tag="4">{{text}}</option>
 			{% endfor %}
@@ -191,19 +191,31 @@
 <input type="url" id="shape_location" name="location" value={% static 'graph/json/Local_Auths_Dec16_Gen_Clip_UK.json'%}" hidden/>
 
 <script>
+//start up script
 var api_fetch={{api_status}}
 var last_update="{{last_update}}"
 var focus_place="{{place}}"
+console.log(focus_place);
 var first_load=true
-function firstload(){
-loadmap("{{place}}");
-get_data("{{place}}");
-var sel2 = document.getElementById("Filter2");
-selectOption(sel2,"{{nation_index}}");
-//updateNation();
-var sel = document.getElementById("Filter{{nation}}");
-selectOption(sel, "{{place}}");
-};
+
+function firstload()
+	{
+		loadmap("{{place}}");
+		get_data("{{place}}");
+		var sel2 = document.getElementById("Filter2");  //nation filter
+		selectOption(sel2,"{{nation_index}}");
+		//updateNation();
+		if ('{{nation}}'=='Northern Ireland')
+		{
+		var sel = document.getElementById("FilterNorthern");
+		}
+		else
+		{
+		var sel = document.getElementById("Filter{{nation}}"); 
+		};
+		console.log(sel);
+		selectOption(sel, "{{place}}"); //select the current place in the place filter
+	};
 
 </script>
 {% endblock %}

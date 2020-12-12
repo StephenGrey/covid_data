@@ -57,9 +57,12 @@ var api_url="/graph/api/"
 
 function selectOption(sel, val) {
     var opt; 
-//console.log(sel,val);
+console.log(sel,val);
     // loop through options in select list
+    try
+        {
     for ( var i = 0, len = sel.options.length; i < len; i++ ) {
+
         opt = sel.options[i]; //
 
         if ( opt.value === val ) {
@@ -67,17 +70,26 @@ function selectOption(sel, val) {
             break;
         }
     }
+
+    }
+           catch(err) {
+    		console.log(err);
+    				};
+    
 }
+
 
 
 
 function get_data(placename)
     {
+    console.log('getting data from '+placename);
     if (api_fetch="true")
     {
     	$.get( api_url+placename, function( data ) 
       {
-	    
+	    console.log('fetched from API');
+	    console.log(data);
 	    var nation=data.nation
     	var nation_index=data.nation_index
     	var areacode=data.areacode
@@ -104,7 +116,7 @@ function get_data(placename)
     var dataset=all_data[placename];
     if (dataset){
     		
-    		//console.log(dataset)//alert(data.results.progress);
+    console.log(dataset)//alert(data.results.progress);
     parse_data(dataset);
     
     
@@ -566,7 +578,7 @@ function updateChart() {
  		var determineChart = $("#FilterScotland").val();
  		}
  	else {
-		var determineChart = $("#FilterNI").val();
+		var determineChart = $("#FilterNorthern").val();
 		};
 
      console.log('getting data here');
@@ -589,7 +601,7 @@ function updateNation() {
 	if (nation_select=='1'){
 		console.log('England');
 		$('#FilterEngland').show();
-		$('#FilterNI').hide();
+		$('#FilterNorthern').hide();
 		$('#FilterScotland').hide();		
 		$('#FilterWales').hide();
 	}
@@ -597,25 +609,26 @@ function updateNation() {
 	{
 		console.log('Wales');
 		$('#FilterEngland').hide();
-		$('#FilterNI').hide();
+		$('#FilterNorthern').hide();
 		$('#FilterScotland').hide();		
 		$('#FilterWales').show();
 	}
 	else if (nation_select=='3'){
 		console.log('Scotland');
 		$('#FilterEngland').hide();
-		$('#FilterNI').hide();
+		$('#FilterNorthern').hide();
 		$('#FilterScotland').show();		
 		$('#FilterWales').hide();
 		}
 	else {
 		console.log('NI');
 		$('#FilterEngland').hide();
-		$('#FilterNI').show();
+		$('#FilterNorthern').show();
 		$('#FilterScotland').hide();		
 		$('#FilterWales').hide();
 		};
 	new_nation=nations[nation_select];
+	console.log(new_nation);
 //	all_data=new_data[new_nation];
 	updateChart();
  };
@@ -658,13 +671,13 @@ console.log('charts created')
 
 //FIRST LOAD
 $('#FilterEngland').show();
-$('#FilterNI').hide();
+$('#FilterNorthern').hide();
 $('#FilterScotland').hide();		
 $('#FilterWales').hide();
 
 //WATCHERS
 $('#FilterEngland').on('change', updateChart);
-$('#FilterNI').on('change', updateChart);
+$('#FilterNorthern').on('change', updateChart);
 $('#FilterWales').on('change', updateChart);
 $('#FilterScotland').on('change', updateChart);
 $('#Filter2').on('change', updateNation);
