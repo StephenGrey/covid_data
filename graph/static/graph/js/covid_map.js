@@ -24,6 +24,7 @@ Adjust shape_url variable in line elow for new file name.
 */
    var display_value='cases_rate'
    var shape_url = "/static/graph/json/UK_corrected_topo.json"
+   var regions_url = "/static/graph/json/english_regions_topo.json"
 //document.getElementById("shape_location").value;
    var map_data_url="/graph/api_rates"
    var legend_values={
@@ -39,7 +40,7 @@ Adjust shape_url variable in line elow for new file name.
 
    var map;
    var zoomplace;
-   var topoLayer;
+   var topoLayer,topoLayer2;
    var colourmatrix = {
                     R2G:["#238b45","#74c476","#c7e9c0","#ffcccc","#ff6666","#CC0000",]
                     ,Green:["#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32"]
@@ -192,11 +193,11 @@ function loadmap(place){
     	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 		});
 
- 	layer.addTo(map);
- 
+// 	layer.addTo(map);
+// 
 //add the default legend to the map
-	legend_map['cases_rate'].addTo(map);
-
+   legend_map['cases_rate'].addTo(map);
+//
 	add_shades();
 
 	};
@@ -216,6 +217,11 @@ function add_shades(){
  
   topoLayer = new L.TopoJSON();
   console.log(topoLayer);
+  
+  //topoLayer= new L.TopoJSON();
+  //console.log(topoLayer2);
+  //$.getJSON(shape_url).done(addTopoData);
+  
 //  topoLayer.on('data:loaded',function(e){
 //  console.log("loaded");   
 //  });
@@ -243,8 +249,11 @@ d3.json(map_data_url, function (data) {
     	
     	});
     $.getJSON(shape_url).done(addTopoData);
+   // $.getJSON(shape_url).done();
 });
   	
+  
+  
   	
   	
   };
@@ -277,6 +286,13 @@ function addTopoData(topoData) {
            zoom2place(zoomplace);
            };
    }
+
+function addTopoData2(topoData) {
+		console.log(topoData);
+        topoLayer2.addData(topoData);
+        topoLayer2.addTo(map);	
+	    topoLayer2.eachLayer(handleLayer2);
+}
  
  
 // Set the style of the boundary data layer (fill color based on data values)
@@ -296,6 +312,23 @@ function handleLayer(layer) {
    layers[layer._leaflet_id] = layer;
    references[layer.feature.properties.areaname]=layer;
   } //End of handleLayer function
+
+function handleLayer2(layer){
+   console.log(layer);
+   
+   layer.setStyle({ fillColor : 'blue',
+                     fillOpacity: 0.6,
+                     color: 'black',
+                     weight:0.5,
+                     opacity: 0.9 });
+   layer.on({ mouseover : enterLayer,
+               mouseout: leaveLayer,
+               click: clicklayer,  });	
+   layers[layer._leaflet_id] = layer;
+   references[layer.feature.properties.areaname]=layer;
+	
+}
+
 
 function updateData(){
 	console.log('update data');

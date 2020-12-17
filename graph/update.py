@@ -92,13 +92,18 @@ class Updater():
                 
         except Exception as e:
             log.error(e)
+            log.error('Failed to check ONS weekly deaths')
                 
         log.info('Updating Scottish deaths - normally released Wednesday')
-        self.scot=scotland.Scot_Importer()
-        if self.scot.update_check():
-            self.scot.process()
-            update_deaths=True
-
+        
+        try:
+            self.scot=scotland.Scot_Importer()
+            if self.scot.update_check():
+                self.scot.process()
+                update_deaths=True
+        except Exception as e:
+            log.error(e)
+            log.error('Failed to update Scottish deaths')
         
         log.info('Updating N Irish deaths')
         try:
@@ -109,23 +114,29 @@ class Updater():
                update_deaths=True
         except Exception as e:
             log.error(e)
+            log.error('Failed to update N Irish deaths')
         
         #READJUST HERE FOR ANY GLITCHES
 
         if update_deaths or update_regions:
-            log.info('Updating cumulative deaths')
-            model_calcs.update_cum_deaths()
+            try:
+                log.info('Updating cumulative deaths')
+                model_calcs.update_cum_deaths()
+    
+                log.info('Updating excess deaths')
+                self.check_excess()
+                model_calcs.calc_excess_rates()
+                log.info('Updating Reuters infection curve')
+                infections.calc()
+            except Exception as e:
+                log.error(e)
 
-            log.info('Updating excess deaths')
-            self.check_excess()
-            model_calcs.calc_excess_rates()
-            log.info('Updating Reuters infection curve')
-            infections.calc()
-
-        #UPDATE PHE DEATHS
-        pd=phe_deaths.PHE_Deaths()
-        pd.process()
-        
+        try:
+            #UPDATE PHE DEATHS
+            pd=phe_deaths.PHE_Deaths()
+            pd.process()
+        except Exception as e:
+            log.error(e)        
 
         log.info('Checking PHE case - England and Wales - released daily')
         
