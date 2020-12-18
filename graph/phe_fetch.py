@@ -302,7 +302,7 @@ class Fetch_API(Check_PHE):
 					tries +=1
 					new_data=[]
 			if not new_data:
-				log.error('No data here')
+				log.error('No data found for {place}')
 			else:
 				self.data_all +=new_data
 			time.sleep(0.1)

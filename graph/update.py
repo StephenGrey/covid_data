@@ -131,6 +131,8 @@ class Updater():
             except Exception as e:
                 log.error(e)
 
+        
+        log.info('Checking PHE deaths from API - England and Wales - released daily')
         try:
             #UPDATE PHE DEATHS
             pd=phe_deaths.PHE_Deaths()
@@ -138,12 +140,12 @@ class Updater():
         except Exception as e:
             log.error(e)        
 
-        log.info('Checking PHE case - England and Wales - released daily')
+        log.info('Checking PHE cases - England and Wales - released daily')
         
         try:
             cz=phe_fetch.Fetch_API()
             cz.process()
-            log.info('PHE data successfully processed')
+            log.info('PHE cases data successfully processed')
         except Exception as e:
             log.error(e)
             log.error('PHE API failure ... using old CSV')
