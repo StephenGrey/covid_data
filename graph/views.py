@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from django.views.decorators.cache import cache_page
 import os,time
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
@@ -18,6 +19,7 @@ places=ons_week.make_index()
 CACHED_DAILY_SERIES=model_calcs.output_daily_series(series='dailyLabConfirmedCases',n=30)
 CACHE_UPDATED=time.time()
 
+@cache_page(60 * 15)
 def index(request,place='index'):
     log.info('loading page')
     
@@ -59,7 +61,7 @@ def index(request,place='index'):
 def index_m(request,place='Birmingham'):
     return render(request,'graph/delays.html',{'place':place, 'api_status':'false','covid-rates':model_calcs.output_rates()})
 
-
+@cache_page(60 * 15)
 def sparks(request):
     if True:
         regions=model_calcs.sort_rate(model_calcs.output_rates(subset=ons_week.REGIONS))
@@ -69,7 +71,7 @@ def sparks(request):
 
     return render(request,'graph/sparks2.html',{'api_status':'true','regions':regions, 'nations':nations,'districts':districts,'top_districts':top_districts, "england_select":ons_week.england_select,"wales_select":ons_week.wales_select,"scotland_select":ons_week.scotland_select,"ni_select":ons_week.ni_select})
 
-
+@cache_page(60 * 15)
 def api(request,place=""):
     log.debug(place)
     dataset=model_calcs.output_district(place)
@@ -85,11 +87,13 @@ def api(request,place=""):
     jsonresponse={'error':False,'place':place,'nation':nation, 'nation_index':nation_index,'areacode':areacode,'dataset':dataset}    
     return JsonResponse(jsonresponse)
 
+@cache_page(60 * 15)
 def api_rates(request):
 	dataset=model_calcs.output_rates()
 	jsonresponse={'error':False, 'dataset':dataset}    
 	return JsonResponse(jsonresponse)
 
+@cache_page(60 * 15)
 def api_slim_data(request,place=""):
 	"""return data on limited series"""
 	_error=False
@@ -104,7 +108,8 @@ def api_slim_data(request,place=""):
 	if not dataset:
 		_error=True
 	return JsonResponse({'error':_error, 'name':'select_data_for_area','place':place,'dataset':dataset, 'latest_update':edition})
-		
+
+@cache_page(60 * 15)		
 def api_all_daily(request):
 	_error=False
 	try:
@@ -122,7 +127,7 @@ def api_all_daily(request):
 	log.debug(res)
 	return JsonResponse(res)
 	
-	
+@cache_page(60 * 15)
 def api_places(request):
 	_error=False
 	try:
@@ -131,9 +136,11 @@ def api_places(request):
 		places=None
 		_error=True
 	return JsonResponse({'error':_error,'name':'index_of_areas','places':places})
-	
+
+@cache_page(60 * 15)	
 def api_shapes(request):
 	return HttpResponse(shapes)
+
 
 def fetch_ons(request,place=""):
 	print('fetch ons')
