@@ -292,6 +292,7 @@ class Fetch_API(Check_PHE):
 					log.debug(f'Fetching {place}')
 					self.data=self.api.get_json()  # Returns a dictionary
 					new_data=self.data.get('data')
+					log.info(self.latest_update)
 					if not self.edition:
 						self.edition=self.latest_update
 					break
@@ -302,7 +303,7 @@ class Fetch_API(Check_PHE):
 					tries +=1
 					new_data=[]
 			if not new_data:
-				log.error('No data found for {place}')
+				log.error(f'No data found for {place}')
 			else:
 				self.data_all +=new_data
 			time.sleep(0.1)
@@ -375,6 +376,8 @@ class Fetch_API(Check_PHE):
 
 		if self.edition:
 			configs.userconfig.update('PHE','latest_update',self.edition)
+		else:
+			log.info('Latest update not updated')
 
 #	
 	def save(self):

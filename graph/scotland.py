@@ -1,4 +1,4 @@
-import requests,json,csv,pandas,os,logging
+import requests,json,csv,pandas,os,logging,unicodedata
 from datetime import datetime
 from bs4 import BeautifulSoup as BS
 from .ons_week import week as ons_week,sunday,stored_names,nation,scotcode
@@ -62,8 +62,9 @@ class Scot_Importer(PandaImporter):
         if res:
             html=res.content
             soup=BS(res.content, 'html.parser')
-            el=soup.table.tbody.contents[3].td.next.next.next.text
-            target="Weekly deaths by date of occurrence, health board and location"
+            el=soup.table.tbody.contents[5].td.next.next.next.text
+            el=unicodedata.normalize("NFKD", el)
+            target="Weekly deaths by week of occurrence, health board and location"
             if target in el:
                 log.info("Found target: latest Scotland weekly deaths data")
                 self.edition=el[el.find('(')+1:el.find(')')]
