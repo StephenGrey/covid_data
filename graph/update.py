@@ -139,24 +139,39 @@ class Updater():
         except Exception as e:
             log.error(e)
             log.error('PHE API failure ... using old CSV')
-            cz=phe_fetch.Fetch_PHE()
-            cz.process()
-            cz.save()
-
-#        #Welsh cases now on PHE API
+            try:
+                cz=phe_fetch.Fetch_PHE()
+                cz.process()
+                cz.save()
+            except Exception as e:
+                log.error(e)                
+                
+#        #Welsh daily cases now on PHE API
+        try:
             wck=wales.Wales_Check()
             if wck._update:
                 log.info('Updating Welsh cases')
                 wz=wales.Wales_Cases()
                 wz.process()
-        
+        except Exception as e:
+            log.error(e)   
 #        self.cz.update_totals()
-        log.info('Updating Scottish cases - released daily')
-        self.scot2=scotland.Scot_Cases()
-        self.scot2.process()
+
+        try:
+            log.info('Updating Scottish cases - released daily')
+            self.scot2=scotland.Scot_Cases()
+            self.scot2.process()
+        except Exception as e:
+            log.error(e)   
+        
+        
         
         log.info('Update new case rates')
-        model_calcs.calc_newcases_rates()
+        
+        try:
+            model_calcs.calc_newcases_rates()
+        except Exception as e:
+            log.error(e)   
 
         if update_deaths or update_regions:
             try:
@@ -172,7 +187,6 @@ class Updater():
                 infections.calc()
             except Exception as e:
                 log.error(e)
-
 
         
         log.info('Updates complete')

@@ -94,7 +94,7 @@ class Check_PHE():
         return self.cases_and_deaths
         
     def get(self):
-        log.info('Fetching PHE cases from API')
+        #log.info('Fetching PHE cases from API')
         try:
             self.data=self.api.get_json()  # Returns a dictionary
         except Exception as e:
@@ -125,6 +125,7 @@ class Check_PHE():
         "cumCasesBySpecimenDate":"cumCasesBySpecimenDate",
         "newDeaths28DaysByPublishDate":"newDeaths28DaysByPublishDate",
         "newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate",
+        
 #        "newPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
 #        "cumPillarOneTestsByPublishDate":"newPillarOneTestsByPublishDate",
 #        "newAdmissions":"newAdmissions",
