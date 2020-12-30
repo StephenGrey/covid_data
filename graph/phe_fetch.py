@@ -293,7 +293,7 @@ class Fetch_API(Check_PHE):
 					log.debug(f'Fetching {place}')
 					self.data=self.api.get_json()  # Returns a dictionary
 					new_data=self.data.get('data')
-					log.info(self.latest_update)
+					#log.info(self.latest_update)
 					if not self.edition:
 						self.edition=self.latest_update
 					break
