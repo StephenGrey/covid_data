@@ -75,7 +75,6 @@ class Updater():
         
         
     def process(self):
-
         """check for updates of deaths and cases data & download updates"""
         
         update_deaths,update_regions=False,False

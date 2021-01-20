@@ -1,12 +1,14 @@
 import pandas,requests,logging
-from .ons_week import ni_codes, week as ons_week,sunday, stored_names
+from .ons_week import ni_codes, week as ons_week,sunday, stored_names,week_lookup
 from .models import CovidWeek
 log = logging.getLogger('api.graph.n_ireland')
 
 import configs
 from configs import userconfig
 
-DEATHS_URL="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
+DEATHS_URL="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.XLSX"
+INFO_URL="https://www.nisra.gov.uk/publications/weekly-deaths"
+#old"https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #historic https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths%20-%20Historical.xls
 """
@@ -30,7 +32,9 @@ class NI_Importer():
         self.fix()
         
     def fix(self):
-        pass
+        self.data2['week']=self.data2['Week Ending (Friday)'].dt.date.apply(week_lookup)
+        self.data['week']=self.data['Week Ending (Friday)'].dt.date.apply(week_lookup)
+        self.data3['week']=self.data3['Week Ending (Friday)'].dt.date.apply(week_lookup)
         
     def check_update(self):
         niupdate=configs.config.get('NIreland')
@@ -54,7 +58,7 @@ class NI_Importer():
         self.data3=pandas.read_excel(path,sheet_name="Table 8",skiprows=4).dropna() #care home deaths
         
     def weeks(self):
-        return sorted([int(z) for z in self.data2['Registration Week'].unique()])
+        return sorted([int(z) for z in self.data2['week'].unique()])
         
     def districts(self):
         return ni_codes.keys()
@@ -77,9 +81,9 @@ class NI_Importer():
         
         #print(week,district)
         
-        _allc19=zero_null(self.data[(self.data['Registration Week']==week)][district])
-        _all=zero_null(self.data2[(self.data2['Registration Week']==week)][district])
-        careh19=zero_null(self.data3[(self.data3['Registration Week']==week)][district])
+        _allc19=zero_null(self.data[(self.data['week']==week)][district])
+        _all=zero_null(self.data2[(self.data2['week']==week)][district])
+        careh19=zero_null(self.data3[(self.data3['week']==week)][district])
         
         qrow=CovidWeek.objects.filter(week=week+1,areacode=areacode) # week +1 to bring in line with ONS weeks.
         if qrow:

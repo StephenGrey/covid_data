@@ -62,7 +62,7 @@ class Scot_Importer(PandaImporter):
         if res:
             html=res.content
             soup=BS(res.content, 'html.parser')
-            el=soup.table.tbody.contents[5].td.next.next.next.text
+            el=soup.table.tbody.contents[7].td.next.next.next.text
             el=unicodedata.normalize("NFKD", el)
             target="Weekly deaths by week of occurrence, health board and location"
             if target in el:
@@ -97,7 +97,11 @@ class Scot_Importer(PandaImporter):
         deaths_field='deaths' if 'deaths' in self.data.columns else 'Deaths'
         
         self.data['Deaths'] = self.data[deaths_field].astype(int)
-        self.data['Week of occurrence'] = self.data['Week of occurrence'].astype(int)
+        self.data['year']="20"+self.data['Week of occurrence'].str[:2]
+        self.data['Week of occurrence'] = self.data['Week of occurrence'].str[3:5].astype(int)
+        self.data.loc[self.data['year']=='2021', 'week'] = (self.data['Week of occurrence']+53).astype(int)
+        self.data.loc[self.data['year']=='2020', 'week'] = self.data['Week of occurrence'].astype(int)
+        
 #        self.data.columns=['Week of occurrence','Health Board','Location of death','Cause of Death','deaths']
 #        #self.data.dropna() #drop any columns with null values
 #        validweeks=[n for n in self.data['Week of occurrence'].unique() if valid_int(n)] #only week numbers that are valid
@@ -107,7 +111,7 @@ class Scot_Importer(PandaImporter):
         
         
     def weeks(self):
-        return sorted([int(z) for z in self.data['Week of occurrence'].unique()])
+        return sorted([int(z) for z in self.data['week'].unique()])
         
     def districts(self):
         return sorted([z for z in self.data['Health Board'].unique()])
@@ -122,12 +126,12 @@ class Scot_Importer(PandaImporter):
 #            configs.userconfig.update('ONS','latest_update',self.edition)
     def parse_week(self,week,district,_update=True):
         week_str=str(week)
-        sub=self.data[(self.data['Health Board']==district)&(self.data['Week of occurrence']==week)]
-        _allc19=sub[(sub['Cause of Death']=='COVID-19')]['Deaths'].sum()
+        sub=self.data[(self.data['Health Board']==district)&(self.data['week']==week)]
+        _allc19=sub[(sub['Cause of Death']=='COVID-19 mentioned')]['Deaths'].sum()
         _all=sub['Deaths'].sum()
         careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
-        careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
-        hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
+        careh19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
+        hosp19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
         log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
         qrow=CovidWeek.objects.filter(week=week,areaname=district)
         if qrow:
@@ -147,13 +151,13 @@ class Scot_Importer(PandaImporter):
     def sum_Scotland(self):
         for week in self.weeks():
             district='Scotland'
-            sub=self.data[(self.data['Week of occurrence']==week)]
+            sub=self.data[(self.data['week']==week)]
             week_str=str(week)
-            _allc19=sub[(sub['Cause of Death']=='COVID-19')]['Deaths'].sum()
+            _allc19=sub[(sub['Cause of Death']=='COVID-19 mentioned')]['Deaths'].sum()
             _all=sub['Deaths'].sum()
             careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
-            careh19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
-            hosp19=sub[(sub['Cause of Death']=='COVID-19')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
+            careh19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
+            hosp19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
             log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
             qrow=CovidWeek.objects.filter(week=week,areaname=district)
             if qrow:

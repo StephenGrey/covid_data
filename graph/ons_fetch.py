@@ -1,7 +1,8 @@
 import requests,json,csv,logging
-from .ons_week import week as ons_week,sunday,stored_names,nation,weeks
+from .ons_week import sunday,stored_names,nation
 from .models import CovidWeek,CovidScores
 from .import_csv import URLImporter,PandaImporter,merge_averages
+from pandas import isna
 import configs
 from configs import userconfig
 from datetime import date,timedelta
@@ -29,7 +30,7 @@ EG={
     "dataset": {
         "id": "weekly-deaths-local-authority",
         "edition": "time-series",
-        "version": 12
+        "version": 13
     },
     "dimensions": [
         {
@@ -63,29 +64,44 @@ class ONS_Importer(PandaImporter):
         return ID
     
     def process(self):
-        _id,url=self.get_download_link()
+        
+        #2020 update
+        _id,url=self.get_download_link(2020)
+        last_update=configs.config['ONS'].get('latest_2020update')
+        log.info(f"Latest 2020 edition: {_id}   Most recent update {last_update}")
+        if last_update != _id:
+            log.debug('updating 2020 data')
+            self.download()
+            self.parse(2020)
+            if self.edition:
+                configs.userconfig.update('ONS','latest_2020update',self.edition)
+            else:
+                log.info('No new update for 2020 ONS deaths')
+        #2021
+        _id,url=self.get_download_link(2021)
         last_update=configs.config['ONS'].get('latest_update')
         log.info(f"Latest edition: {_id}   Most recent update {last_update}")
         if last_update != _id:
             self.download()
-            self.parse()
+            self.parse(2021)
             if self.edition:
                 configs.userconfig.update('ONS','latest_update',self.edition)            
             return True
         else:
             return False
             
-    def parse(self):
+    def parse(self,year):
         for district in self.districts():
             for week in self.weeks():
                 week_data={}
-                self.parse_week(week,district)
+                self.parse_week(week,district,year=year)
 
 
-    def parse_week(self,week,district,_update=True):
+    def parse_week(self,week,district,_update=True,year=2020):
         week_str=f"week-{week}"
-        year="2020"
-        sub=self.data[(self.data['administrative-geography']==district)&(self.data['RegistrationOrOccurrence']=='Occurrences')&(self.data['week-number']==week_str)]
+        if year==2021:
+            week=week+53
+        sub=self.data[(self.data['administrative-geography']==district)&(self.data['RegistrationOrOccurrence']=='Occurrences')&(self.data['week-number']==week_str)&(self.data['calendar-years']==year)]
         _allc19=sub[(sub['CauseOfDeath']=='COVID 19')]['v4_0'].sum()
         _all=sub[(sub['CauseOfDeath']=='All causes')]['v4_0'].sum()
         careh=sub[(sub['CauseOfDeath']=='All causes')&(sub['PlaceOfDeath']=='Care home')]['v4_0'].sum()
@@ -103,31 +119,43 @@ class ONS_Importer(PandaImporter):
                 areaname=stored_names[district]
                 _nation=nation[district]
                 row=CovidWeek(areacode=district,nation=_nation,areaname=areaname,week=week)
-                log.debug(f'Created week {sunday(week)} for {district}')
+                log.debug(f'Created week {week} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
+                
+    def get_download_link(self,year):
+        if year==2021:
+            latest=get_latest(_id=self.this_id)
 
-    def get_download_link(self):
-        latest=get_latest(_id=self.this_id)
-        url=latest.get('href')
-        _id=latest.get('id')
-        if url and _id:
-            self.edition=_id
             
-            configs.userconfig.update('ONS','latest_edition',self.edition)
-            
-            log.info(f'Latest edition {_id}: {url}')
-            resp=lookup_json(url)
-            try:
-                downloads=resp['downloads']['csv']['href']
-                self.download_url=downloads
-                configs.userconfig.update('ONS','latest_download',url)
-                return _id,downloads
-            except Exception as e:
-                log.info(e)
-                return None,None        
+            url=latest.get('href')
+            _id=latest.get('id')
+            if url and _id:
+                self.edition=str(_id)
+                
+                configs.userconfig.update('ONS','latest_edition',self.edition)
+                
+                log.info(f'Latest edition {_id}: {url}')
+                resp=lookup_json(url)
+                try:
+                    downloads=resp['downloads']['csv']['href']
+                    self.download_url=downloads
+                    configs.userconfig.update('ONS','latest_download',url)
+                    return _id,downloads
+                except Exception as e:
+                    log.info(e)
+                    return None,None        
+            else:
+                return None,None
         else:
-            return None,None
+            url,_id=get_2020(_id=self.this_id)
+            if url and _id:
+                self.edition=str(_id)
+                self.download_url=url           
+                return str(_id),url
+            else:
+                return None,None
+
 
     
     def update_filter(self):
@@ -181,12 +209,26 @@ class ONS_Regions(ONS_Importer):
         return ID_REGIONS
 
     def process(self):
-        _id,url=self.get_download_link()
+
+#        year=2020
+#        _id,url=self.get_download_link(year)
+#        last_update=configs.config['ONS'].get('latest_regional_2020deaths')
+#        log.info(f"Latest edition: {_id}   Most recent update {last_update}")
+#        if last_update != _id:
+#            self.download()
+#            self.parse()
+#            self.add_England()
+#            if self.edition:
+#            	configs.userconfig.update('ONS','latest_regional_deaths',self.edition)                    
+        #
+        year=2021
+        _id,url=self.get_download_link(year)
         last_update=configs.config['ONS'].get('latest_regional_deaths')
         log.info(f"Latest edition: {_id}   Most recent update {last_update}")
         if last_update != _id:
             self.download()
-            self.parse()
+            self.parse(2020)
+            self.parse(2021)
             self.add_England()
             if self.edition:
             	configs.userconfig.update('ONS','latest_regional_deaths',self.edition)            
@@ -194,11 +236,13 @@ class ONS_Regions(ONS_Importer):
         else:
             return False
 
-    
     def add_England(self):
         for week in self.weeks():
-        	wales=CovidWeek.objects.get(areaname='Wales',week=week)
-        	england_wales=CovidWeek.objects.get(areaname='England and Wales',week=week)
+        	try:
+        		wales=CovidWeek.objects.get(areaname='Wales',week=week)
+        		england_wales=CovidWeek.objects.get(areaname='England and Wales',week=week)
+        	except CovidWeek.DoesNotExist:
+        		continue
         	england_c19= england_wales.weeklydeaths-wales.weeklydeaths
         	england_all=england_wales.weeklyalldeaths-wales.weeklyalldeaths
         	log.debug(f'England deaths week {week} c19:{england_c19} all:{england_all}')
@@ -208,17 +252,21 @@ class ONS_Regions(ONS_Importer):
         	update_row(row,england_all,england_c19,None,None,None)
         
     
-    def parse_week(self,week,district,_update=True):
+    def parse_week(self,week,district,year=2021,_update=True):
         week_str=f"week-{week}"
-        year="2020"
-        sub=self.data[(self.data['administrative-geography']==district)&(self.data['week-number']==week_str)]
-        
-        _all=sub[(sub['recorded-deaths']=='total-registered-deaths')]['V4_0'].values[0]
-        _allc19=sub[(sub['recorded-deaths']=='deaths-involving-covid-19-registrations')]['V4_0'].sum()
+        if year==2020 and week<6:
+            return
+        if year==2021:
+            week=week+53
+        sub=self.data[(self.data['administrative-geography']==district)&(self.data['week-number']==week_str)&(self.data['calendar-years']==year)]
+        _all=sub[(sub['recorded-deaths']=='total-registered-deaths')]['V4_1'].values[0]
+        if not _all or isna(_all):
+            return
+        _allc19=sub[(sub['recorded-deaths']=='deaths-involving-covid-19-registrations')]['V4_1'].sum()
         careh=None
         careh19=None
         hosp19=None
-        log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all}')
+        log.debug(f'District: {district} Year:{year} Week: {week} C19:{_allc19} All: {_all}')
         qrow=CovidWeek.objects.filter(week=week,areacode=district)
         if qrow:
             row=qrow[0]
@@ -230,7 +278,7 @@ class ONS_Regions(ONS_Importer):
                 areaname=stored_names[district]
                 _nation=nation[district]
                 row=CovidWeek(areacode=district,nation=_nation,areaname=areaname,week=week)
-                log.debug(f'Created week {sunday(week)} for {district}')
+                log.debug(f'Created week {week} for {district}')
                 row.save()
                 update_row(row,_all,_allc19,careh,careh19,hosp19)
 
@@ -344,6 +392,23 @@ def get_latest(_id=ID):
     """latest details of ONS series"""
     info=lookup_index(series=_id)[0]
     return info['links']['latest_version'] #.keys() #['latest_version']
+
+def get_editions(_id=ID):
+    info=lookup_index(series=_id)[0]
+    return info['links']['editions']['href']
+    
+def get_2020(_id=ID):
+    eds=lookup_json(get_editions(_id=_id))
+    
+    ed2020=[x for x in eds['items'] if x.get('edition')=='2020']
+    
+    latest=ed2020[0]['links']['latest_version']['href']
+    
+    info=lookup_json(latest)
+    url=info['downloads']['csv']['href']
+    version=info['version']
+    return url,version
+
 
 def get_latest_url(_id=ID):
     """latest series URL"""
