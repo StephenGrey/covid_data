@@ -7,9 +7,10 @@ from utils import time_utils
 import configs
 from configs import userconfig
 log = logging.getLogger('api.graph.model_calcs')
-RANGE=["2020-02-07", "2021-01-17"]
-RANGE_WEEK=[6, 55]
-WEEK_DATE_LABELS=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27','Dec 4','Dec 11','Dec 18','Dec 25','Jan 1','Jan 8','Jan 15']
+RANGE=["2020-02-07", "2021-02-24"]
+RANGE_WEEK=[6, 58]
+WEEK_DATE_LABELS=['Feb 7','Feb 14','Feb 21', 'Feb 28','Mar 6','Mar 13','Mar 20', 'Mar 27','Apr 3','Apr 10', 'Apr 17','Apr 24','May 1','May 8','May 15','May 22','May 29','June 5', 'June 12','June 19','June 26','Jul 3','Jul 10', 'Jul 17', 'Jul 24','Jul 31','Aug 7','Aug 14','Aug 21','Aug 28','Sep 4','Sep 11','Sep 18','Sep 25','Oct 2','Oct 9','Oct 16','Oct 23','Oct 30','Nov 6','Nov 13','Nov 20','Nov 27','Dec 4','Dec 11','Dec 18','Dec 25','Jan 1','Jan 8','Jan 15','Jan 22','Jan 29','Feb 5','Feb 12']
+
 
 DELAY=datetime.timedelta(4)  #delay before most cases are published i.e. case rate becomes accurate
 DATA_STORE=os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../data'))
