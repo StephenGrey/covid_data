@@ -36,17 +36,25 @@ def excess_deaths_district(place='Birmingham',save=False):
 
 	all_deaths_2020=0
 	all_carehome_deaths_2020=0
-	count=0 #count the number of weeks with data
+	_count=0 #count the number of weeks with data
 	for i in district:
 		if i.weeklyalldeaths is None: #check for when data runs out
 			break
 		all_deaths_2020+=i.weeklyalldeaths
 		if i.weeklycarehomedeaths is not None:
 			all_carehome_deaths_2020+=i.weeklycarehomedeaths
-		count+=1
+		_count+=1
 	
 	#gather the dates for same weeks
-	averages=AverageWeek.objects.filter(areacode=areacode,week__range=[RANGE_WEEK[0],RANGE_WEEK[0]+count-1])	
+	end_week=RANGE_WEEK[1]
+	if end_week <54:
+		averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
+	else:
+		average20=AverageWeek.objects.filter(areacode=areacode,week__range=[RANGE_WEEK[0],52])
+		wk52=AverageWeek.objects.get(areacode=areacode,week=52)
+		av21=AverageWeek.objects.filter(areacode=areacode,week__range=[1,end_week-54])
+		averages=[x for x in average20]+[wk52]+[x for x in av21]
+
 	
 	if averages:
 		_data=True
@@ -319,22 +327,27 @@ def output_district(place,q=None):
 
 		areacode=district[0].areacode
 
-		averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
+		
+		end_week=RANGE_WEEK[1]
+		if end_week <54:
+			averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
+		else:
+			average20=AverageWeek.objects.filter(areacode=areacode,week__range=[RANGE_WEEK[0],52])
+			wk52=AverageWeek.objects.get(areacode=areacode,week=52)
+			av21=AverageWeek.objects.filter(areacode=areacode,week__range=[1,end_week-54])
+			averages=[x for x in average20]+[wk52]+[x for x in av21]
 		totavdeaths=[str(i.weeklyalldeaths) for i in averages]
 		avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
+		
+		
+		
 		#print(place)
 		#print(weeklycases)
 		sc=CovidScores.objects.get(areaname=place)
 		if sc:
-			excess=sc.excess_deaths
-			excess_ch=sc.excess_deaths_carehomes
-			excess_rate=sc.excess_death_rate
-			
-			if not excess or not excess_ch or not excess_rate:
-				excess,excess_ch,excess_rate="N/A","N/A","N/A"
-			
-		else:
-			excess,excess_ch,excess_rate="N/A","N/A","N/A"
+			excess=sc.excess_deaths if sc.excess_deaths else 'N/A'
+			excess_ch=sc.excess_deaths_carehomes if sc.excess_deaths_carehomes else 'N/A'
+			excess_rate=sc.excess_death_rate if sc.excess_death_rate else 'N/A'
 		
 		last=DailyCases.objects.filter(areaname=place).order_by('-specimenDate')[:50][::-1]
 		last_cases=[i.dailyLabConfirmedCases for i in last]
