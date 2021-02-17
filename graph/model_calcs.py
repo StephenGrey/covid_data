@@ -37,6 +37,9 @@ def excess_deaths_district(place='Birmingham',save=False):
 	all_deaths_2020=0
 	all_carehome_deaths_2020=0
 	_count=0 #count the number of weeks with data
+	
+
+	
 	for i in district:
 		if i.weeklyalldeaths is None: #check for when data runs out
 			break
@@ -44,18 +47,16 @@ def excess_deaths_district(place='Birmingham',save=False):
 		if i.weeklycarehomedeaths is not None:
 			all_carehome_deaths_2020+=i.weeklycarehomedeaths
 		_count+=1
-	
-	#gather the dates for same weeks
-	end_week=RANGE_WEEK[1]
-	if end_week <54:
-		averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
-	else:
-		average20=AverageWeek.objects.filter(areacode=areacode,week__range=[RANGE_WEEK[0],52])
-		wk52=AverageWeek.objects.get(areacode=areacode,week=52)
-		av21=AverageWeek.objects.filter(areacode=areacode,week__range=[1,end_week-54])
-		averages=[x for x in average20]+[wk52]+[x for x in av21]
-
-	
+		
+	datarange=[RANGE_WEEK[0],RANGE_WEEK[0]+_count-1]
+	log.debug(datarange)
+	try:
+		#gather the dates for same weeks
+		averages=filter_averages(datarange,areacode)
+	except Exception as e:
+		log.error(f'No average data for {place} - {e}')
+		averages=None
+		
 	if averages:
 		_data=True
 		average_deaths=sum([i.weeklyalldeaths for i in averages])
@@ -87,6 +88,21 @@ def excess_deaths_district(place='Birmingham',save=False):
 			av.excess_deaths_carehomes=None
 			av.save()
 
+def filter_averages(weekrange,areacode):
+	"""roll over average data spanning 2 years"""
+	end_week=weekrange[1]
+	if end_week <53:
+		averages=AverageWeek.objects.filter(areacode=areacode,week__range=weekrange)
+	else:
+		average20=AverageWeek.objects.filter(areacode=areacode,week__range=[weekrange[0],52])
+		wk52=AverageWeek.objects.get(areacode=areacode,week=52)
+		if end_week==53: #REPEAT AVERAGE FOR WEEK 52 for WEEK 53 as per ONS GUIDANCE
+			averages=[x for x in average20]+[wk52]
+		else:		
+			av21=AverageWeek.objects.filter(areacode=areacode,week__range=[1,end_week-54])
+			averages=[x for x in average20]+[wk52]+[x for x in av21]
+	return averages
+	
 def excess_deaths():
 	"parse through all districts in database , updating the excess death calc"""
 	for place in district_names():
@@ -326,8 +342,6 @@ def output_district(place,q=None):
 		weeklycarehomedeaths=[i.weeklycarehomedeaths for i in district]
 
 		areacode=district[0].areacode
-
-		
 		end_week=RANGE_WEEK[1]
 		if end_week <54:
 			averages=AverageWeek.objects.filter(areacode=areacode,week__range=RANGE_WEEK)
@@ -336,10 +350,15 @@ def output_district(place,q=None):
 			wk52=AverageWeek.objects.get(areacode=areacode,week=52)
 			av21=AverageWeek.objects.filter(areacode=areacode,week__range=[1,end_week-54])
 			averages=[x for x in average20]+[wk52]+[x for x in av21]
-		totavdeaths=[str(i.weeklyalldeaths) for i in averages]
-		avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]
 		
-		
+		try:
+			averages=filter_averages(RANGE_WEEK,areacode)
+			totavdeaths=[str(i.weeklyalldeaths) for i in averages]
+			avcaredeaths=[str(i.weeklycarehomedeaths) for i in averages]			
+		except:
+			averages=None
+			totavdeaths=None
+			avcaredeaths=None
 		
 		#print(place)
 		#print(weeklycases)
