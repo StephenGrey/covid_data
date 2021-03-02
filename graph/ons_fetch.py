@@ -66,7 +66,7 @@ class ONS_Importer(PandaImporter):
     def process(self):
         
         #2020 update
-        _id,url=self.get_download_link(2020)
+        self.download_url,_id=get_year(year='2020')
         last_update=configs.config['ONS'].get('latest_2020update')
         log.info(f"Latest 2020 edition: {_id}   Most recent update {last_update}")
         if last_update != _id:
@@ -78,7 +78,7 @@ class ONS_Importer(PandaImporter):
             else:
                 log.info('No new update for 2020 ONS deaths')
         #2021
-        _id,url=self.get_download_link(2021)
+        _id,self.download_url=self.get_download_link(2021)
         last_update=configs.config['ONS'].get('latest_update')
         log.info(f"Latest edition: {_id}   Most recent update {last_update}")
         if last_update != _id:
@@ -125,23 +125,19 @@ class ONS_Importer(PandaImporter):
                 
     def get_download_link(self,year):
         if year==2021:
-            latest=get_latest(_id=self.this_id)
-
-            
-            url=latest.get('href')
-            _id=latest.get('id')
+            url,_id=get_year(year='2021')
             if url and _id:
                 self.edition=str(_id)
                 
                 configs.userconfig.update('ONS','latest_edition',self.edition)
                 
                 log.info(f'Latest edition {_id}: {url}')
-                resp=lookup_json(url)
+#                resp=lookup_json(url)
                 try:
-                    downloads=resp['downloads']['csv']['href']
-                    self.download_url=downloads
+#                    downloads=resp['downloads']['csv']['href']
+                    self.download_url=url
                     configs.userconfig.update('ONS','latest_download',url)
-                    return _id,downloads
+                    return _id,url
                 except Exception as e:
                     log.info(e)
                     return None,None        
@@ -397,10 +393,10 @@ def get_editions(_id=ID):
     info=lookup_index(series=_id)[0]
     return info['links']['editions']['href']
     
-def get_2020(_id=ID):
+def get_year(_id=ID,year='2020'):
     eds=lookup_json(get_editions(_id=_id))
     
-    ed2020=[x for x in eds['items'] if x.get('edition')=='2020']
+    ed2020=[x for x in eds['items'] if x.get('edition')==year]
     
     latest=ed2020[0]['links']['latest_version']['href']
     
@@ -408,6 +404,8 @@ def get_2020(_id=ID):
     url=info['downloads']['csv']['href']
     version=info['version']
     return url,version
+
+
 
 
 def get_latest_url(_id=ID):
