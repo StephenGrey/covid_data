@@ -69,7 +69,7 @@ class ONS_Importer(PandaImporter):
         self.download_url,_id=get_year(year='2020')
         last_update=configs.config['ONS'].get('latest_2020update')
         log.info(f"Latest 2020 edition: {_id}   Most recent update {last_update}")
-        if last_update != _id:
+        if int(last_update) != _id:
             log.debug('updating 2020 data')
             self.download()
             self.parse(2020)
@@ -81,7 +81,7 @@ class ONS_Importer(PandaImporter):
         _id,self.download_url=self.get_download_link(2021)
         last_update=configs.config['ONS'].get('latest_update')
         log.info(f"Latest edition: {_id}   Most recent update {last_update}")
-        if last_update != _id:
+        if int(last_update) != _id:
             self.download()
             self.parse(2021)
             if self.edition:
