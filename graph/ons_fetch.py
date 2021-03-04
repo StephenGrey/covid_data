@@ -67,6 +67,8 @@ class ONS_Importer(PandaImporter):
         
         #2020 update
         self.download_url,_id=get_year(year='2020')
+        if self.download_url and _id:
+            self.edition=str(_id)
         last_update=configs.config['ONS'].get('latest_2020update')
         log.info(f"Latest 2020 edition: {_id}   Most recent update {last_update}")
         if int(last_update) != _id:
@@ -125,7 +127,7 @@ class ONS_Importer(PandaImporter):
                 
     def get_download_link(self,year):
         if year==2021:
-            url,_id=get_year(year='2021')
+            url,_id=get_year(year='2021',_id=self.this_id)
             if url and _id:
                 self.edition=str(_id)
                 
@@ -221,7 +223,7 @@ class ONS_Regions(ONS_Importer):
         _id,url=self.get_download_link(year)
         last_update=configs.config['ONS'].get('latest_regional_deaths')
         log.info(f"Latest edition: {_id}   Most recent update {last_update}")
-        if last_update != _id:
+        if int(last_update) != _id:
             self.download()
             self.parse(2020)
             self.parse(2021)
@@ -255,6 +257,7 @@ class ONS_Regions(ONS_Importer):
         if year==2021:
             week=week+53
         sub=self.data[(self.data['administrative-geography']==district)&(self.data['week-number']==week_str)&(self.data['calendar-years']==year)]
+        
         _all=sub[(sub['recorded-deaths']=='total-registered-deaths')]['V4_1'].values[0]
         if not _all or isna(_all):
             return
@@ -396,7 +399,12 @@ def get_editions(_id=ID):
 def get_year(_id=ID,year='2020'):
     eds=lookup_json(get_editions(_id=_id))
     
-    ed2020=[x for x in eds['items'] if x.get('edition')==year]
+    if _id=='weekly-deaths-region':
+    	ed2020=[x for x in eds['items'] if x.get('edition')=='covid-19']
+    else:
+    	ed2020=[x for x in eds['items'] if x.get('edition')==year]
+    
+    
     
     latest=ed2020[0]['links']['latest_version']['href']
     

@@ -62,9 +62,9 @@ class Scot_Importer(PandaImporter):
         if res:
             html=res.content
             soup=BS(res.content, 'html.parser')
-            el=soup.table.tbody.contents[7].td.next.next.next.text
+            el=soup.table.tbody.contents[9].td.next.next.next.text
             el=unicodedata.normalize("NFKD", el)
-            target="Weekly deaths by week of occurrence, health board and location"
+            target="Weekly deaths by location, health board and council area"
             if target in el:
                 log.info("Found target: latest Scotland weekly deaths data")
                 self.edition=el[el.find('(')+1:el.find(')')]
@@ -127,12 +127,12 @@ class Scot_Importer(PandaImporter):
     def parse_week(self,week,district,_update=True):
         week_str=str(week)
         sub=self.data[(self.data['Health Board']==district)&(self.data['week']==week)]
-        _allc19=sub[(sub['Cause of Death']=='COVID-19 mentioned')]['Deaths'].sum()
+        _allc19=sub[(sub['Cause of Death']=='COVID-19 contributory factor')]['Deaths'].sum()+sub[(sub['Cause of Death']=='COVID-19 underlying cause')]['Deaths'].sum()
         _all=sub['Deaths'].sum()
         careh=sub[(sub['Location of death']=='Care Home')]['Deaths'].sum()
-        careh19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
-        hosp19=sub[(sub['Cause of Death']=='COVID-19 mentioned')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
-        log.debug(f'District: {district} Week: {week} C19:{_allc19} All: {_all} Carehomes {careh} ({careh19} C19)')
+        careh19=sub[(sub['Cause of Death']=='COVID-19 contributory factor')&(sub['Location of death']=='Care Home')]['Deaths'].sum()+sub[(sub['Cause of Death']=='COVID-19 underlying cause')&(sub['Location of death']=='Care Home')]['Deaths'].sum()
+        hosp19=sub[(sub['Cause of Death']=='COVID-19 contributory factor')&(sub['Location of death']=='Hospital')]['Deaths'].sum()+sub[(sub['Cause of Death']=='COVID-19 underlying cause')&(sub['Location of death']=='Hospital')]['Deaths'].sum()
+        log.debug(f'District: {district} Week: {week} C19all:{_allc19}  All: {_all} Carehomes {careh} ({careh19} C19)')
         qrow=CovidWeek.objects.filter(week=week,areaname=district)
         if qrow:
             row=qrow[0]

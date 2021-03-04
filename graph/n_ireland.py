@@ -6,10 +6,9 @@ log = logging.getLogger('api.graph.n_ireland')
 import configs
 from configs import userconfig
 
-DEATHS_URL="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.XLSX"
+DEATHS_URL="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLSX"
 INFO_URL="https://www.nisra.gov.uk/publications/weekly-deaths"
 #old"https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
-
 #historic https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths%20-%20Historical.xls
 """
 NI: YET TO PUBLISH LOCAL DEATHS BY OCCURRENCE
